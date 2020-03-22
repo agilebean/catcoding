@@ -15,7 +15,7 @@ treatment_string <- function() {
 
 models_list_label <- function() {
   output_filename(
-    "data/models.list",
+    "models/models.list",
     paste0(CV.REPEATS, "repeats"),
     DATASET.LABEL,
     treatment_string()
@@ -24,7 +24,7 @@ models_list_label <- function() {
 
 models_metrics_label <- function() {
   output_filename(
-    "data/models.metrics",
+    "models/models.metrics",
     paste0(CV.REPEATS, "repeats"),
     DATASET.LABEL,
     treatment_string()

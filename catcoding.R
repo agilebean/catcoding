@@ -6,73 +6,128 @@
 #
 ################################################################################
 # common variables
-DATASET.LABEL <- "diamonds"
-TREATMENT <- "vtreat"
+rm(list = ls())
+# DATASET.LABEL <- "diamonds"
+DATASET.LABEL <- "ames"
+# TREATMENT <- "vtreat-design"
+TREATMENT <- "vtreat-cross"
 # TREATMENT <- NULL
 source("_common.R")
 source("_strings.R")
-
 # devtools::install_github("agilebean/machinelearningtools")
 # unloadNamespace("machinelearningtools")
-# CV.REPEATS <- 2
-CV.REPEATS <- 10
-models_list_label() 
-models_metrics_label()
 
-TRY.FIRST <- 100
-# TRY.FIRST <- NULL
-
-# clus <- parallel::makeCluster(16)
-# stopCluster(clus)
+CATS.ONLY <- TRUE
+# CATS.ONLY <- FALSE
 
 if (!is.null(TREATMENT)) {
-  system.time(
+  
+  if (TREATMENT == "vtreat-design") {
+    
     treatment.plan <- designTreatmentsN(
       dframe = config.set,
       varlist = features.labels,
       # parallelCluster = clus, # 5% faster
       outcomename = target.label
-    )  
-  )
-  
-  scoreFrame <- treatment.plan$scoreFrame %>%
-    select(varName, origName, code) %T>% print
-  
-  features.treated <- treatment.plan$scoreFrame %>%
-    # code "clean":  a numerical variable with no NAs or NaNs
-    # code "lev": an indicator variable for a specific level of the original categorical variable.
-    filter(code %in% c("clean", "lev")) %>%
-    pull(varName) %T>% print
-  
-  training.set.scores <-  prepare(
-    treatment.plan,
-    training.set,
-    scale = TRUE,
-    varRestriction = features.treated
-  )
-  
-  testing.set.scores <-  prepare(
-    treatment.plan,
-    testing.set,
-    scale = TRUE,
-    varRestriction = features.treated
-  )
+      )
+    
+    scoreFrame <- treatment.plan$scoreFrame %>%
+      select(varName, origName, code) %T>% print
+    
+    vartypes.selected <- if (CATS.ONLY) {
+      c("lev") 
+      print("feature selection: CATS ONLY")
+      } else { 
+        c("clean", "lev")
+      }
+    
+    features.treated <- treatment.plan$scoreFrame %>%
+      # code "clean":  a numerical variable with no NAs or NaNs
+      # code "lev": an indicator variable for a specific level of the original categorical variable.
+      # filter(code %in% c("clean", "lev")) %>%
+      filter(code %in% vartypes.selected) %>%
+      pull(varName) %T>% print
+    
+    training.set.scores <-  prepare(
+      treatment.plan,
+      training.set,
+      scale = TRUE,
+      varRestriction = features.treated
+    )
+    
+    testing.set.scores <-  prepare(
+      treatment.plan,
+      testing.set,
+      scale = TRUE,
+      varRestriction = features.treated
+    )
+    
+  } else if (TREATMENT == "vtreat-cross") {
+    
+    system.time(
+      training.set.cross <- vtreat::mkCrossFrameNExperiment(
+        dframe = training.set, 
+        varlist = features.labels,
+        outcomename = target.label,
+        # parallelCluster = clus, # % faster
+        rareCount = 0,  # Note set this to something larger, like 5
+        rareSig = c()
+      )  
+    )
+    
+    treatments <- training.set.cross$treatments %T>% print
+    # training.set.scores <- treatments$scoreFrame %T>% print
+    training.set.treated <- training.set.cross$crossFrame %T>% print
+    testing.set.treated <- vtreat::prepare(
+      treatments,
+      testing.set,
+      pruneSig=c()
+    )
+    
+    features.treated <- training.set.treated %>% select(-target.label) %>% names
+    
+  }
 
-  # mkCrossFrame*Experiment$crossFrame  
+} else {
+  
+  if (CATS.ONLY) {
+    
+    # training.set with target and only cats
+    training.set %<>% 
+      select_if(is.factor) %>% 
+      mutate(!!target.label := training.set[[!!target.label]]) %>% 
+      select(target.label, everything())
+ 
+    # training.set %>% 
+    #   select_if(str_detect(names(.), target.label) | is.factor(.))
+       
+    # testing.set with target and only cats
+    testing.set %<>% 
+      select_if(is.factor) %>% 
+      mutate(!!target.label := testing.set[[!!target.label]]) %>% 
+      select(target.label, everything())
+    
+    features.labels <- training.set %>% select(-target.label) %>% names
+    
+    print("feature selection: CATS ONLY")
+    
+  }
+
 }
 
 ################################################################################
 ################################################################################
 
 NEW <- TRUE
-NEW <- FALSE
+# NEW <- FALSE
 ### continue
 CV.REPEATS <- 2
-CV.REPEATS <- 10
-TRY.FIRST <- 1000
-# TRY.FIRST <- NULL
-TREATMENT <- "vtreat"
-TREATMENT <- NULL
+# CV.REPEATS <- 10
+# TRY.FIRST <- 1000
+TRY.FIRST <- NULL
+
+models_list_label() 
+models_metrics_label()
 
 training.configuration <- trainControl(
   method = "repeatedcv",
@@ -82,9 +137,23 @@ training.configuration <- trainControl(
 )
 
 if (!is.null(TREATMENT)) {
-  training.set <- training.set.scores
-  testing.set <- testing.set.scores
-  features.labels <- features.treated
+  
+  if (TREATMENT == "vtreat-design") {
+    
+    training.set <- training.set.scores
+    testing.set <- testing.set.scores
+    features.labels <- features.treated
+    print("dataset treatment: vtreat::designTreatmentsN")
+    
+  } else if (TREATMENT == "vtreat-cross") {
+    
+    training.set <- training.set.treated
+    testing.set <- testing.set.treated
+    features.labels <- features.treated
+    print("dataset treatment: vtreat::mkCrossFrameNExperiment")
+    
+  }
+
 }
 
 system.time(
@@ -100,12 +169,16 @@ system.time(
     models_list_name = models_list_label()
   )
 )
+models.metrics <- models.list %>% get_model_metrics() %T>% print
+ålibrary(gbm)
+models.list$gbm %>% varImp()
+models.list$svmRadial %>% varImp()
 
 models_list_label() 
 models_metrics_label()
 
+
 if (NEW) {
-  # models.list %>% saveRDS(models_list_label())  
   
   models.metrics <- models.list %>% get_model_metrics() %T>% print
   models.metrics %>% saveRDS(models_metrics_label())
