@@ -7,11 +7,12 @@
 ################################################################################
 # common variables
 rm(list = ls())
-# DATASET.LABEL <- "diamonds"
-DATASET.LABEL <- "ames"
+DATASET.LABEL <- "diamonds"
+# DATASET.LABEL <- "ames"
 # TREATMENT <- "vtreat-design"
-TREATMENT <- "vtreat-cross"
 # TREATMENT <- NULL
+TREATMENT <- "vtreat-cross"
+
 source("_common.R")
 source("_strings.R")
 # devtools::install_github("agilebean/machinelearningtools")
@@ -64,27 +65,46 @@ if (!is.null(TREATMENT)) {
     
   } else if (TREATMENT == "vtreat-cross") {
     
-    system.time(
-      training.set.cross <- vtreat::mkCrossFrameNExperiment(
+    training.set.cross <- vtreat::mkCrossFrameNExperiment(
         dframe = training.set, 
         varlist = features.labels,
         outcomename = target.label,
+        # codeRestriction = c("lev"),
         # parallelCluster = clus, # % faster
         rareCount = 0,  # Note set this to something larger, like 5
         rareSig = c()
       )  
-    )
     
     treatments <- training.set.cross$treatments %T>% print
-    # training.set.scores <- treatments$scoreFrame %T>% print
+    training.set.scores <- treatments$scoreFrame %T>% print
     training.set.treated <- training.set.cross$crossFrame %T>% print
-    testing.set.treated <- vtreat::prepare(
-      treatments,
-      testing.set,
-      pruneSig=c()
-    )
     
-    features.treated <- training.set.treated %>% select(-target.label) %>% names
+    vartypes.selected <- if (CATS.ONLY) {
+      
+      print("feature selection: CATS ONLY")
+      c("lev") 
+      
+    } else { 
+      c("clean", "lev")
+    }
+    
+    training.set.treated %>% select(-target.label) %>% names
+    
+    features.treated <- treatments$scoreFrame %>%
+      # code "clean":  a numerical variable with no NAs or NaNs
+      # code "lev": an indicator variable for a specific level of the original categorical variable.
+      # filter(code %in% c("clean", "lev")) %>%
+      filter(code %in% vartypes.selected) %>%
+      filter(recommended == TRUE) %>% 
+      pull(varName) %T>% print
+    
+    if (!is.null(testing.set)) {
+      testing.set.treated <- vtreat::prepare(
+        treatments,
+        testing.set,
+        pruneSig=c()
+      )      
+    }
     
   }
 
@@ -121,8 +141,8 @@ if (!is.null(TREATMENT)) {
 NEW <- TRUE
 # NEW <- FALSE
 ### continue
-CV.REPEATS <- 2
-# CV.REPEATS <- 10
+# CV.REPEATS <- 2
+CV.REPEATS <- 10
 # TRY.FIRST <- 1000
 TRY.FIRST <- NULL
 
@@ -148,7 +168,11 @@ if (!is.null(TREATMENT)) {
   } else if (TREATMENT == "vtreat-cross") {
     
     training.set <- training.set.treated
-    testing.set <- testing.set.treated
+    
+    if (!is.null(testing.set)) {
+      testing.set <- testing.set.treated  
+    }
+    
     features.labels <- features.treated
     print("dataset treatment: vtreat::mkCrossFrameNExperiment")
     
@@ -169,15 +193,8 @@ system.time(
     models_list_name = models_list_label()
   )
 )
-models.metrics <- models.list %>% get_model_metrics() %T>% print
-ålibrary(gbm)
-models.list$gbm %>% varImp()
-models.list$svmRadial %>% varImp()
 
-models_list_label() 
-models_metrics_label()
-
-
+# models.list <- readRDS(models_list_label())
 if (NEW) {
   
   models.metrics <- models.list %>% get_model_metrics() %T>% print
@@ -192,3 +209,11 @@ if (NEW) {
   models.metrics <- readRDS(models_metrics_label())
   
 }
+
+models.metrics
+library(gbm)
+models.list$gbm %>% varImp()
+models.list$svmRadial %>% varImp()
+
+models_list_label() 
+models_metrics_label()
