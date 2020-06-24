@@ -7,8 +7,10 @@
 ################################################################################
 # common variables
 rm(list = ls())
-DATASET.LABEL <- "diamonds"
-# DATASET.LABEL <- "ames"
+
+
+# DATASET.LABEL <- "diamonds"
+DATASET.LABEL <- "ames"
 # TREATMENT <- "vtreat-design"
 # TREATMENT <- NULL
 TREATMENT <- "vtreat-cross"
@@ -141,10 +143,10 @@ if (!is.null(TREATMENT)) {
 NEW <- TRUE
 # NEW <- FALSE
 ### continue
-# CV.REPEATS <- 2
-CV.REPEATS <- 10
-# TRY.FIRST <- 1000
-TRY.FIRST <- NULL
+CV.REPEATS <- 2
+# CV.REPEATS <- 10
+TRY.FIRST <- 500
+# TRY.FIRST <- NULL
 
 models_list_label() 
 models_metrics_label()
@@ -180,23 +182,32 @@ if (!is.null(TREATMENT)) {
 
 }
 
-system.time(
-  models.list <- benchmark_algorithms(
-    target_label = target.label,
-    features_labels = features.labels,
-    training_set = training.set,
-    testing_set = testing.set,
-    training_configuration = training.configuration,
-    algorithm_list = algorithm.list,
-    cv_repeats = CV.REPEATS,
-    try_first = TRY.FIRST,
-    models_list_name = models_list_label()
-  )
+algorithm.list <- c(
+  "lm"
+  # , "svmRadial"
+  # "gbm"
+  , "rf"
 )
+
 
 # models.list <- readRDS(models_list_label())
 if (NEW) {
-  
+  system.time(
+    models.list <- benchmark_algorithms(
+      target_label = target.label,
+      features_labels = features.labels,
+      training_set = training.set,
+      testing_set = testing.set,
+      training_configuration = training.configuration,
+      algorithm_list = algorithm.list,
+      cv_repeats = CV.REPEATS,
+      try_first = TRY.FIRST,
+      models_list_name = models_list_label()
+    )
+  )
+} 
+
+if (NEW) {
   models.metrics <- models.list %>% get_model_metrics() %T>% print
   models.metrics %>% saveRDS(models_metrics_label())
   
@@ -206,11 +217,13 @@ if (NEW) {
   
 } else {
   
+  models.list <- readRDS(models_list_label())
   models.metrics <- readRDS(models_metrics_label())
   
 }
 
 models.metrics
+
 library(gbm)
 models.list$gbm %>% varImp()
 models.list$svmRadial %>% varImp()

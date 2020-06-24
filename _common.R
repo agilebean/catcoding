@@ -14,7 +14,7 @@ sapply(packs, require, character.only = TRUE)
 # diamonds %>% str
 # library(help = "datasets")
 
-library("AmesHousing")
+library(AmesHousing)
 ames <- AmesHousing::make_ames()
 ames %>% select(starts_with("Sale"))
 
@@ -86,9 +86,3 @@ if (is.null(TREATMENT)) {
 
 # names(config.set)[!names(config.set) %in% names(training.set)]
 
-algorithm.list <- c(
-  "lm"
-  , "svmRadial"
-  , "gbm"
-  # , "rf"
-)
