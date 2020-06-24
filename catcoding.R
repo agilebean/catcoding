@@ -10,7 +10,12 @@ rm(list = ls())
 
 
 # DATASET.LABEL <- "diamonds"
-DATASET.LABEL <- "ames"
+# DATASET.LABEL <- "ames"
+DATASET.LABEL <- "designdim"
+# DATASET.LABEL <- "timex"
+# DATASET.LABEL <- "smartflow"
+
+
 # TREATMENT <- "vtreat-design"
 # TREATMENT <- NULL
 TREATMENT <- "vtreat-cross"

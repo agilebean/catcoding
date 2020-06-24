@@ -3,7 +3,8 @@ packs <- c(
   "magrittr",
   "vtreat",
   "caret",
-  "machinelearningtools"
+  "machinelearningtools",
+  "AmesHousing"
 )
 sapply(packs, require, character.only = TRUE)
 
@@ -14,11 +15,7 @@ sapply(packs, require, character.only = TRUE)
 # diamonds %>% str
 # library(help = "datasets")
 
-library(AmesHousing)
-ames <- AmesHousing::make_ames()
-ames %>% select(starts_with("Sale"))
-
-dataset.list <- list(diamonds, ames) %>% set_names(c("diamonds", "ames"))
+# dataset.list <- list(diamonds, ames) %>% set_names(c("diamonds", "ames"))
 
 if (DATASET.LABEL == "diamonds") {
   
@@ -38,7 +35,8 @@ if (DATASET.LABEL == "diamonds") {
 
 } else if (DATASET.LABEL == "ames") {
   
-  dataset <-  ames
+  dataset <- AmesHousing::make_ames()
+  
   target.label <- "Sale_Price"
   features.labels <- dataset %>% select(-target.label) %>% names
   
@@ -56,7 +54,66 @@ if (DATASET.LABEL == "diamonds") {
   # train.ratio <- 0.4 # RMSE gbm 25714
   # CATS.ONLY: 37484 gbm
   # train.ratio <- 0.2 # RMSE svm 29023
-}
+  # 
+} else if (DATASET.LABEL == "designdim") {
+  
+  # no desc.stats exists. tricky: design.descriptives are design features!
+  dataset <- readRDS("data/designdim.items.rds")
+  
+  target.label <- "NPS"
+  features.labels <- dataset %>% select(-target.label) %>% names
+
+} else if (DATASET.LABEL == "timex") {
+  
+  data.descriptive <- readRDS("data/timex.descriptive.rds") 
+  data.items <- readRDS("data/timex.items.rds")
+  
+  dataset <- cbind(data.descriptive, data.items) %>% 
+    select(referral:happy, -feedback, -email) %>% 
+    mutate(
+      HAPPINESS = rowMeans(
+        select(., active:alert, starts_with("lifesatis"), happy)
+      )
+    ) %>% 
+    na.omit() # n=252, 82
+  
+  target.label <- "HAPPINESS"
+  features.labels <-
+    dataset %>% 
+    select(-target.label) %>% 
+    select(-c(active:ashamed)) %>% #PANAS-PA/-NA
+    select(-starts_with("lifesatis"), -happy) %>% 
+    names
+  
+} else if (DATASET.LABEL == "smartflow") {
+  
+  data.descriptive <- readRDS("data/smartflow.descriptive.rds") 
+  data.items <- readRDS("data/smartflow.items.rds")
+  
+  dataset <- cbind(data.descriptive, data.items) %>% 
+    select(-feedback, -email) %>% 
+    mutate(., SMADDICTION = rowMeans(
+      select(., starts_with("addicted")), na.rm = TRUE)) %>% 
+    na.omit() # n=307
+  
+  target.label <- "SMADDICTION" # TODO: smartphone addiction missing
+  features.labels <- dataset %>% 
+    select(-target.label, -starts_with("addicted")) %>% names
+  
+} else if (DATASET.LABEL == "smartflow.scales") {
+  
+  data.descriptives <- readRDS("data/smartflow.descriptive.rds") 
+  data.scales <- readRDS("data/smartflow.scales.rds")
+  
+  dataset <- cbind(data.descriptives, data.scales) %>% 
+    select(-feedback, -email) %>% 
+    na.omit() # n=307
+  
+  target.label <- "SmartphoneAddiction" # TODO: smartphone addiction missing
+  features.labels <- dataset %>% 
+    select(-SmartphoneHours) %>% names
+
+}  
 
 if (is.null(TREATMENT)) {
 
@@ -72,15 +129,15 @@ if (is.null(TREATMENT)) {
   not.test.index <- createDataPartition(
     dataset[[target.label]], p = test.ratio, list = FALSE
   )
-  testing.set <- dataset[-not.test.index, ] %T>% print
+  testing.set <- dataset[-not.test.index, ]
   if (nrow(testing.set) == 0) testing.set <- NULL
   
   # sample by train.ratio from data outside testing.set
   train.index <- not.test.index %>% as.vector %>% sample(length(.)* train.ratio) 
-  training.set <- dataset[train.index, ] %T>% print
+  training.set <- dataset[train.index, ] 
   
   config.index <- not.test.index[!not.test.index %in% train.index]
-  config.set <- dataset[config.index, ] %T>% print 
+  config.set <- dataset[config.index, ] 
 
 }
 
