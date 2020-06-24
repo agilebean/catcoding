@@ -1,0 +1,114 @@
+\def\year{2020}\relax
+%File: formatting-instruction.tex
+\documentclass[letterpaper]{article} % DO NOT CHANGE THIS
+\usepackage{aaai20}  % DO NOT CHANGE THIS
+\usepackage{times}  % DO NOT CHANGE THIS
+\usepackage{helvet} % DO NOT CHANGE THIS
+\usepackage{courier}  % DO NOT CHANGE THIS
+\usepackage[hyphens]{url}  % DO NOT CHANGE THIS
+\usepackage{graphicx} % DO NOT CHANGE THIS
+\urlstyle{rm} % DO NOT CHANGE THIS
+\def\UrlFont{\rm}  % DO NOT CHANGE THIS
+\usepackage{graphicx}  % DO NOT CHANGE THIS
+\frenchspacing  % DO NOT CHANGE THIS
+\setlength{\pdfpagewidth}{8.5in}  % DO NOT CHANGE THIS
+\setlength{\pdfpageheight}{11in}  % DO NOT CHANGE THIS
+%\nocopyright
+%PDF Info Is REQUIRED.
+
+ \pdfinfo{
+/Title (AAAI Press Formatting Instructions for Authors Using LaTeX -- A Guide)
+/Author (First Author, Second Author)
+} %Leave this
+% /Title ()
+% Put your actual complete title (no codes, scripts, shortcuts, or LaTeX commands) within the parentheses in mixed case
+% Leave the space between \Title and the beginning parenthesis alone
+% /Author ()
+
+\setcounter{secnumdepth}{0} %May be changed to 1 or 2 if section numbers are desired.
+
+% The file aaai20.sty is the style file for AAAI Press
+% proceedings, working notes, and technical reports.
+%
+\setlength\titlebox{2.5in} % If your paper contains an overfull \vbox too high warning at the beginning of the document, use this
+% command to correct it. You may not alter the value below 2.5 in
+%\title{AAAI Press Formatting Instructions \\for Authors Using \LaTeX{} --- A Guide }
+\title{Categorical Encoding Techniques to Improve Prediction Accuracy of Likert Scales used in Social Sciences Research for Supervised Learning}
+
+%Your title must be in mixed case, not sentence case.
+% That means all verbs (including short verbs like be, is, using,and go),
+% nouns, adverbs, adjectives should be capitalized, including both words in hyphenated terms, while
+% articles, conjunctions, and prepositions are lower case unless they
+% directly follow a colon or long dash
+\author{First Author\textsuperscript{\rm 1}\thanks{Primarily }\\ \Large \textbf{Second Author\textsuperscript{\rm 1}}\\ % All authors must be in the same font size and format. Use \Large and \textbf to achieve this result when breaking a line
+\textsuperscript{\rm 1}Affiliation\\ %If you have multiple authors and multiple affiliations
+% use superscripts in text and roman font to identify them. For example, Sunil Issar,\textsuperscript{\rm 2} J. Scott Penberthy\textsuperscript{\rm 3} George Ferguson,\textsuperscript{\rm 4} Hans Guesgen\textsuperscript{\rm 5}. Note that the comma should be placed BEFORE the superscript for optimum readability
+Street\\
+City, State 94303\\
+publications20@aaai.org % email address must be in roman text type, not monospace or sans serif
+}
+ \begin{document}
+
+\maketitle
+
+\begin{abstract}
+Likert scales have become a quasi-standard in psychology and many other domains for measuring latent variables in a survey. The common encoding performs a conversion into a numeric variable. This study performs alternative encoding methods and compares their prediction accuracy for several datasets from psychology and design research.
+
+\end{abstract}
+
+%\begin{keywords}
+%    Categorial variables, categorical encoding, one-hot encoding, machine learning, prediction accuracy
+%\end{keywords}
+
+\section{Introduction}
+\noindent Here is the deal.
+Although a multitude of different encoding methods have been proposed in the literature, they have not penetrated practical machine learning where the default method, one-hot encoding, has been consistently applied across programming tutorials. The main reason lies in the fact that one-hot encoding works well for the majority of data sets. The conditions where other categorical encoders yield superior performance are thus rare, and can be limited to the following conditions:
+\begin{enumerate}
+\item High-cardinality datasets have a high number of classes compared to low-cardinality datasets. In such cases, one-hot encoding leads to an explosive growth of number of features with an inverse reduction of feature importance.
+\item The ratio between number of categorical variables and number of all features is high, thus higher likelihood that the categorical variables' feature importance is relatively high among all features.
+\end{enumerate}
+
+For the first case, high-cardinality categorial variables, several approaches have been suggested.
+
+One such approach consists in reducing the number of classes by a dimensionality reduction algorithm such as PCA or ZCA. This approach yields features that are less computationally expensive to process and reach the same predictive value \cite{bibid}.
+
+Another approach, applicable for high-cardinality string variables, is to represent the variables as \textit{bag-of-n-grams}, a technique that converts the strings into character-level vectors. The advantage thereof is that distance measures can be applied that effectively merges similar wordings into similar vector representations, thus eliminating the feature engineering efforts to manually summarize different spellings or misspellings of the same or similar category \cite{Cerda2019}.
+
+The second case, high ratio of categorial to all features, the literature has not defined explicit solutions. This is mainly due to the fact that both supervised and unsupervised learning is based on numerical features, thus datasets usually do not contain many categorical features. Nevertheless, there are some conditions where this applies -- datasets derived from questionnaires that contain \textit{demographic variables} (e.g. gender, education, company) or/and \textit{Likert scale} variables. These datasets are the focus of this study.
+
+There are two standard procedures for these datasets.
+
+\textit{First}, the demographic variables are used as so-called \textit{control variables}, i.e. dummy encoded variables which are entered in a GLM model (multiple linear regression, ANOVA, structural equation model) to increase the variance explained (e.g. measured as R$^2$).
+
+\textit{Second}, the Likert scale variables are encoded numerically into ascending or descending integers (e.g. from 1 to 5 or 1 to 7). This encoding scheme is based on the assumption of \textit{equi-distance}, i.e. all neighboring label points of a Likert scales are equally distant from each other. Although this has been common practice in psychology and other fields where Likert scales are popular, it must be said that the sole reason for this numeric encoding is the practicality. It stands, however, without theoretical reason to apply such encoding as it is obvious that Likert scales represent ordinal variables. This issue has long been raised by \textit{probabilistic test theory} that proposed several techniques (like Rasch scales or item-response-theory). These techniques, however, are effortful to implement and require a specific study in order to calculate probabilistic values for the cardinal values, and thus have not become widespread despite being more accurate.
+
+\subsection{Research Question}
+The preceding considerations allow to formulate the following research question.
+\begin{quotation}
+    Can we replace the (a) the one-hot encoding of demographic variables and (b) the numeric encoding of Likert scale variables by an encoding algorithm  that improves the predictive value of categorical variables in social sciences surveys?
+\end{quotation}
+In pursuit of this research question, the present study proposes to apply a selection of categorical encoding algorithms and compare them to their default encoding. The goal is to detect the best algorithm to apply to a new dataset derived from a survey containing categorical variables composed of demographic and Likert scale variables. To facilitate the preprocessing procedure, the same encoding algorithm will be applied for demographic and Likert scale variables.
+
+\section{Method}
+\noindent First sentence.
+
+\section{Results}
+\noindent First sentence.
+
+\section{Discussion}
+\noindent First sentence.
+
+
+\bibliographystyle{aaai}
+\bibliography{library}
+
+\appendix
+
+\section{Benchmarking}\label{apd:first}
+The following shows the detailed results of the benchmarking study.
+
+\section{Programming Libraries \& Functions Used}\label{apd:second}
+This might not be necessary
+
+
+\end{document}
