@@ -5,144 +5,84 @@
 # Treatment:    None
 #
 ################################################################################
+packs <- c(
+  "tidyverse",
+  "magrittr",
+  "vtreat",
+  "caret",
+  "machinelearningtools"
+)
+sapply(packs, require, character.only = TRUE)
 # common variables
-rm(list = ls())
-
-
 # DATASET.LABEL <- "diamonds"
 # DATASET.LABEL <- "ames"
 DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
 
-
 # TREATMENT <- "vtreat-design"
 # TREATMENT <- NULL
 TREATMENT <- "vtreat-cross"
 
-source("_common.R")
+# source("_common.R")
+source("_getdata.R")
 source("_strings.R")
+source("_treatments.R")
 # devtools::install_github("agilebean/machinelearningtools")
 # unloadNamespace("machinelearningtools")
 
+# QUICK-TEST: use only cats to see whether it's worth catcoding 
 CATS.ONLY <- TRUE
 # CATS.ONLY <- FALSE
 
-if (!is.null(TREATMENT)) {
+################################################################################
+if (is.null(TREATMENT)) {
   
-  if (TREATMENT == "vtreat-design") {
-    
-    treatment.plan <- designTreatmentsN(
-      dframe = config.set,
-      varlist = features.labels,
-      # parallelCluster = clus, # 5% faster
-      outcomename = target.label
-      )
-    
-    scoreFrame <- treatment.plan$scoreFrame %>%
-      select(varName, origName, code) %T>% print
-    
-    vartypes.selected <- if (CATS.ONLY) {
-      c("lev") 
-      print("feature selection: CATS ONLY")
-      } else { 
-        c("clean", "lev")
-      }
-    
-    features.treated <- treatment.plan$scoreFrame %>%
-      # code "clean":  a numerical variable with no NAs or NaNs
-      # code "lev": an indicator variable for a specific level of the original categorical variable.
-      # filter(code %in% c("clean", "lev")) %>%
-      filter(code %in% vartypes.selected) %>%
-      pull(varName) %T>% print
-    
-    training.set.scores <-  prepare(
-      treatment.plan,
-      training.set,
-      scale = TRUE,
-      varRestriction = features.treated
-    )
-    
-    testing.set.scores <-  prepare(
-      treatment.plan,
-      testing.set,
-      scale = TRUE,
-      varRestriction = features.treated
-    )
-    
-  } else if (TREATMENT == "vtreat-cross") {
-    
-    training.set.cross <- vtreat::mkCrossFrameNExperiment(
-        dframe = training.set, 
-        varlist = features.labels,
-        outcomename = target.label,
-        # codeRestriction = c("lev"),
-        # parallelCluster = clus, # % faster
-        rareCount = 0,  # Note set this to something larger, like 5
-        rareSig = c()
-      )  
-    
-    treatments <- training.set.cross$treatments %T>% print
-    training.set.scores <- treatments$scoreFrame %T>% print
-    training.set.treated <- training.set.cross$crossFrame %T>% print
-    
-    vartypes.selected <- if (CATS.ONLY) {
-      
-      print("feature selection: CATS ONLY")
-      c("lev") 
-      
-    } else { 
-      c("clean", "lev")
-    }
-    
-    training.set.treated %>% select(-target.label) %>% names
-    
-    features.treated <- treatments$scoreFrame %>%
-      # code "clean":  a numerical variable with no NAs or NaNs
-      # code "lev": an indicator variable for a specific level of the original categorical variable.
-      # filter(code %in% c("clean", "lev")) %>%
-      filter(code %in% vartypes.selected) %>%
-      filter(recommended == TRUE) %>% 
-      pull(varName) %T>% print
-    
-    if (!is.null(testing.set)) {
-      testing.set.treated <- vtreat::prepare(
-        treatments,
-        testing.set,
-        pruneSig=c()
-      )      
-    }
-    
-  }
-
+  train.index <- createDataPartition(
+    dataset[[target.label]], p = split.untreated, list = FALSE
+  )
+  training.set <- dataset[train.index, ] %T>% print
+  testing.set <- dataset[-train.index, ] %T>% print
+  
+  
 } else {
   
-  if (CATS.ONLY) {
-    
-    # training.set with target and only cats
-    training.set %<>% 
-      select_if(is.factor) %>% 
-      mutate(!!target.label := training.set[[!!target.label]]) %>% 
-      select(target.label, everything())
- 
-    # training.set %>% 
-    #   select_if(str_detect(names(.), target.label) | is.factor(.))
-       
-    # testing.set with target and only cats
-    testing.set %<>% 
-      select_if(is.factor) %>% 
-      mutate(!!target.label := testing.set[[!!target.label]]) %>% 
-      select(target.label, everything())
-    
-    features.labels <- training.set %>% select(-target.label) %>% names
-    
-    print("feature selection: CATS ONLY")
-    
-  }
-
+  split.untreated <- 0.8
+  #### AMES results
+  # untreated ALL: RMSE 24247 gbm
+  # CATS.ONLY: RMSE 31459 (2rep), 31810 (10rep) gbm <<<<<<<<<<<<<<
+  
+  # test.ratio   <- 0.9
+  test.ratio   <- 1.0
+  train.ratio <- 0.8  
+  
+  #### AMES results
+  # train.ratio = 0.8 RMSE gbm 24662, svm 24511
+  # CATS.ONLY: RMSE 25252 (10rep)gbm <<<<<<<<<<<<<<
+  # train.ratio <- 0.6 # RMSE gbm 26253
+  # CATS.ONLY: 36717 svm
+  # train.ratio <- 0.5 # RMSE gbm 26321
+  # train.ratio <- 0.4 # RMSE gbm 25714
+  # CATS.ONLY: 37484 gbm
+  # train.ratio <- 0.2 # RMSE svm 29023
+  #   
+  not.test.index <- createDataPartition(
+    dataset[[target.label]], p = test.ratio, list = FALSE
+  )
+  testing.set <- dataset[-not.test.index, ]
+  if (nrow(testing.set) == 0) testing.set <- NULL
+  
+  # sample by train.ratio from data outside testing.set
+  train.index <- not.test.index %>% as.vector %>% sample(length(.)* train.ratio) 
+  training.set <- dataset[train.index, ] 
+  
+  config.index <- not.test.index[!not.test.index %in% train.index]
+  config.set <- dataset[config.index, ] 
+  
 }
 
-################################################################################
+# names(config.set)[!names(config.set) %in% names(training.set)]
+
 ################################################################################
 
 NEW <- TRUE
@@ -190,7 +130,7 @@ if (!is.null(TREATMENT)) {
 algorithm.list <- c(
   "lm"
   # , "svmRadial"
-  # "gbm"
+  , "gbm"
   , "rf"
 )
 
