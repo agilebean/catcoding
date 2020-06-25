@@ -13,6 +13,7 @@ training.set <- dataset[train.index, ]
 testing.set <- dataset[-train.index, ]
 if (nrow(testing.set) == 0) testing.set <- NULL
 
+# no treatment
 if (is.null(TREATMENT)) {
   
   # special case: only cats without treatment
@@ -51,14 +52,21 @@ if (is.null(TREATMENT)) {
     ifelse(is_empty(features.labels), "None", features.labels)
   ))
   
-} else {
+} else { # TREATMENTS
   
   if (TREATMENT == "vtreat-design") {
     
-    # sample by train.ratio from data outside testing.set
-    train.index <- not.test.index %>% as.vector %>% sample(length(.)* train.ratio) 
-    config.index <- not.test.index[!not.test.index %in% train.index]
-    config.set <- dataset[config.index, ] 
+    # to extract config.set from training.set
+    training.original <- training.set
+
+    # subset index by config.ratio 
+    # tricky: subset too short: sample(nrow(training.original) * config.ratio)
+    config.index <- 1:nrow(training.original) %>% 
+      sample(length(.) * config.ratio)
+    
+    # extract config.set from training.set by config.ratio
+    config.set <- training.original %>% slice(config.index)
+    training.set <- training.original %>% slice(-config.index)
     
     treatment.plan <- designTreatmentsN(
       dframe = config.set,
@@ -71,10 +79,14 @@ if (is.null(TREATMENT)) {
       select(varName, origName, code) %T>% print
     
     vartypes.selected <- if (CATS.ONLY) {
-      c("lev") 
+      
       print("feature selection: CATS ONLY")
+      c("lev") 
+      
     } else { 
-      c("clean", "lev")
+      
+      print("feature selection: ALL")
+      c("lev", "clean")
     }
     
     features.treated <- treatment.plan$scoreFrame %>%
@@ -82,7 +94,7 @@ if (is.null(TREATMENT)) {
       # code "lev": an indicator variable for a specific level of the original categorical variable.
       # filter(code %in% c("clean", "lev")) %>%
       filter(code %in% vartypes.selected) %>%
-      pull(varName) %T>% print
+      pull(varName)
     
     training.set.scores <-  prepare(
       treatment.plan,
@@ -97,6 +109,11 @@ if (is.null(TREATMENT)) {
       scale = TRUE,
       varRestriction = features.treated
     )
+    
+    training.set <- training.set.scores
+    testing.set <- testing.set.scores
+    features.labels <- features.treated
+    print("TREATMENT: vtreat::designTreatmentsN")
     
   } else if (TREATMENT == "vtreat-cross") {
     

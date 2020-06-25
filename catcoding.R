@@ -24,16 +24,16 @@ DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
 
-# TREATMENT <- "vtreat-design"
+TREATMENT <- "vtreat-design"
 # TREATMENT <- NULL
-TREATMENT <- "vtreat-cross"
+# TREATMENT <- "vtreat-cross"
 
 # data splits
-train.test.split   <- 1.0
-
+train.test.split   <- 0.8
+config.ratio <- 0.2
 # QUICK-TEST: use only cats to see whether it's worth catcoding 
-# CATS.ONLY <- TRUE
-CATS.ONLY <- FALSE
+CATS.ONLY <- TRUE
+# CATS.ONLY <- FALSE
 
 source("_getdata.R")
 source("_strings.R")
@@ -44,37 +44,27 @@ target.label
 features.labels
 TREATMENT
 
-################################################################################
-if (is.null(TREATMENT)) {
-  
-
-  
-  
-} else {
-  
-  
-  #### AMES results
-  # untreated ALL: RMSE 24247 gbm
-  # CATS.ONLY: RMSE 31459 (2rep), 31810 (10rep) gbm <<<<<<<<<<<<<<
-  
- 
-  
-  #### AMES results
-  # train.ratio = 0.8 RMSE gbm 24662, svm 24511
-  # CATS.ONLY: RMSE 25252 (10rep)gbm <<<<<<<<<<<<<<
-  # train.ratio <- 0.6 # RMSE gbm 26253
-  # CATS.ONLY: 36717 svm
-  # train.ratio <- 0.5 # RMSE gbm 26321
-  # train.ratio <- 0.4 # RMSE gbm 25714
-  # CATS.ONLY: 37484 gbm
-  # train.ratio <- 0.2 # RMSE svm 29023
-  
-}
-
-# names(config.set)[!names(config.set) %in% names(training.set)]
-
 training.set %>% names
 testing.set %>% names
+
+################################################################################
+#### AMES benchmarking results
+# untreated ALL: RMSE 24247 gbm
+# CATS.ONLY: RMSE 31459 (2rep), 31810 (10rep) gbm <<<<<<<<<<<<<<
+
+
+
+#### AMES results
+# train.ratio = 0.8 RMSE gbm 24662, svm 24511
+# CATS.ONLY: RMSE 25252 (10rep)gbm <<<<<<<<<<<<<<
+# train.ratio <- 0.6 # RMSE gbm 26253
+# CATS.ONLY: 36717 svm
+# train.ratio <- 0.5 # RMSE gbm 26321
+# train.ratio <- 0.4 # RMSE gbm 25714
+# CATS.ONLY: 37484 gbm
+# train.ratio <- 0.2 # RMSE svm 29023
+
+# names(config.set)[!names(config.set) %in% names(training.set)]
 
 ################################################################################
 
@@ -96,27 +86,6 @@ training.configuration <- trainControl(
   savePredictions = "final"
 )
 
-if (!is.null(TREATMENT)) {
-  
-  if (TREATMENT == "vtreat-design") {
-    
-    training.set <- training.set.scores
-    testing.set <- testing.set.scores
-    features.labels <- features.treated
-    print("dataset treatment: vtreat::designTreatmentsN")
-    
-  } else if (TREATMENT == "vtreat-cross") {
-    
-    
-    
-
-    
-    
-    
-    
-  }
-
-}
 
 algorithm.list <- c(
   "lm"
