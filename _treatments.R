@@ -1,5 +1,44 @@
-
-if (!is.null(TREATMENT)) {
+if (is.null(TREATMENT)) {
+  
+  # default case: whole dataset without treatment
+  train.index <- createDataPartition(
+    dataset[[target.label]], p = split.untreated, list = FALSE
+  )
+  training.set <- dataset[train.index, ] 
+  testing.set <- dataset[-train.index, ]
+  if (nrow(testing.set) == 0) testing.set <- NULL
+  
+  # special case: only cats without treatment
+  # cats must be converted in _getdata.R
+  if (CATS.ONLY) {
+    
+    print("feature selection: CATS ONLY")
+    # training.set with target and only cats
+    training.set %<>% 
+      select_if(is.factor) %>% 
+      # add target.label column bec all factors
+      mutate(!!target.label := training.set[[!!target.label]]) %>%
+      select(target.label, everything())
+    
+    # testing.set with target and only cats
+    testing.set %<>% 
+      select_if(is.factor) %>% 
+      mutate(!!target.label := testing.set[[!!target.label]]) %>% 
+      select(target.label, everything())
+    
+  } else {
+    
+    print("feature selection: ALL")
+  }
+  
+  # set feature labels
+  features.labels <- training.set %>% select(-target.label) %>% names
+  print(paste(
+    "Categorical features:",
+    ifelse(is_empty(features.labels), "None", features.labels)
+  ))
+  
+} else {
   
   if (TREATMENT == "vtreat-design") {
     
@@ -88,31 +127,6 @@ if (!is.null(TREATMENT)) {
         pruneSig=c()
       )      
     }
-    
-  }
-  
-} else {
-  
-  if (CATS.ONLY) {
-    
-    # training.set with target and only cats
-    training.set %<>% 
-      select_if(is.factor) %>% 
-      mutate(!!target.label := training.set[[!!target.label]]) %>% 
-      select(target.label, everything())
-    
-    # training.set %>% 
-    #   select_if(str_detect(names(.), target.label) | is.factor(.))
-    
-    # testing.set with target and only cats
-    testing.set %<>% 
-      select_if(is.factor) %>% 
-      mutate(!!target.label := testing.set[[!!target.label]]) %>% 
-      select(target.label, everything())
-    
-    features.labels <- training.set %>% select(-target.label) %>% names
-    
-    print("feature selection: CATS ONLY")
     
   }
   

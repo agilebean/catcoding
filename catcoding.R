@@ -25,8 +25,15 @@ DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "smartflow"
 
 # TREATMENT <- "vtreat-design"
-# TREATMENT <- NULL
-TREATMENT <- "vtreat-cross"
+TREATMENT <- NULL
+# TREATMENT <- "vtreat-cross"
+
+# data splits
+split.untreated <- 0.8
+
+# QUICK-TEST: use only cats to see whether it's worth catcoding 
+CATS.ONLY <- TRUE
+# CATS.ONLY <- FALSE
 
 source("_getdata.R")
 source("_strings.R")
@@ -37,23 +44,15 @@ target.label
 features.labels
 TREATMENT
 
-# QUICK-TEST: use only cats to see whether it's worth catcoding 
-CATS.ONLY <- TRUE
-# CATS.ONLY <- FALSE
-
 ################################################################################
 if (is.null(TREATMENT)) {
   
-  train.index <- createDataPartition(
-    dataset[[target.label]], p = split.untreated, list = FALSE
-  )
-  training.set <- dataset[train.index, ] %T>% print
-  testing.set <- dataset[-train.index, ] %T>% print
+
   
   
 } else {
   
-  split.untreated <- 0.8
+  
   #### AMES results
   # untreated ALL: RMSE 24247 gbm
   # CATS.ONLY: RMSE 31459 (2rep), 31810 (10rep) gbm <<<<<<<<<<<<<<
@@ -73,10 +72,11 @@ if (is.null(TREATMENT)) {
   train.index <- createDataPartition(
     dataset[[target.label]], p = train.test.split, list = FALSE
   )
-  testing.set <- dataset[-train.index, ]
-  if (nrow(testing.set) == 0) testing.set <- NULL
   
   training.set <- dataset[train.index, ] 
+  
+  testing.set <- dataset[-train.index, ]
+  if (nrow(testing.set) == 0) testing.set <- NULL
   
 }
 

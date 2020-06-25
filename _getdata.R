@@ -38,7 +38,7 @@ if (DATASET.LABEL == "diamonds") {
 } else if (DATASET.LABEL == "designdim") {
   
   # no desc.stats exists. tricky: design.descriptives are design features!
-  dataset <- readRDS("data/designdim.items.rds")
+  dataset <- readRDS("data/designdim.items.rds") %>% as_tibble()
   
   target.label <- "NPS"
   features.labels <- dataset %>% select(-target.label) %>% names
