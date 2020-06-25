@@ -25,15 +25,15 @@ DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "smartflow"
 
 # TREATMENT <- "vtreat-design"
-TREATMENT <- NULL
-# TREATMENT <- "vtreat-cross"
+# TREATMENT <- NULL
+TREATMENT <- "vtreat-cross"
 
 # data splits
 train.test.split   <- 1.0
 
 # QUICK-TEST: use only cats to see whether it's worth catcoding 
-CATS.ONLY <- TRUE
-# CATS.ONLY <- FALSE
+# CATS.ONLY <- TRUE
+CATS.ONLY <- FALSE
 
 source("_getdata.R")
 source("_strings.R")
@@ -68,15 +68,6 @@ if (is.null(TREATMENT)) {
   # train.ratio <- 0.4 # RMSE gbm 25714
   # CATS.ONLY: 37484 gbm
   # train.ratio <- 0.2 # RMSE svm 29023
-  
-  train.index <- createDataPartition(
-    dataset[[target.label]], p = train.test.split, list = FALSE
-  )
-  
-  training.set <- dataset[train.index, ] 
-  
-  testing.set <- dataset[-train.index, ]
-  if (nrow(testing.set) == 0) testing.set <- NULL
   
 }
 
@@ -116,14 +107,12 @@ if (!is.null(TREATMENT)) {
     
   } else if (TREATMENT == "vtreat-cross") {
     
-    training.set <- training.set.treated
     
-    if (!is.null(testing.set)) {
-      testing.set <- testing.set.treated  
-    }
     
-    features.labels <- features.treated
-    print("dataset treatment: vtreat::mkCrossFrameNExperiment")
+
+    
+    
+    
     
   }
 
