@@ -25,16 +25,15 @@ if (is.null(TREATMENT)) {
     training.set %<>% 
       select_if(is.factor) %>% 
       # add target.label column bec all factors
-      mutate(!!target.label := training.set[[!!target.label]]) %>%
-      select(target.label, everything())
+      mutate(!!target.label := training.set[[!!target.label]])
     
     # testing.set with target and only cats
     if (!is.null(testing.set)) {
       
       testing.set %<>% 
         select_if(is.factor) %>% 
-        mutate(!!target.label := testing.set[[!!target.label]]) %>% 
-        select(target.label, everything())      
+        mutate(!!target.label := testing.set[[!!target.label]]) 
+           
     } else {
       
       print("no testing set")
@@ -170,3 +169,8 @@ if (is.null(TREATMENT)) {
   }
   
 }
+
+# reorder with target first
+training.set %<>% select(target.label, everything())
+testing.set %<>% select(target.label, everything())
+
