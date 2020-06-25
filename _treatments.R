@@ -3,6 +3,11 @@ if (!is.null(TREATMENT)) {
   
   if (TREATMENT == "vtreat-design") {
     
+    # sample by train.ratio from data outside testing.set
+    train.index <- not.test.index %>% as.vector %>% sample(length(.)* train.ratio) 
+    config.index <- not.test.index[!not.test.index %in% train.index]
+    config.set <- dataset[config.index, ] 
+    
     treatment.plan <- designTreatmentsN(
       dframe = config.set,
       varlist = features.labels,
@@ -51,7 +56,7 @@ if (!is.null(TREATMENT)) {
       # parallelCluster = clus, # % faster
       rareCount = 0,  # Note set this to something larger, like 5
       rareSig = c()
-    )  
+    ) 
     
     treatments <- training.set.cross$treatments %T>% print
     training.set.scores <- treatments$scoreFrame %T>% print

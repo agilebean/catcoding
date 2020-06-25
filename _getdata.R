@@ -1,7 +1,7 @@
-packs <- c(
-  "AmesHousing"
-)
-sapply(packs, require, character.only = TRUE)
+# packs <- c(
+#   "AmesHousing"
+# )
+# sapply(packs, require, character.only = TRUE)
 
 #######################################
 # Step 1: Data Acquisition

@@ -13,6 +13,10 @@ packs <- c(
   "machinelearningtools"
 )
 sapply(packs, require, character.only = TRUE)
+
+# devtools::install_github("agilebean/machinelearningtools")
+# unloadNamespace("machinelearningtools")
+
 # common variables
 # DATASET.LABEL <- "diamonds"
 # DATASET.LABEL <- "ames"
@@ -24,12 +28,14 @@ DATASET.LABEL <- "designdim"
 # TREATMENT <- NULL
 TREATMENT <- "vtreat-cross"
 
-# source("_common.R")
 source("_getdata.R")
 source("_strings.R")
 source("_treatments.R")
-# devtools::install_github("agilebean/machinelearningtools")
-# unloadNamespace("machinelearningtools")
+
+dataset
+target.label
+features.labels
+TREATMENT
 
 # QUICK-TEST: use only cats to see whether it's worth catcoding 
 CATS.ONLY <- TRUE
@@ -52,9 +58,7 @@ if (is.null(TREATMENT)) {
   # untreated ALL: RMSE 24247 gbm
   # CATS.ONLY: RMSE 31459 (2rep), 31810 (10rep) gbm <<<<<<<<<<<<<<
   
-  # test.ratio   <- 0.9
-  test.ratio   <- 1.0
-  train.ratio <- 0.8  
+  train.test.split   <- 1.0
   
   #### AMES results
   # train.ratio = 0.8 RMSE gbm 24662, svm 24511
@@ -65,23 +69,21 @@ if (is.null(TREATMENT)) {
   # train.ratio <- 0.4 # RMSE gbm 25714
   # CATS.ONLY: 37484 gbm
   # train.ratio <- 0.2 # RMSE svm 29023
-  #   
-  not.test.index <- createDataPartition(
-    dataset[[target.label]], p = test.ratio, list = FALSE
+  
+  train.index <- createDataPartition(
+    dataset[[target.label]], p = train.test.split, list = FALSE
   )
-  testing.set <- dataset[-not.test.index, ]
+  testing.set <- dataset[-train.index, ]
   if (nrow(testing.set) == 0) testing.set <- NULL
   
-  # sample by train.ratio from data outside testing.set
-  train.index <- not.test.index %>% as.vector %>% sample(length(.)* train.ratio) 
   training.set <- dataset[train.index, ] 
-  
-  config.index <- not.test.index[!not.test.index %in% train.index]
-  config.set <- dataset[config.index, ] 
   
 }
 
 # names(config.set)[!names(config.set) %in% names(training.set)]
+
+training.set %>% names
+testing.set %>% names
 
 ################################################################################
 
