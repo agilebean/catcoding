@@ -2,7 +2,7 @@ if (is.null(TREATMENT)) {
   
   # default case: whole dataset without treatment
   train.index <- createDataPartition(
-    dataset[[target.label]], p = split.untreated, list = FALSE
+    dataset[[target.label]], p = train.test.split, list = FALSE
   )
   training.set <- dataset[train.index, ] 
   testing.set <- dataset[-train.index, ]
@@ -21,10 +21,16 @@ if (is.null(TREATMENT)) {
       select(target.label, everything())
     
     # testing.set with target and only cats
-    testing.set %<>% 
-      select_if(is.factor) %>% 
-      mutate(!!target.label := testing.set[[!!target.label]]) %>% 
-      select(target.label, everything())
+    if (!is.null(testing.set)) {
+      
+      testing.set %<>% 
+        select_if(is.factor) %>% 
+        mutate(!!target.label := testing.set[[!!target.label]]) %>% 
+        select(target.label, everything())      
+    } else {
+      
+      print("no testing set")
+    }
     
   } else {
     

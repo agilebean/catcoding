@@ -29,7 +29,7 @@ TREATMENT <- NULL
 # TREATMENT <- "vtreat-cross"
 
 # data splits
-split.untreated <- 0.8
+train.test.split   <- 1.0
 
 # QUICK-TEST: use only cats to see whether it's worth catcoding 
 CATS.ONLY <- TRUE
@@ -57,7 +57,7 @@ if (is.null(TREATMENT)) {
   # untreated ALL: RMSE 24247 gbm
   # CATS.ONLY: RMSE 31459 (2rep), 31810 (10rep) gbm <<<<<<<<<<<<<<
   
-  train.test.split   <- 1.0
+ 
   
   #### AMES results
   # train.ratio = 0.8 RMSE gbm 24662, svm 24511
