@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Script:       _treatments.R
+# Script:       _encodings.R
 # Purpose:      Provide different treatments of categorical features
 #
 ################################################################################
