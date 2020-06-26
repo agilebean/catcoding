@@ -19,52 +19,80 @@ sapply(packs, require, character.only = TRUE)
 
 # common variables
 # DATASET.LABEL <- "diamonds"
-# DATASET.LABEL <- "ames"
-DATASET.LABEL <- "designdim"
+DATASET.LABEL <- "ames"
+# DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
+# DATASET.LABEL <- "smartflow-scales"
 
-TREATMENT <- "vtreat-design"
+
 # TREATMENT <- NULL
+# TREATMENT <- "vtreat-design"
 # TREATMENT <- "vtreat-cross"
+TREATMENT <- "vtreat-dummy"
 
 # data splits
-train.test.split   <- 0.8
+train.test.split <- 1.0
 config.ratio <- 0.2
 # QUICK-TEST: use only cats to see whether it's worth catcoding 
-CATS.ONLY <- TRUE
-# CATS.ONLY <- FALSE
+# CATS.ONLY <- TRUE
+CATS.ONLY <- FALSE
 
 source("_getdata.R")
 source("_strings.R")
-source("_treatments.R")
+
+################################################################################
+# default case: whole dataset
+train.index <- createDataPartition(
+  dataset[[target.label]], p = train.test.split, list = FALSE
+)
+training.set <- dataset[train.index, ] 
+testing.set <- dataset[-train.index, ]
+if (nrow(testing.set) == 0) testing.set <- NULL
+
+################################################################################
+
+if (is.null(TREATMENT)) {
+  
+  source("_encoding none.R")
+  
+} else { # TREATMENTS
+  
+  if (TREATMENT == "vtreat-cross") {
+    
+    source("_encoding vtreat-cross.R")
+    
+  } else if (TREATMENT == "vtreat-design") {
+    
+    source("_encoding vtreat-design.R")
+    
+  } else if (TREATMENT == "vtreat-dummy") { # SUMMY ENCODING
+    
+    source("_encoding vtreat-dummy.R")
+    
+  }
+  
+}
+
+# inform about feature generation stats
+print(paste(
+  "From", no.cats, "categorical of", no.features.original,
+  "original features in total, generated", length(features.labels), "features."
+))
+
+################################################################################
 
 dataset
 target.label
 features.labels
 TREATMENT
 
-training.set %>% names
-testing.set %>% names
-
-################################################################################
-#### AMES benchmarking results
-# untreated ALL: RMSE 24247 gbm
-# CATS.ONLY: RMSE 31459 (2rep), 31810 (10rep) gbm <<<<<<<<<<<<<<
+training.set %>% glimpse
+training.set %>% dim
+testing.set %>% glimpse
+testing.set %>% dim
 
 
-
-#### AMES results
-# train.ratio = 0.8 RMSE gbm 24662, svm 24511
-# CATS.ONLY: RMSE 25252 (10rep)gbm <<<<<<<<<<<<<<
-# train.ratio <- 0.6 # RMSE gbm 26253
-# CATS.ONLY: 36717 svm
-# train.ratio <- 0.5 # RMSE gbm 26321
-# train.ratio <- 0.4 # RMSE gbm 25714
-# CATS.ONLY: 37484 gbm
-# train.ratio <- 0.2 # RMSE svm 29023
-
-# names(config.set)[!names(config.set) %in% names(training.set)]
 
 ################################################################################
 
@@ -78,6 +106,8 @@ TRY.FIRST <- 500
 
 models_list_label() 
 models_metrics_label()
+dataset_label()
+
 
 training.configuration <- trainControl(
   method = "repeatedcv",
@@ -86,7 +116,6 @@ training.configuration <- trainControl(
   savePredictions = "final"
 )
 
-
 algorithm.list <- c(
   "lm"
   # , "svmRadial"
@@ -94,9 +123,8 @@ algorithm.list <- c(
   , "rf"
 )
 
-
-# models.list <- readRDS(models_list_label())
 if (NEW) {
+  
   system.time(
     models.list <- benchmark_algorithms(
       target_label = target.label,
@@ -110,7 +138,10 @@ if (NEW) {
       models_list_name = models_list_label()
     )
   )
-} 
+} else {
+  
+  models.list <- readRDS(models_list_label())
+}
 
 if (NEW) {
   models.metrics <- models.list %>% get_model_metrics() %T>% print
