@@ -118,7 +118,6 @@ if (DATASET.LABEL == "diamonds") {
   
 } 
 
-
 # subset features & remove other DV items
 dataset %<>% select(target.label, features.labels)
 
@@ -133,6 +132,47 @@ no.cats <- dataset %>% select(where(is.factor)) %>% ncol
 
 # get #features-original
 no.features.original <- length(features.labels)
+
+################################################################################
+# default case: whole dataset
+train.index <- createDataPartition(
+  dataset[[target.label]], p = train.test.split, list = FALSE
+)
+training.set <- dataset[train.index, ]
+if (train.test.split < 1.0) {
+  
+  testing.set <- dataset[-train.index, ]  
+} else {
+  
+  print("no testing set")
+  testing.set <- NULL
+}
+
+################################################################################
+# special case: only cats without treatment
+# cats must be converted in _getdata.R
+if (CATS.ONLY) {
+  
+  print("feature selection: CATS ONLY")
+  # training.set with target and only cats
+  training.set %<>% 
+    select_if(is.factor) %>% 
+    # add target.label column bec all factors
+    mutate(!!target.label := training.set[[!!target.label]])
+  
+  # testing.set with target and only cats
+  if (!is.null(testing.set)) {
+    
+    testing.set %<>% 
+      select_if(is.factor) %>% 
+      mutate(!!target.label := testing.set[[!!target.label]]) 
+    
+  }
+  
+} else {
+  
+  print("feature selection: ALL")
+}
 
 # inform about dataset type, #features, target
 if (is.numeric(target)) {

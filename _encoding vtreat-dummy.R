@@ -42,14 +42,18 @@ training.set.scores <-  prepare(
   varRestriction = features.treated
 )
 
-testing.set.scores <-  prepare(
-  treatment.plan,
-  testing.set,
-  scale = TRUE,
-  varRestriction = features.treated
-)
+if (!is.null(testing.set)) {
+  
+  testing.set.scores <-  prepare(
+    treatment.plan,
+    testing.set,
+    scale = TRUE,
+    varRestriction = features.treated
+  ) 
+}
 
+# create output
 training.set <- training.set.scores
-testing.set <- testing.set.scores
+testing.set <- if(is.null(testing.set)) { NULL } else { testing.set.scores }
 features.labels <- features.treated
 print("TREATMENT: vtreat::designTreatmentsZ")

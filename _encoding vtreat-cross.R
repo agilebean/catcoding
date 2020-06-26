@@ -66,7 +66,7 @@ features.selected <- treatments$scoreFrame %>%
   # set trainingset, testingset, features labels
   training.set <- training.set.treated %>% select(features.selected)
   if (!is.null(testing.set)) {
-    testing.set <- testing.set.treated  %>% select(features.selected)
+    testing.set <- testing.set.treated %>% select(features.selected)
   }
   features.labels <- features.selected
   
