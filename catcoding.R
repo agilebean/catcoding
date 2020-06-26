@@ -2,7 +2,7 @@
 #
 # Script:       catcoding.R
 # Benchmarking: lm, svmRadial, gbm, rf
-# Treatment:    None
+# ENCODING:    None
 #
 ################################################################################
 packs <- c(
@@ -13,10 +13,10 @@ packs <- c(
   "machinelearningtools"
 )
 sapply(packs, require, character.only = TRUE)
-
 # devtools::install_github("agilebean/machinelearningtools")
 # unloadNamespace("machinelearningtools")
 
+####################################################
 # common variables
 # DATASET.LABEL <- "diamonds"
 DATASET.LABEL <- "ames"
@@ -25,51 +25,47 @@ DATASET.LABEL <- "ames"
 # DATASET.LABEL <- "smartflow"
 # DATASET.LABEL <- "smartflow-scales"
 
+####################################################
+# ENCODING <- NULL
+# ENCODING <- "vtreat-design"
+# ENCODING <- "vtreat-cross"
+ENCODING <- "vtreat-dummy"
+# ENCODING <- "embed-bayes"
 
-# TREATMENT <- NULL
-# TREATMENT <- "vtreat-design"
-# TREATMENT <- "vtreat-cross"
-TREATMENT <- "vtreat-dummy"
-
+####################################################
 # data splits
 train.test.split <- 1.0
-config.ratio <- 0.2
+# config.ratio <- 0.2  # only for vtreat-design
 # QUICK-TEST: use only cats to see whether it's worth catcoding 
 # CATS.ONLY <- TRUE
 CATS.ONLY <- FALSE
 
+################################################################################
 source("_getdata.R")
 source("_strings.R")
-
-################################################################################
-# default case: whole dataset
-train.index <- createDataPartition(
-  dataset[[target.label]], p = train.test.split, list = FALSE
-)
-training.set <- dataset[train.index, ] 
-testing.set <- dataset[-train.index, ]
-if (nrow(testing.set) == 0) testing.set <- NULL
-
 ################################################################################
 
-if (is.null(TREATMENT)) {
-  
+if (is.null(ENCODING)) {
+
   source("_encoding none.R")
   
-} else { # TREATMENTS
+} else { # ENCODINGS
   
-  if (TREATMENT == "vtreat-cross") {
+  if (ENCODING == "vtreat-cross") {
     
     source("_encoding vtreat-cross.R")
     
-  } else if (TREATMENT == "vtreat-design") {
+  } else if (ENCODING == "vtreat-design") {
     
     source("_encoding vtreat-design.R")
     
-  } else if (TREATMENT == "vtreat-dummy") { # SUMMY ENCODING
+  } else if (ENCODING == "vtreat-dummy") { # SUMMY ENCODING
     
     source("_encoding vtreat-dummy.R")
     
+  } else if (ENCODING == "embed-bayes") {
+    
+    source("_encoding embed-bayes.R")
   }
   
 }
@@ -85,14 +81,12 @@ print(paste(
 dataset
 target.label
 features.labels
-TREATMENT
+ENCODING
 
 training.set %>% glimpse
 training.set %>% dim
 testing.set %>% glimpse
 testing.set %>% dim
-
-
 
 ################################################################################
 
@@ -118,7 +112,7 @@ training.configuration <- trainControl(
 
 algorithm.list <- c(
   "lm"
-  # , "svmRadial"
+  , "svmRadial"
   , "gbm"
   , "rf"
 )
