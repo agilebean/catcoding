@@ -53,11 +53,81 @@ if (is.null(TREATMENT)) {
   
 } else { # TREATMENTS
   
-  if (TREATMENT == "vtreat-design") {
+  # treatment
+  if (TREATMENT == "vtreat-cross") {
+    
+    if (is.numeric(target)) {
+      
+      treatment_function <- vtreat::mkCrossFrameNExperiment
+      
+    } else if (is.factor(target)) {
+      
+      treatment_function <- vtreat::mkCrossFrameCExperiment
+    }
+    
+    clus <- clusterOn()
+    system.time(
+      training.set.cross <- treatment_function(
+        dframe = training.set, 
+        varlist = features.labels,
+        outcomename = target.label,
+        # codeRestriction = c("lev"),
+        parallelCluster = clus, # % faster
+        rareCount = 0,  # Note set this to something larger, like 5
+        rareSig = c()
+      )       
+    )
+    clusterOff(clus)
+    
+    # get treated trainingset
+    treatments <- training.set.cross$treatments %T>% print
+    training.set.treated <- training.set.cross$crossFrame %>% 
+      as_tibble() %T>% print
+    
+    vartypes.selected <- if (CATS.ONLY) {
+      
+      print("feature selection: CATS ONLY")
+      c("lev")
+      
+    } else { 
+      
+      print("feature selection: ALL")
+      c("lev", "clean")
+    }
+    
+    # training.set.treated %>% select(-target.label) %>% names
+    
+    features.selected <- treatments$scoreFrame %>%
+      # code "clean":  a numerical variable with no NAs or NaNs
+      # code "lev": an indicator variable for a specific level of the original categorical variable.
+      # filter(code %in% c("clean", "lev")) %>%
+      filter(code %in% vartypes.selected) %>%
+      # vtreat recommendations to filter out useless variables
+      filter(recommended == TRUE) %>%
+      pull(varName) %T>% print
+    
+    if (!is.null(testing.set)) {
+      testing.set.treated <- vtreat::prepare(
+        treatments,
+        testing.set,
+        pruneSig=c()
+      )      
+    }
+    
+    # set trainingset, testingset, features labels
+    training.set <- training.set.treated %>% select(features.selected)
+    if (!is.null(testing.set)) {
+      testing.set <- testing.set.treated  %>% select(features.selected)
+    }
+    features.labels <- features.selected
+    
+    print("TREATMENT: vtreat::mkCrossFrameNExperiment")
+    
+  } else if (TREATMENT == "vtreat-design") {
     
     # to extract config.set from training.set
     training.original <- training.set
-
+    
     # subset index by config.ratio 
     # tricky: subset too short: sample(nrow(training.original) * config.ratio)
     config.index <- 1:nrow(training.original) %>% 
@@ -114,63 +184,12 @@ if (is.null(TREATMENT)) {
     features.labels <- features.treated
     print("TREATMENT: vtreat::designTreatmentsN")
     
-  } else if (TREATMENT == "vtreat-cross") {
-    
-    training.set.cross <- vtreat::mkCrossFrameNExperiment(
-      dframe = training.set, 
-      varlist = features.labels,
-      outcomename = target.label,
-      # codeRestriction = c("lev"),
-      # parallelCluster = clus, # % faster
-      rareCount = 0,  # Note set this to something larger, like 5
-      rareSig = c()
-    ) 
-    
-    # get treated trainingset
-    treatments <- training.set.cross$treatments %T>% print
-    training.set.treated <- training.set.cross$crossFrame %>% 
-      as_tibble() %T>% print
-    
-    vartypes.selected <- if (CATS.ONLY) {
-      
-      print("feature selection: CATS ONLY")
-      c("lev")
-      
-    } else { 
-      
-      print("feature selection: ALL")
-      c("lev", "clean")
-    }
-    
-    # training.set.treated %>% select(-target.label) %>% names
-    
-    features.treated <- treatments$scoreFrame %>%
-      # code "clean":  a numerical variable with no NAs or NaNs
-      # code "lev": an indicator variable for a specific level of the original categorical variable.
-      # filter(code %in% c("clean", "lev")) %>%
-      filter(code %in% vartypes.selected) %>%
-      filter(recommended == TRUE) %>% 
-      pull(varName) %T>% print
-    
-    if (!is.null(testing.set)) {
-      testing.set.treated <- vtreat::prepare(
-        treatments,
-        testing.set,
-        pruneSig=c()
-      )      
-    }
-    
-    # set trainingset, testingset, features labels
-    training.set <- training.set.treated
-    if (!is.null(testing.set)) testing.set <- testing.set.treated  
-    features.labels <- features.treated
-    print("TREATMENT: vtreat::mkCrossFrameNExperiment")
-    
   }
   
 }
 
-# reorder with target first
-training.set %<>% select(target.label, everything())
-testing.set %<>% select(target.label, everything())
-
+# inform about feature generation stats
+print(paste(
+  "From", no.cats, "categorical of", no.features.original,
+  "original features in total, generated", length(features.labels), "features."
+))

@@ -43,6 +43,9 @@ if (DATASET.LABEL == "diamonds") {
   target.label <- "NPS"
   features.labels <- dataset %>% select(-target.label) %>% names
   
+  # convert Likert to factor
+  dataset %<>% mutate(across(features.labels, as.factor))
+  
 } else if (DATASET.LABEL == "timex") {
   
   data.descriptive <- readRDS("data/timex.descriptive.rds") 
@@ -55,15 +58,22 @@ if (DATASET.LABEL == "diamonds") {
         select(., active:alert, starts_with("lifesatis"), happy)
       )
     ) %>% 
-    na.omit() # n=252, 82
+    na.omit() %>% # n=252, 82
+    as_tibble()
   
   target.label <- "HAPPINESS"
   features.labels <-
     dataset %>% 
     select(-target.label) %>% 
-    select(-c(active:ashamed)) %>% #PANAS-PA/-NA
-    select(-starts_with("lifesatis"), -happy) %>% 
+    select(-c(active:ashamed)) %>% #DV: PANAS-PA/-NA 
+    select(-starts_with("lifesatis"), -happy) %>% #DV: lifesatis+happiness-global
     names
+  
+  # convert Likert to factor
+  dataset %<>% 
+    mutate(across(features.labels, as.factor)) %>% 
+    mutate(age = as.numeric(age))
+  
   
 } else if (DATASET.LABEL == "smartflow") {
   
@@ -74,11 +84,18 @@ if (DATASET.LABEL == "diamonds") {
     select(-feedback, -email) %>% 
     mutate(., SMADDICTION = rowMeans(
       select(., starts_with("addicted")), na.rm = TRUE)) %>% 
-    na.omit() # n=307
+    na.omit() %>% # n=307
+    as_tibble()
   
-  target.label <- "SMADDICTION" # TODO: smartphone addiction missing
+  target.label <- "SMADDICTION"
   features.labels <- dataset %>% 
     select(-target.label, -starts_with("addicted")) %>% names
+  
+  # convert Likert to factor
+  dataset %<>% 
+    mutate(across(features.labels, as.factor)) %>% 
+    mutate(age = as.numeric(age))
+  
   
 } else if (DATASET.LABEL == "smartflow.scales") {
   
@@ -87,10 +104,55 @@ if (DATASET.LABEL == "diamonds") {
   
   dataset <- cbind(data.descriptives, data.scales) %>% 
     select(-feedback, -email) %>% 
-    na.omit() # n=307
+    na.omit() %>% # n=307
+    as_tibble()
   
-  target.label <- "SmartphoneAddiction" # TODO: smartphone addiction missing
+  target.label <- "SmartphoneAddiction"
   features.labels <- dataset %>% 
     select(-SmartphoneHours) %>% names
   
-}  
+  # convert Likert to factor
+  dataset %<>% 
+    mutate(across(referral:relationship, as.factor)) %>% 
+    mutate(age = as.numeric(age))
+  
+} 
+
+
+# subset features & remove other DV items
+dataset %<>% select(target.label, features.labels)
+
+# put target as last column
+dataset %<>% relocate(target.label, .after = last_col())
+
+# create target
+target <- dataset[[target.label]]
+
+# get categorical features
+no.cats <- dataset %>% select(where(is.factor)) %>% ncol
+
+# get #features-original
+no.features.original <- length(features.labels)
+
+# inform about dataset type, #features, target
+if (is.numeric(target)) {
+  
+  print(
+    paste(
+      "This is a regression dataset with target *", target.label, "* and",
+      no.cats, "categorical of", no.features.original, "features in total"
+    )
+  )
+  
+} else if (is.factor(target)) {
+  
+  print(
+    paste(
+      "This is a classification dataset with target:", target.label, "and",
+      no.cats, "categorical of", no.features.original, "features in total"
+    )
+  )
+  
+}
+
+
