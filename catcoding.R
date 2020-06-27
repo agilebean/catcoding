@@ -70,9 +70,9 @@ training.set %>% glimpse
 # ENCODING <- "vtreat-cross"
 # ENCODING <- "vtreat-dummy"
 # ENCODING <- "embed-bayes"
-# ENCODING <- "embed-glm"
+ENCODING <- "embed-glm"
 # ENCODING <- "embed-keras"
-ENCODING <- "scikit-helmert"
+# ENCODING <- "scikit-helmert"
 ################################################################################
 # apply encoding on dataaset
 if (is.null(ENCODING)) {
@@ -99,6 +99,8 @@ if (is.null(ENCODING)) {
              ENCODING == "embed-keras"
              ) {
     
+    # PREP <- TRUE
+    PREP <- FALSE
     source("encoders/embed-steps.R")
     
   } else if (startsWith(ENCODING, "scikit")) {
@@ -176,25 +178,7 @@ training.configuration <- trainControl(
   savePredictions = "final"
 )
 
-# use original training.set https://stackoverflow.com/a/55270581/7769076
-clus <- clusterOn()
-model.gbm <- caret::train(
-  x = recipe.encoding,
-  data = training.set,
-  method = "gbm",
-  trainControl = training.configuration
-)
-clusterOff(clus)
 
-# workaround but doesn't avoid to prep()
-clus <- clusterOn()
-model.gbm <- caret::train(
-  x = recipe.base,
-  data = training.set.juice,
-  method = "gbm",
-  trainControl = training.configuration
-)
-clusterOff(clus)
 ################################################################################
 
 dataset
