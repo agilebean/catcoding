@@ -45,21 +45,25 @@ features.treated <- treatment.plan$scoreFrame %>%
   filter(code %in% vartypes.selected) %>%
   pull(varName)
 
-training.set.scores <-  prepare(
+training.set.scores <-  vtreat::prepare(
   treatment.plan,
   training.set,
   scale = TRUE,
   varRestriction = features.treated
 )
 
-testing.set.scores <-  prepare(
-  treatment.plan,
-  testing.set,
-  scale = TRUE,
-  varRestriction = features.treated
-)
+if (!is.null(testing.set)) {
+  testing.set.scores <-  vtreat::prepare(
+    treatment.plan,
+    testing.set,
+    scale = TRUE,
+    varRestriction = features.treated
+  )
+}
 
 training.set <- training.set.scores
-testing.set <- testing.set.scores
+if (!is.null(testing.set)) {
+  testing.set <- testing.set.scores 
+}
 features.labels <- features.treated
 print("TREATMENT: vtreat::designTreatmentsN")

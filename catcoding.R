@@ -26,15 +26,8 @@ DATASET.LABEL <- "ames"
 # DATASET.LABEL <- "smartflow"
 # DATASET.LABEL <- "smartflow-scales"
 
+
 ####################################################
-# ENCODING <- NULL
-# ENCODING <- "vtreat-design"
-# ENCODING <- "vtreat-cross"
-# ENCODING <- "vtreat-dummy"
-# ENCODING <- "embed-bayes"
-# ENCODING <- "embed-glm"
-# ENCODING <- "embed-keras"
-ENCODING <- "scikit-helmert"
 
 ENCODER.LIST <- c(
   "none",
@@ -66,11 +59,20 @@ CATS.ONLY <- FALSE
 PREP <- FALSE
 
 # get dataset
-source("_getdata.R")
-source("_strings.R")
+source("plugins/getdata.R")
+source("plugins/strings.R")
 
 training.set %>% glimpse
 
+################################################################################
+# ENCODING <- NULL
+# ENCODING <- "vtreat-design"
+# ENCODING <- "vtreat-cross"
+# ENCODING <- "vtreat-dummy"
+# ENCODING <- "embed-bayes"
+# ENCODING <- "embed-glm"
+# ENCODING <- "embed-keras"
+ENCODING <- "scikit-helmert"
 ################################################################################
 # apply encoding on dataaset
 if (is.null(ENCODING)) {
