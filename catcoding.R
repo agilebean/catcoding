@@ -34,13 +34,29 @@ DATASET.LABEL <- "ames"
 # ENCODING <- "embed-bayes"
 # ENCODING <- "embed-glm"
 # ENCODING <- "embed-keras"
-# ENCODING <- "stats-helmert"
 ENCODING <- "scikit-helmert"
+
+ENCODER.LIST <- c(
+  "none",
+  "embed-bayes",
+  "embed-glm",
+  "vtreat-cross",
+  "vtreat-dummy",
+  "scikit-target",
+  "scikit-ordinal",
+  "scikit-backward-difference",
+  "scikit-helmert",
+  "scikit-james-stein"
+  "scikit-polynomial",
+  "scikit-woe",
+  "scikit-binary",
+  "scikit-onehot"
+)
+
 
 ####################################################
 # data splits
 train.test.split <- 1.0
-# config.ratio <- 0.2  # only for vtreat-design
 # QUICK-TEST: use only cats to see whether it's worth catcoding 
 # CATS.ONLY <- TRUE
 CATS.ONLY <- FALSE
@@ -53,74 +69,81 @@ PREP <- FALSE
 source("_getdata.R")
 source("_strings.R")
 
-training.set
+training.set %>% glimpse
 
 ################################################################################
 # apply encoding on dataaset
 if (is.null(ENCODING)) {
 
-  source("_encoding none.R")
+  source("encoders/no-encoding.R")
   
 } else { # ENCODINGS
   
   if (ENCODING == "vtreat-cross") {
     
-    source("_encoding vtreat-cross.R")
+    source("encoders/vtreat-cross.R")
     
   } else if (ENCODING == "vtreat-design") {
     
-    source("_encoding vtreat-design.R")
+    config.ratio <- 0.2  # only for vtreat-design
+    source("encoders/vtreat-design.R")
     
   } else if (ENCODING == "vtreat-dummy") { # SUMMY ENCODING
     
-    source("_encoding vtreat-dummy.R")
+    source("encoders/vtreat-dummy.R")
     
   } else if (ENCODING == "embed-bayes" | 
              ENCODING == "embed-glm" | 
              ENCODING == "embed-keras"
              ) {
     
-    source("_encoding embed-steps.R")
+    source("encoders/embed-steps.R")
     
-  } else if (ENCODING == "stats-helmert") {
-    
-    source("_encoding stats-helmert.R")
-    
-  } else if (ENCODING == "scikit-target" | 
-             ENCODING == "scikit-backward-difference" | 
-             ENCODING == "scikit-ordinal" | 
-             ENCODING == "scikit-helmert") {
+  } else if (startsWith(ENCODING, "scikit")) {
     
     use_condaenv(condaenv = "reticulate", required = TRUE)
     # py_config()
     # import("category_encoders")
     
     # load python script
-    source_python("_encoding scikit-encoders.py", convert = TRUE)
+    source_python("encoders/scikit-encoders.py", convert = TRUE)
     
     CAT.labels <- training.set %>% 
       select(-target.label) %>% 
       select(where(is.factor)) %>% 
-      names
+      names %T>% print
     
     # script <- "_encoding_scikit-encoders.py"
     # training_set <- training.set
     # system("python _encoding_scikit-encoders.py ENCODING CAT_labels", wait = FALSE)
     # system2("python", args = c(script, ENCODING, CAT_labels))
     
-    # ENCODING = "scikit-helmert"
+    ENCODING = "scikit-target"
     # ENCODING = "scikit-ordinal"
+    # ENCODING = "scikit-helmert"
     # ENCODING = "scikit-backward-difference"
-    # ENCODING = "scikit-target"
+    # ENCODING = "scikit-james-stein"
+    # ENCODING = "scikit-polynomial"
+    # ENCODING = "scikit-woe"
+    # ENCODING = "scikit-binary"
+    # ENCODING = "scikit-onehot"
     
     # apply sckit encoder
     encoder <- apply_scikit_encoder(ENCODING, CAT.labels)
     
-    # train encoder model on training.set
-    encoder$fit(training.set, training.set[[target.label]])
+    training.original <- training.set
+    ### Note: replaced fit().transform() by fit_transform()
+    ### see https://github.com/scikit-learn-contrib/category_encoders/issues/167#issuecomment-461489109
+    # train encoder model on training.set & train encoder model on training.set
+    training.set.transformed <- encoder$fit_transform(
+      training.original, training.original[[target.label]]
+    )
     
-    # apply trained model on training.set
-    training.set.transformed <- encoder$transform(training.set)
+    # # train encoder model on training.set
+    # encoder$fit(training.set, training.set[[target.label]])
+    # # apply trained model on training.set >> creates "intercept"!
+    # training.set2 <- encoder$transform(training.set)
+    # 
     training.set.transformed %>% glimpse
     
     training.set <- training.set.transformed

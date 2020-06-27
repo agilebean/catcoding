@@ -5,17 +5,14 @@
 #
 ################################################################################
 library(embed)
-
 # For outcome, only numeric and two-level factors are currently supported
 
-# training.set <- ptitanic %>% as_tibble() %>% na.omit
-# target.label <- "survived"
-# features.labels <- training.set %>% select(-target.label) %>% names
 recipe.base <- features.labels %>% 
   paste(collapse = " + ") %>% 
   paste(target.label, "~", .) %>% 
   as.formula %>% 
   recipe(training.set)
+
 
 if (ENCODING == "embed-bayes") {
   
@@ -62,6 +59,12 @@ training.set.juice <- juice(prep.encoding)
 # 
 # # prep.bayes %>% tidy(number = 1) %>% select(-id) 
 # # testing.set.bayes <- prep.bayes %>% bake(testing.set) %T>% print
-# 
-# 
+
+# clus <- clusterOn()
+# model.gbm <- caret::train(
+#   x = recipe.base,
+#   data = training.set.juice,
+#   method = "gbm"
+# )
+# clusterOff(clus)
 
