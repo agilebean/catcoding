@@ -6,7 +6,7 @@
 ################################################################################
 import category_encoders as ce
 
-def apply_scikit_encoder(encoding, cat_labels):
+def get_scikit_encoder(encoding, cat_labels):
   
   if (encoding == "scikit-target"):
     

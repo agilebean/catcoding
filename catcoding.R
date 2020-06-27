@@ -69,6 +69,9 @@ apply_encoder <- function(
     } else if (startsWith(encoding, "scikit")) {
       
       source("encoders/scikit-encoders.R")
+      data.encoded <- apply_scikit_encoder(
+        encoding, training_original, testing_original, target_label
+      )
     }
     
     # get categorical features
@@ -81,6 +84,8 @@ apply_encoder <- function(
       "From", no.cats, "categorical of", no.features.original,
       "original features in total, generated", length(features.labels), "features."
     ))
+    
+    return(data.encoded)
   }
 }
 ################################################################################
@@ -111,7 +116,8 @@ ENCODER.LIST <- c(
 # ENCODING <- "scikit-binary"
 # ENCODING <- "scikit-onehot"
 # ENCODING <- "scikit-woe" # target must be binary
-apply_encoder(ENCODING, training.original, testing.original, target.label)
+a <- apply_encoder(ENCODING, training.original, testing.original, target.label)
+a
 training.set %>% glimpse
 ####################################################
 # ENCODING <- "embed-bayes"
