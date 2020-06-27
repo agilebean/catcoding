@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Script:  _encoding vtreat-cross.R
+# Script:  encoders/vtreat-cross.R
 # Output:  training.set, testing.set - vtreat::mkCrossFrame{N,C} Experiment
 #
 ################################################################################

@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Script:  _encoding vtreat-dummy.R
+# Script:  encoders/vtreat-dummy.R
 # Output:  training.set, testing.set - dummy-encoded
 #
 ################################################################################

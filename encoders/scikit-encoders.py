@@ -1,11 +1,10 @@
+################################################################################
+#
+# Script:  encoders/scikit-encoders.R
+# Output:  training.set, testing.set - library: category_encoders
+#
+################################################################################
 import category_encoders as ce
-# import sys
-# 
-# ENCODING = sys.argv[1]
-# CAT_labels = sys.argv[2]
-# 
-# print(ENCODING)
-# print(CAT_labels)
 
 def apply_scikit_encoder(encoding, cat_labels):
   
@@ -53,65 +52,3 @@ def apply_scikit_encoder(encoding, cat_labels):
   encoding_function = encoding_function(cols = cat_labels, drop_invariant = True)
   
   return(encoding_function)
-
-# def apply_scikit_encoder(encoding, cat_labels):
-#   
-#   if (encoding == "scikit-target"):
-#     
-#     encoder = ce.TargetEncoder(cols = cat_labels, drop_invariant = True)
-#   
-#   elif (encoding == "scikit-ordinal"):
-#   
-#     encoder = ce.OrdinalEncoder(cols = cat_labels, drop_invariant = True)
-#   
-#   elif (encoding == "scikit-backward-difference"):
-#   
-#     encoder = ce.BackwardDifferenceEncoder(
-#       cols = cat_labels, drop_invariant = True
-#     )
-#   
-#   elif (encoding == "scikit-helmert"):
-#   
-#     encoder = ce.HelmertEncoder(
-#       cols = cat_labels, drop_invariant = True
-#     )
-# 
-#   elif (encoding == "scikit-helmert"):
-# 
-#     encoder = ce.HelmertEncoder(
-#       cols = cat_labels, drop_invariant = True
-#   )
-#   
-#   elif (encoding == "scikit-james-stein"):
-# 
-#     encoder = ce.JamesSteinEncoder(
-#       cols = cat_labels, drop_invariant = True
-#   )
-# 
-#   elif (encoding == "scikit-polynomial"):
-# 
-#     encoder = ce.PolynomialEncoder(
-#       cols = cat_labels, drop_invariant = True
-#   )
-# 
-#   elif (encoding == "scikit-woe"):
-# 
-#     encoder = ce.WOEEncoder(
-#       cols = cat_labels, drop_invariant = True
-#   )
-# 
-#   elif (encoding == "scikit-binary"):
-# 
-#     encoder = ce.BinaryEncoder(
-#       cols = cat_labels, drop_invariant = True
-#   )  
-#   
-#   elif (encoding == "scikit-onehot"):
-# 
-#     encoder = ce.OneHotEncoder(
-#       cols = cat_labels, drop_invariant = True
-#   )   
-#   return(encoder)
-
-
-

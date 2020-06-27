@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Script:  _encoding vtreat-design.R
+# Script:  encoders/vtreat-design.R
 # Output:  training.set, testing.set - vtreat::designTreatmentsN
 #
 ################################################################################

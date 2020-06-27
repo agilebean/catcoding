@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Script:  _encoding embed-steps.R
+# Script:  encoders/embed-steps.R
 # Output:  training.set, testing.set - bayesian target encoding
 #
 ################################################################################
@@ -12,7 +12,6 @@ recipe.base <- features.labels %>%
   paste(target.label, "~", .) %>% 
   as.formula %>% 
   recipe(training.set)
-
 
 if (ENCODING == "embed-bayes") {
   
@@ -38,8 +37,6 @@ if (ENCODING == "embed-bayes") {
 recipe.encoding <- recipe.base %>% 
   encoding_function(all_nominal(), outcome = vars(target.label))
 
-# PREP <- TRUE
-PREP <- FALSE
 
 if (PREP) {
   
@@ -60,11 +57,34 @@ training.set.juice <- juice(prep.encoding)
 # # prep.bayes %>% tidy(number = 1) %>% select(-id) 
 # # testing.set.bayes <- prep.bayes %>% bake(testing.set) %T>% print
 
-# clus <- clusterOn()
-# model.gbm <- caret::train(
-#   x = recipe.base,
-#   data = training.set.juice,
-#   method = "gbm"
-# )
-# clusterOff(clus)
+CV.REPEATS <- 2
+# CV.REPEATS <- 10
+TRY.FIRST <- 1000
+
+training.configuration <- trainControl(
+  method = "repeatedcv",
+  number = 2,
+  repeats = CV.REPEATS,
+  savePredictions = "final"
+)
+
+# use original training.set https://stackoverflow.com/a/55270581/7769076
+clus <- clusterOn()
+model.gbm <- caret::train(
+  x = recipe.encoding,
+  data = training.set,
+  method = "gbm",
+  trainControl = training.configuration
+)
+clusterOff(clus)
+
+# workaround but doesn't avoid to prep()
+clus <- clusterOn()
+model.gbm <- caret::train(
+  x = recipe.base,
+  data = training.set.juice,
+  method = "gbm",
+  trainControl = training.configuration
+)
+clusterOff(clus)
 
