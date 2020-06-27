@@ -35,7 +35,7 @@ features.treated <- treatment.plan$scoreFrame %>%
   filter(code %in% vartypes.selected) %>% 
   pull(varName)
 
-training.set.scores <-  prepare(
+training.set.scores <- vtreat::prepare(
   treatment.plan,
   training.set,
   scale = TRUE,
@@ -44,7 +44,7 @@ training.set.scores <-  prepare(
 
 if (!is.null(testing.set)) {
   
-  testing.set.scores <-  prepare(
+  testing.set.scores <- vtreat::prepare(
     treatment.plan,
     testing.set,
     scale = TRUE,
