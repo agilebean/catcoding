@@ -16,7 +16,7 @@ def apply_scikit_encoder(encoding, cat_labels):
   
     encoding_function = ce.OrdinalEncoder
   
-  elif (encoding == "scikit-backward-difference"):
+  elif (encoding == "scikit-backward"):
   
     encoding_function = ce.BackwardDifferenceEncoder
   

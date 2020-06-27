@@ -28,6 +28,7 @@ DATASET.LABEL <- "ames"
 ####################################################
 # data splits
 train.test.split <- 1.0
+calibration.ratio <- 0.2  # only for vtreat-design
 # QUICK-TEST: use only cats to see whether it's worth catcoding 
 # CATS.ONLY <- TRUE
 CATS.ONLY <- FALSE
@@ -38,7 +39,8 @@ PREP <- FALSE
 
 ################################################################################
 # apply encoding on dataset
-apply_encoder <- function(encoding, training_set) {
+apply_encoder <- function(
+  encoding, training_original, testing_original, target_label) {
   
   if (is.null(encoding)) {
     
@@ -52,7 +54,6 @@ apply_encoder <- function(encoding, training_set) {
       
     } else if (encoding == "vtreat-design") {
       
-      config.ratio <- 0.2  # only for vtreat-design
       source("encoders/vtreat-design.R")
       
     } else if (encoding == "vtreat-dummy") { # DUMMY ENCODING
@@ -69,6 +70,17 @@ apply_encoder <- function(encoding, training_set) {
       
       source("encoders/scikit-encoders.R")
     }
+    
+    # get categorical features
+    no.cats <- training_original %>% select(where(is.factor)) %>% ncol
+    
+    # get #features-original
+    no.features.original <- training.original %>% ncol -1
+    # inform about feature generation stats
+    print(paste(
+      "From", no.cats, "categorical of", no.features.original,
+      "original features in total, generated", length(features.labels), "features."
+    ))
   }
 }
 ################################################################################
@@ -82,7 +94,6 @@ ENCODER.LIST <- c(
   "scikit-helmert",
   "scikit-james-stein",
   "scikit-polynomial",
-  "scikit-woe",
   "scikit-binary",
   "scikit-onehot"
 )
@@ -91,15 +102,17 @@ ENCODER.LIST <- c(
 # ENCODING <- "vtreat-design"
 # ENCODING <- "vtreat-cross"
 # ENCODING <- "vtreat-dummy"
-ENCODING <- "scikit-target"
+# ENCODING <- "scikit-target"
 # ENCODING <- "scikit-ordinal"
-# ENCODING <- "scikit-helmert"
-# ENCODING <- "scikit-backward-difference"
+# ENCODING <- "scikit-helmert" # reached elapsed time limit
+# ENCODING <- "scikit-backward" # reached elapsed time limit
 # ENCODING <- "scikit-james-stein"
 # ENCODING <- "scikit-polynomial"
-# ENCODING <- "scikit-woe"
 # ENCODING <- "scikit-binary"
 # ENCODING <- "scikit-onehot"
+# ENCODING <- "scikit-woe" # target must be binary
+apply_encoder(ENCODING, training.original, testing.original, target.label)
+training.set %>% glimpse
 ####################################################
 # ENCODING <- "embed-bayes"
 # ENCODING <- "embed-glm"
@@ -113,123 +126,27 @@ source("plugins/strings.R")
 data.original.object <- get_dataset_original(DATASET.LABEL)
 
 # split original dataset into training/testing.set
-data.original <- split_dataset_original(
-  data.original.object, ENCODING, train.test.split, CATS.ONLY)
-
-training.original <- data.original$training.set %T>% glimpse
-testing.original <- data.original$testing.set %T>% glimpse
-features.original <- data.original$features.labels %T>% print
-
-data.encoded <- apply_encoder(ENCODING)
-training.set.encoded <- data.encoded$training.set %T>% print
-testing.set.encoded <- data.encoded$testing.set %T>% print
-
-# inform about feature generation stats
-print(paste(
-  "From", no.cats, "categorical of", no.features.original,
-  "original features in total, generated", length(features.labels), "features."
-))
-
-CV.REPEATS <- 2
-# CV.REPEATS <- 10
-TRY.FIRST <- 1000
-
-training.configuration <- trainControl(
-  method = "repeatedcv",
-  number = 5,
-  repeats = CV.REPEATS,
-  savePredictions = "final"
+original <- split_dataset_original(
+  data.original.object, ENCODING, train.test.split, CATS.ONLY
 )
+target <- training.original[[target.label]]
+
+apply_encoder(
+  ENCODING, original$training.set, original$testing.set, original$target.label
+)
+training.set %>% glimpse
+# training.set.encoded <- data.encoded$training.set %T>% print
+# testing.set.encoded <- data.encoded$testing.set %T>% print
 
 
 ################################################################################
-
-dataset
 target.label
 features.labels
 ENCODING
 
 training.set %>% glimpse
 training.set %>% dim
-testing.set %>% glimpse
-testing.set %>% dim
+# testing.set %>% glimpse
+# testing.set %>% dim
 
 ################################################################################
-# NEW <- TRUE
-NEW <- FALSE
-### continue
-CV.REPEATS <- 2
-# CV.REPEATS <- 10
-TRY.FIRST <- 500
-# TRY.FIRST <- NULL
-
-models_list_label() 
-models_metrics_label()
-dataset_label()
-# prep_label()
-
-training.configuration <- trainControl(
-  method = "repeatedcv",
-  number = 5,
-  repeats = CV.REPEATS,
-  savePredictions = "final"
-)
-
-algorithm.list <- c(
-  "lm"
-  , "gbm"
-  , "rf"
-)
-
-if (NEW) {
-  
-  if (startsWith(ENCODING, "embed")) { 
-    
-    # benchmark_algorithms with unprepped recipe and original training.set
-    
-  } else {
-    
-    system.time(
-      models.list <- benchmark_algorithms(
-        target_label = target.label,
-        features_labels = features.labels,
-        training_set = training.set.encoded,
-        testing_set = testing.set.encoded,
-        training_configuration = training.configuration,
-        algorithm_list = algorithm.list,
-        cv_repeats = CV.REPEATS,
-        try_first = TRY.FIRST,
-        models_list_name = models_list_label()
-      )
-    )
-  }
-
-} else {
-  
-  models.list <- readRDS(models_list_label())
-}
-
-
-if (NEW) {
-  models.metrics <- models.list %>% get_model_metrics() %T>% print
-  models.metrics %>% saveRDS(models_metrics_label())
-  
-  # models.metrics <- models.list %>% 
-  #   purrr::list_modify("lm" = NULL) %>% 
-  #   get_model_metrics() 
-  
-} else {
-  
-  models.list <- readRDS(models_list_label())
-  models.metrics <- readRDS(models_metrics_label())
-  
-}
-
-models.metrics
-
-library(gbm)
-models.list$gbm %>% varImp()
-models.list$svmRadial %>% varImp()
-
-models_list_label() 
-models_metrics_label()
