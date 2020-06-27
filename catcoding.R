@@ -25,28 +25,6 @@ DATASET.LABEL <- "ames"
 # DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
 # DATASET.LABEL <- "smartflow-scales"
-
-
-####################################################
-
-ENCODER.LIST <- c(
-  "none",
-  "embed-bayes",
-  "embed-glm",
-  "vtreat-cross",
-  "vtreat-dummy",
-  "scikit-target",
-  "scikit-ordinal",
-  "scikit-backward-difference",
-  "scikit-helmert",
-  "scikit-james-stein"
-  "scikit-polynomial",
-  "scikit-woe",
-  "scikit-binary",
-  "scikit-onehot"
-)
-
-
 ####################################################
 # data splits
 train.test.split <- 1.0
@@ -58,109 +36,94 @@ CATS.ONLY <- FALSE
 # PREP <- TRUE
 PREP <- FALSE
 
-# get dataset
-source("plugins/getdata.R")
-source("plugins/strings.R")
-
-training.set %>% glimpse
-
 ################################################################################
+# apply encoding on dataset
+apply_encoder <- function(encoding, training_set) {
+  
+  if (is.null(encoding)) {
+    
+    source("encoders/no-encoding.R")
+    
+  } else { # ENCODINGS
+    
+    if (encoding == "vtreat-cross") {
+      
+      source("encoders/vtreat-cross.R")
+      
+    } else if (encoding == "vtreat-design") {
+      
+      config.ratio <- 0.2  # only for vtreat-design
+      source("encoders/vtreat-design.R")
+      
+    } else if (encoding == "vtreat-dummy") { # DUMMY ENCODING
+      
+      source("encoders/vtreat-dummy.R")
+      
+    } else if (startsWith(encoding, "embed")) {
+      
+      # PREP <- TRUE
+      PREP <- FALSE
+      source("encoders/embed-steps.R")
+      
+    } else if (startsWith(encoding, "scikit")) {
+      
+      source("encoders/scikit-encoders.R")
+    }
+  }
+}
+################################################################################
+ENCODER.LIST <- c(
+  "none",
+  "vtreat-cross",
+  "vtreat-dummy",
+  "scikit-target",
+  "scikit-ordinal",
+  "scikit-backward",
+  "scikit-helmert",
+  "scikit-james-stein",
+  "scikit-polynomial",
+  "scikit-woe",
+  "scikit-binary",
+  "scikit-onehot"
+)
+####################################################
 # ENCODING <- NULL
 # ENCODING <- "vtreat-design"
 # ENCODING <- "vtreat-cross"
 # ENCODING <- "vtreat-dummy"
-# ENCODING <- "embed-bayes"
-ENCODING <- "embed-glm"
-# ENCODING <- "embed-keras"
+ENCODING <- "scikit-target"
+# ENCODING <- "scikit-ordinal"
 # ENCODING <- "scikit-helmert"
+# ENCODING <- "scikit-backward-difference"
+# ENCODING <- "scikit-james-stein"
+# ENCODING <- "scikit-polynomial"
+# ENCODING <- "scikit-woe"
+# ENCODING <- "scikit-binary"
+# ENCODING <- "scikit-onehot"
+####################################################
+# ENCODING <- "embed-bayes"
+# ENCODING <- "embed-glm"
+# ENCODING <- "embed-keras"
 ################################################################################
-# apply encoding on dataaset
-if (is.null(ENCODING)) {
+# get dataset
+source("plugins/get_data.R")
+source("plugins/strings.R")
 
-  source("encoders/no-encoding.R")
-  
-} else { # ENCODINGS
-  
-  if (ENCODING == "vtreat-cross") {
-    
-    source("encoders/vtreat-cross.R")
-    
-  } else if (ENCODING == "vtreat-design") {
-    
-    config.ratio <- 0.2  # only for vtreat-design
-    source("encoders/vtreat-design.R")
-    
-  } else if (ENCODING == "vtreat-dummy") { # SUMMY ENCODING
-    
-    source("encoders/vtreat-dummy.R")
-    
-  } else if (ENCODING == "embed-bayes" | 
-             ENCODING == "embed-glm" | 
-             ENCODING == "embed-keras"
-             ) {
-    
-    # PREP <- TRUE
-    PREP <- FALSE
-    source("encoders/embed-steps.R")
-    
-  } else if (startsWith(ENCODING, "scikit")) {
-    
-    use_condaenv(condaenv = "reticulate", required = TRUE)
-    # py_config()
-    # import("category_encoders")
-    
-    # load python script
-    source_python("encoders/scikit-encoders.py", convert = TRUE)
-    
-    CAT.labels <- training.set %>% 
-      select(-target.label) %>% 
-      select(where(is.factor)) %>% 
-      names %T>% print
-    
-    # script <- "_encoding_scikit-encoders.py"
-    # training_set <- training.set
-    # system("python _encoding_scikit-encoders.py ENCODING CAT_labels", wait = FALSE)
-    # system2("python", args = c(script, ENCODING, CAT_labels))
-    
-    ENCODING = "scikit-target"
-    # ENCODING = "scikit-ordinal"
-    # ENCODING = "scikit-helmert"
-    # ENCODING = "scikit-backward-difference"
-    # ENCODING = "scikit-james-stein"
-    # ENCODING = "scikit-polynomial"
-    # ENCODING = "scikit-woe"
-    # ENCODING = "scikit-binary"
-    # ENCODING = "scikit-onehot"
-    
-    # apply sckit encoder
-    encoder <- apply_scikit_encoder(ENCODING, CAT.labels)
-    
-    training.original <- training.set
-    ### Note: replaced fit().transform() by fit_transform()
-    ### see https://github.com/scikit-learn-contrib/category_encoders/issues/167#issuecomment-461489109
-    # train encoder model on training.set & train encoder model on training.set
-    training.set.transformed <- encoder$fit_transform(
-      training.original, training.original[[target.label]]
-    )
-    
-    # # train encoder model on training.set
-    # encoder$fit(training.set, training.set[[target.label]])
-    # # apply trained model on training.set >> creates "intercept"!
-    # training.set2 <- encoder$transform(training.set)
-    # 
-    training.set.transformed %>% glimpse
-    
-    training.set <- training.set.transformed
-    features.labels <- training.set %>% select(-target.label) %>% names
-    
-    if (!is.null(testing.set)) {
-      testing.set <- testing.set.treated %>% select(features.selected)
-    }
+# get original dataset
+data.original.object <- get_dataset_original(DATASET.LABEL)
 
-  }
-}
+# split original dataset into training/testing.set
+data.original <- split_dataset_original(
+  data.original.object, ENCODING, train.test.split, CATS.ONLY)
 
-training.set
+training.original <- data.original$training.set %T>% glimpse
+testing.original <- data.original$testing.set %T>% glimpse
+features.original <- data.original$features.labels %T>% print
+
+data.encoded <- apply_encoder(ENCODING)
+training.set.encoded <- data.encoded$training.set %T>% print
+testing.set.encoded <- data.encoded$testing.set %T>% print
+
 # inform about feature generation stats
 print(paste(
   "From", no.cats, "categorical of", no.features.original,
@@ -203,7 +166,7 @@ TRY.FIRST <- 500
 models_list_label() 
 models_metrics_label()
 dataset_label()
-prep_label()
+# prep_label()
 
 training.configuration <- trainControl(
   method = "repeatedcv",
@@ -220,12 +183,9 @@ algorithm.list <- c(
 
 if (NEW) {
   
-  if (ENCODING == "embed-bayes" | 
-      ENCODING == "embed-glm" | 
-      ENCODING == "embed-keras"
-  ) {
+  if (startsWith(ENCODING, "embed")) { 
     
-
+    # benchmark_algorithms with unprepped recipe and original training.set
     
   } else {
     
@@ -233,8 +193,8 @@ if (NEW) {
       models.list <- benchmark_algorithms(
         target_label = target.label,
         features_labels = features.labels,
-        training_set = training.set,
-        testing_set = testing.set,
+        training_set = training.set.encoded,
+        testing_set = testing.set.encoded,
         training_configuration = training.configuration,
         algorithm_list = algorithm.list,
         cv_repeats = CV.REPEATS,
@@ -248,6 +208,7 @@ if (NEW) {
   
   models.list <- readRDS(models_list_label())
 }
+
 
 if (NEW) {
   models.metrics <- models.list %>% get_model_metrics() %T>% print
