@@ -5,9 +5,14 @@
 #
 ################################################################################
 
-scoreFrame <- treatment.plan$scoreFrame %>%
-  select(varName, origName, code) %T>% print
+treatment.plan <- designTreatmentsZ(
+  dframe = training.original,
+  varlist = features.labels,
+  minFraction = 0
+  # parallelCluster = clus, # 5% faster
+)
 
+# restrict to common variable types
 vartypes.selected <- if (CATS.ONLY) {
   
   print("feature selection: CATS ONLY")
@@ -16,20 +21,9 @@ vartypes.selected <- if (CATS.ONLY) {
 } else { 
   
   print("feature selection: ALL")
-  c("lev", "clean")
+  c("lev", "clean", "isBAD")
 }
-# get treated training.set
-treatments <- training.set.cross$treatments %T>% print
-training.set.treated <- training.set.cross$crossFrame %>% 
-  as_tibble() %T>% print
 
-
-treatment.plan <- vtreat::designTreatmentsZ(
-  training.set, features.labels,
-  minFraction = 0
-)
-# restrict to common variable types
-vartypes.selected <- c("lev", "clean", "isBAD")
 # see vignette('vtreatVariableTypes', package = 'vtreat') for details
 features.treated <- treatment.plan$scoreFrame %>% 
   filter(code %in% vartypes.selected) %>% 
@@ -37,16 +31,16 @@ features.treated <- treatment.plan$scoreFrame %>%
 
 training.set.scores <- vtreat::prepare(
   treatment.plan,
-  training.set,
+  training.original,
   scale = TRUE,
   varRestriction = features.treated
 )
 
-if (!is.null(testing.set)) {
+if (!is.null(testing.original)) {
   
   testing.set.scores <- vtreat::prepare(
     treatment.plan,
-    testing.set,
+    testing.original,
     scale = TRUE,
     varRestriction = features.treated
   ) 
@@ -54,6 +48,8 @@ if (!is.null(testing.set)) {
 
 # create output
 training.set <- training.set.scores
-testing.set <- if(is.null(testing.set)) { NULL } else { testing.set.scores }
+testing.set <- if(is.null(testing.original)) { NULL } else { testing.set.scores }
 features.labels <- features.treated
+print("######################################################################")
 print("TREATMENT: vtreat::designTreatmentsZ")
+print("######################################################################")

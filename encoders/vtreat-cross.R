@@ -4,6 +4,8 @@
 # Output:  training.set, testing.set - vtreat::mkCrossFrame{N,C} Experiment
 #
 ################################################################################
+
+
 # decide regression or classification
 if (is.numeric(target)) {
   
@@ -17,8 +19,8 @@ if (is.numeric(target)) {
 clus <- clusterOn()
 system.time(
   training.set.cross <- treatment_function(
-    dframe = training.set, 
-    varlist = features.labels,
+    dframe = training.original, 
+    varlist = features.original,
     outcomename = target.label,
     # codeRestriction = c("lev"),
     parallelCluster = clus, # % faster
@@ -41,7 +43,7 @@ vartypes.selected <- if (CATS.ONLY) {
 } else { 
   
   print("feature selection: ALL")
-  c("lev", "clean")
+  c("lev", "clean", "isBAD")
 }
 
 # training.set.treated %>% select(-target.label) %>% names
@@ -55,19 +57,21 @@ features.selected <- treatments$scoreFrame %>%
   filter(recommended == TRUE) %>%
   pull(varName) %T>% print
   
-  if (!is.null(testing.set)) {
+if (!is.null(testing.original)) {
     testing.set.treated <- vtreat::prepare(
       treatments,
-      testing.set,
+      testing.original,
       pruneSig=c()
     )      
   }
   
-  # set trainingset, testingset, features labels
-  training.set <- training.set.treated %>% select(features.selected)
-  if (!is.null(testing.set)) {
-    testing.set <- testing.set.treated %>% select(features.selected)
-  }
-  features.labels <- features.selected
-  
-  print("TREATMENT: vtreat::mkCrossFrameNExperiment")
+# set trainingset, testingset, features labels
+training.set <- training.set.treated %>% select(features.selected)
+if (!is.null(testing.original)) {
+  testing.set <- testing.set.treated %>% select(features.selected)
+}
+features.labels <- features.selected
+
+print("######################################################################")
+print("TREATMENT: vtreat::mkCrossFrameNExperiment")
+print("######################################################################")

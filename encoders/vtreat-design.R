@@ -5,20 +5,17 @@
 #
 ################################################################################
 
-# to extract config.set from training.set
-training.original <- training.set
+# to extract calibration.set from training.set, subset index by calibration.ratio 
+# tricky: subset too short: sample(nrow(training.original) * calibration.ratio)
+calibration.index <- 1:nrow(training.original) %>% 
+  sample(length(.) * calibration.ratio)
 
-# subset index by config.ratio 
-# tricky: subset too short: sample(nrow(training.original) * config.ratio)
-config.index <- 1:nrow(training.original) %>% 
-  sample(length(.) * config.ratio)
-
-# extract config.set from training.set by config.ratio
-config.set <- training.original %>% slice(config.index)
-training.set <- training.original %>% slice(-config.index)
+# extract calibration.set from training.set by calibration.ratio
+calibration.set <- training.original %>% slice(calibration.index)
+training.small <- training.original %>% slice(-calibration.index)
 
 treatment.plan <- designTreatmentsN(
-  dframe = config.set,
+  dframe = calibration.set,
   varlist = features.labels,
   # parallelCluster = clus, # 5% faster
   outcomename = target.label
@@ -35,7 +32,7 @@ vartypes.selected <- if (CATS.ONLY) {
 } else { 
   
   print("feature selection: ALL")
-  c("lev", "clean")
+  c("lev", "clean", "isBad")
 }
 
 features.treated <- treatment.plan$scoreFrame %>%
@@ -43,27 +40,32 @@ features.treated <- treatment.plan$scoreFrame %>%
   # code "lev": an indicator variable for a specific level of the original categorical variable.
   # filter(code %in% c("clean", "lev")) %>%
   filter(code %in% vartypes.selected) %>%
+  # vtreat recommendations to filter out useless variables
+  filter(recommended == TRUE) %>%
   pull(varName)
+
 
 training.set.scores <-  vtreat::prepare(
   treatment.plan,
-  training.set,
+  training.small,
   scale = TRUE,
   varRestriction = features.treated
 )
 
-if (!is.null(testing.set)) {
+if (!is.null(testing.original)) {
   testing.set.scores <-  vtreat::prepare(
     treatment.plan,
-    testing.set,
+    testing.original,
     scale = TRUE,
     varRestriction = features.treated
   )
 }
 
 training.set <- training.set.scores
-if (!is.null(testing.set)) {
+if (!is.null(testing.original)) {
   testing.set <- testing.set.scores 
 }
 features.labels <- features.treated
+print("######################################################################")
 print("TREATMENT: vtreat::designTreatmentsN")
+print("######################################################################")
