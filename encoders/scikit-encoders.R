@@ -40,26 +40,24 @@ apply_scikit_encoder <- function(
   # training.set2 <- encoder$transform(training.set)
   # 
   
-  features.labels.selected <- training.set.transformed %>% 
+  features.labels.select <- training.set.transformed %>% 
     select(-target_label) %>% names
   
-  if (!is.null(testing.original)) {
-    testing.set.selected <- testing.original %>% select(features.labels.selected)
+  if (!is.null(testing_original)) {
+    testing.set.select <- testing_original %>% select(features.labels.select)
   } else {
-    testing.set.selected <- NULL
+    testing.set.select <- NULL
   }
   
-  # return(list(training.set = training.set.transformed, 
-  #             testing.set = testing.set.transformed))
   print("######################################################################")
   print(paste("TREATMENT:", ENCODING))
   print("######################################################################")
   
   return(list(
-    features.labels = features.labels.selected,
+    features.labels = features.labels.select,
     target_label = target_label,
     training.set = training.set.transformed,
-    testing.set = testing.set.selected
+    testing.set = testing.set.select
   ))
 }
 

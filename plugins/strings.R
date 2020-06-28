@@ -24,14 +24,13 @@ models_metrics_label <- function() {
   )
 }
 
-dataset_label <- function() {
+dataset_filename <- function(dataset_label) {
   
   output_filename(
     prefix = "data/data",
-    DATASET.LABEL,
+    dataset_label,
     train.test.split*100,
-    ENCODING,
-    paste0(CV.REPEATS, "repeats")
+    ENCODING
   )
 }
 
@@ -43,3 +42,4 @@ prep_label <- function() {
     ENCODING
   )
 }
+

@@ -5,67 +5,97 @@
 #
 ################################################################################
 
-# to extract calibration.set from training.set, subset index by calibration.ratio 
-# tricky: subset too short: sample(nrow(training.original) * calibration.ratio)
-calibration.index <- 1:nrow(training.original) %>% 
-  sample(length(.) * calibration.ratio)
 
-# extract calibration.set from training.set by calibration.ratio
-calibration.set <- training.original %>% slice(calibration.index)
-training.small <- training.original %>% slice(-calibration.index)
+apply_vtreat_design <- function(
+  encoding, training_original, testing_original, target_label) {
+ 
+  # to extract calibration.set from training.set, subset index by calibration.ratio 
+  # tricky: subset too short: sample(nrow(training.original) * calibration.ratio)
+  calib <- 0.2
+  calibration.index <- 1:nrow(training_original) %>% 
+    sample(length(.) * calib)
 
-treatment.plan <- designTreatmentsN(
-  dframe = calibration.set,
-  varlist = features.labels,
-  # parallelCluster = clus, # 5% faster
-  outcomename = target.label
-)
-
-scoreFrame <- treatment.plan$scoreFrame %>%
-  select(varName, origName, code) %T>% print
-
-vartypes.selected <- if (CATS.ONLY) {
+  # message on calibration set
+  print(paste0("*** Removing ", calib*100, "% of training set for calibration!"))
   
-  print("feature selection: CATS ONLY")
-  c("lev") 
+  # extract calibration.set from training.set by calibration.ratio
+  calibration.set <- training_original %>% slice(calibration.index)
+  training.small <- training_original %>% slice(-calibration.index)
   
-} else { 
+  features.labels <- training_original %>% select(-target_label) %>% names
   
-  print("feature selection: ALL")
-  c("lev", "clean", "isBad")
-}
+  # scoreFrame <- treatment.plan$scoreFrame %>%
+  #   select(varName, origName, code) %T>% print
+  
+  vartypes.select <- if (CATS.ONLY) {
+    
+    print("feature selection: CATS ONLY")
+    c("lev") 
+    
+  } else { 
+    
+    print("feature selection: ALL")
+    # code "clean":  a numerical variable with no NAs or NaNs
+    # code "lev": an indicator variable for a specific level of the original categorical variable.
+    c("lev", "clean", "isBad")
+  }
 
-features.treated <- treatment.plan$scoreFrame %>%
-  # code "clean":  a numerical variable with no NAs or NaNs
-  # code "lev": an indicator variable for a specific level of the original categorical variable.
-  # filter(code %in% c("clean", "lev")) %>%
-  filter(code %in% vartypes.selected) %>%
-  # vtreat recommendations to filter out useless variables
-  filter(recommended == TRUE) %>%
-  pull(varName)
+  success <- FALSE
+  while(!success) {
+    
+    print("************ Calculate features with recommended == TRUE")
+    treatment.plan <- designTreatmentsN(
+      dframe = calibration.set,
+      varlist = features.labels,
+      outcomename = target_label
+    )
+    features.select <- treatment.plan$scoreFrame %>%
+      filter(code %in% vartypes.select) %>%
+      # vtreat recommendations to filter out useless variables
+      filter(recommended == TRUE) %>%
+      pull(varName)
+    
+    if (!is_empty(features.select)) success <- TRUE
+  }
 
-
-training.set.scores <-  vtreat::prepare(
-  treatment.plan,
-  training.small,
-  scale = TRUE,
-  varRestriction = features.treated
-)
-
-if (!is.null(testing.original)) {
-  testing.set.scores <-  vtreat::prepare(
+  print(features.select)
+  
+  training.set.encoded <-  vtreat::prepare(
     treatment.plan,
-    testing.original,
+    training.small,
     scale = TRUE,
-    varRestriction = features.treated
+    varRestriction = features.select
   )
-}
+  
+  if (!is.null(testing_original)) {
+    testing.set.encoded <-  vtreat::prepare(
+      treatment.plan,
+      testing_original,
+      scale = TRUE,
+      varRestriction = features.select
+    )
+  } else {
+    testing.set.encoded <- NULL
+  }
+  
+  # set training.set
+  training.set.select <- training.set.encoded %>% select(features.select)
+  
+  # set testing.set
+  if (!is.null(testing.set.encoded)) {
+    testing.set.select <- testing.set.encoded %>% select(features.select)
+  } else {
+    testing.set.select <- NULL
+  }
+  
+  print("######################################################################")
+  print("TREATMENT: vtreat::designTreatmentsN")
+  print("######################################################################")
 
-training.set <- training.set.scores
-if (!is.null(testing.original)) {
-  testing.set <- testing.set.scores 
+  return(list(
+    features.labels = features.select,
+    target_label = target_label,
+    training.set = training.set.select,
+    testing.set = testing.set.select
+  ))
 }
-features.labels <- features.treated
-print("######################################################################")
-print("TREATMENT: vtreat::designTreatmentsN")
-print("######################################################################")

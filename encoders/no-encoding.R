@@ -4,7 +4,21 @@
 # Output:  training.set, testing.set - no encoding
 #
 ################################################################################
-# set feature labels
 
-features.labels <- training.set %>% select(-target.label) %>% names
-print("TREATMENT: NONE")
+apply_no_encoder <- function(
+  encoding, training_original, testing_original, target_label) {
+  
+  # set feature labels
+  features.original <- training_original %>% select(-target_label) %>% names
+  
+  print("######################################################################")
+  print(paste("TREATMENT:", encoding))
+  print("######################################################################")
+
+return(list(
+  features.labels = features.original,
+  target_label = target_label,
+  training.set = training_original,
+  testing.set = testing_original
+))
+}

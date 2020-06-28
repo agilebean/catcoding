@@ -10,6 +10,10 @@
 ################################################################################
 get_dataset_original <- function(dataset_label) {
   
+  print("**********************************************************************")
+  print("*************************************************")
+  print(paste("***** DATASET:", dataset_label, "*****"))
+  
   if (dataset_label == "diamonds") {
     
     dataset <- diamonds
@@ -123,7 +127,7 @@ get_dataset_original <- function(dataset_label) {
 # # FUNCTION: split original dataset into training/testing.set
 ################################################################################
 split_dataset_original <- function(
-  dataset_original_object, train_test_split, cats_only) {
+  dataset_original_object, train_test_split, cats_only = FALSE) {
 
   # retrieve dataset & labels
   dataset <- dataset_original_object$dataset

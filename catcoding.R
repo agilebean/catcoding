@@ -18,17 +18,9 @@ sapply(packs, require, character.only = TRUE)
 # unloadNamespace("machinelearningtools")
 
 ####################################################
-# common variables
-# DATASET.LABEL <- "diamonds"
-DATASET.LABEL <- "ames"
-# DATASET.LABEL <- "designdim"
-# DATASET.LABEL <- "timex"
-# DATASET.LABEL <- "smartflow"
-# DATASET.LABEL <- "smartflow-scales"
-####################################################
 # data splits
 train.test.split <- 1.0
-calibration.ratio <- 0.2  # only for vtreat-design
+calibration.ratio <- 0.3  # only for vtreat-design
 # QUICK-TEST: use only cats to see whether it's worth catcoding 
 # CATS.ONLY <- TRUE
 CATS.ONLY <- FALSE
@@ -39,7 +31,7 @@ PREP <- FALSE
 
 ################################################################################
 # apply encoding on dataset
-apply_encoder <- function(encoding, data_original_split) {
+apply_encoder <- function(data_original_split, encoding) {
   
   print(encoding)
   # data_original_split <- data.original.split
@@ -48,26 +40,27 @@ apply_encoder <- function(encoding, data_original_split) {
   target.label <- data_original_split$target.label
   # encoding <- ENCODING
   
-  if (is.null(encoding)) {
+  if (is.null(encoding) | encoding == "no-encoding") {
     
     source("encoders/no-encoding.R")
+    encoding_function <- apply_no_encoder
     
   } else { # ENCODINGS
     
     if (encoding == "vtreat-cross") {
       
       source("encoders/vtreat-cross.R")
-      apply_vtreat_cross(
-        encoding, training.original, testing.original, target.label
-      )
+      encoding_function <- apply_vtreat_cross
       
     } else if (encoding == "vtreat-design") {
       
       source("encoders/vtreat-design.R")
+      encoding_function <- apply_vtreat_design
       
     } else if (encoding == "vtreat-dummy") { # DUMMY ENCODING
       
       source("encoders/vtreat-dummy.R")
+      encoding_function <- apply_vtreat_dummy
       
     } else if (startsWith(encoding, "embed")) {
       
@@ -79,57 +72,72 @@ apply_encoder <- function(encoding, data_original_split) {
       
       source("encoders/scikit-encoders.R")
       
-      data.encoded <- apply_scikit_encoder(
-        encoding, training.original, testing.original, target.label
-      )
+      encoding_function <-  apply_scikit_encoder
     }
-    
-    # get categorical features
-    no.cats <- training.original %>% select(where(is.factor)) %>% ncol
-    
-    # get #features-original
-    no.features.original <- training.original %>% ncol -1
-    
-    # get #features-encoded
-    no.features.encoded <- data.encoded$training.set %>% ncol -1
-    
-    # inform about feature generation stats
-    print(paste(
-      "From", no.cats, "categorical of", no.features.original,
-      "original features in total, generated", 
-      no.features.encoded, "features."
-    ))
-    
-    return(data.encoded)
   }
+  
+  # apply encoding function
+  data.encoded <- encoding_function(
+    encoding, training.original, testing.original, target.label
+  )
+  
+  # get categorical features
+  no.cats <- training.original %>% select(where(is.factor)) %>% ncol
+  
+  # get #features-original
+  no.features.original <- training.original %>% ncol -1
+  
+  # get #features-encoded
+  no.features.encoded <- data.encoded$training.set %>% ncol -1
+  
+  # inform about feature generation stats
+  print(paste(
+    "From", no.cats, "categorical of", no.features.original,
+    "original features in total, generated", 
+    no.features.encoded, "features."
+  ))
+  
+  return(data.encoded)
+  
 }
 ################################################################################
 ENCODER.LIST <- c(
-  "none",
-  "vtreat-cross",
-  "vtreat-dummy",
-  "scikit-target",
-  "scikit-ordinal",
-  "scikit-backward",
-  "scikit-helmert",
-  "scikit-james-stein",
-  "scikit-polynomial",
-  "scikit-binary",
-  "scikit-onehot"
+  "no-encoding"
+  , "vtreat-cross"
+  , "vtreat-design"
+  , "vtreat-dummy"
+  , "scikit-target"
+  , "scikit-ordinal"
+  , "scikit-backward"
+  , "scikit-helmert"
+  , "scikit-james-stein"
+  , "scikit-polynomial"
+  , "scikit-binary"
+  , "scikit-onehot"
 )
 
 
 DATASET.LABEL.LIST <- c(
-  "diamonds",
-  "ames",
-  "designdim",
-  "timex",
-  "smartflow"
+  "ames"
+  , "diamonds"
+  , "designdim"
+  , "timex"
+  , "smartflow"
 )
+
 ####################################################
-# ENCODING <- NULL
-# ENCODING <- "vtreat-design"
-# ENCODING <- "vtreat-cross"
+# dataset
+# DATASET.LABEL <- "diamonds"
+# DATASET.LABEL <- "ames"
+# DATASET.LABEL <- "designdim"
+DATASET.LABEL <- "timex"
+# DATASET.LABEL <- "smartflow"
+# DATASET.LABEL <- "smartflow-scales"
+# 
+####################################################
+ENCODING <- "no-encoding"
+ENCODING <- "vtreat-cross"
+ENCODING <- "vtreat-design"
 # ENCODING <- "vtreat-dummy"
 # ENCODING <- "scikit-target"
 # ENCODING <- "scikit-ordinal"
@@ -138,7 +146,7 @@ DATASET.LABEL.LIST <- c(
 # ENCODING <- "scikit-james-stein"
 # ENCODING <- "scikit-polynomial"
 # ENCODING <- "scikit-binary"
-ENCODING <- "scikit-onehot"
+# ENCODING <- "scikit-onehot"
 # ENCODING <- "scikit-woe" # target must be binary
 
 # a <- apply_encoder(ENCODING, training.original, testing.original, target.label)
@@ -153,87 +161,97 @@ training.set %>% glimpse
 source("plugins/get_data.R")
 source("plugins/strings.R")
 
-
+# get original dataset
 system.time(
-  # get original dataset
   data.original.object <- get_dataset_original(DATASET.LABEL)
 ) # 0.15s
 
+# create split objects for 1 dataset
 system.time(
-  # split original dataset into training/testing.set
   data.original.split <- split_dataset_original(
     data.original.object, train.test.split, CATS.ONLY
   )  
 ) # 0.03s
 
-dataset_filename(DATASET.LABEL)
-target <- training.original[[target.label]]
 
-
-apply_all_encoders <- function(data_original_split, encoder_list) {
-  
-  print("************************************************")
-  # print(paste("DATASET:", dataset_label))
-  # print(paste("DATASET:", data_original_split))
-  
-  
-  # # get original dataset
-  # data.original.object <- get_dataset_original(dataset_label)
-  
-  sets <- encoder_list %>% 
-    map(~apply_encoder(
-      .x, data_original_split
-    )) %>%
-    set_names(encoder_list)
-
-  sets  
-  # map2(sets, encoder_list, 
-  #      ~saveRDS(
-  #        .x, paste(c("data/data", dataset_label, .y, "rds"), collapse = ".")))
+# create split objects for ALL datasets
+get_data_split_list <- function() {
+  DATASET.LABEL.LIST %>% 
+    map(~ get_dataset_original(.x)) %>% 
+    map(~ split_dataset_original(., train.test.split, CATS.ONLY)) %>% 
+    set_names((DATASET.LABEL.LIST))
 }
+get_data_split_list() %>% names
 
-# create split objects: DONE
+# apply 1 encoder on 1 split object
 system.time(
-  ENCODER.LIST %>% 
-    map(~ split_dataset_original(
-      data.original.object, train.test.split, CATS.ONLY
-    )) %>% 
-    set_names((ENCODER.LIST))
-) # 0.25s
-
-# apply 1 encoder for 1 split object: DONE
-system.time(
-  data.encoded.split <- apply_encoder(ENCODING, data.original.split)  
+  data.encoded.split <- apply_encoder(data.original.split, ENCODING)  
 ) # 2.0s
 
-# apply ALL encoders for 1 split object
-system.time(
-  apply_all_encoders(data.original.split, ENCODER.LIST)
+microbenchmark::microbenchmark(
+  apply_encoder(data.original.split, ENCODING),
+  times = 10
 )
 
-
+# apply ALL encoders on 1 split object
+apply_all_encoders <- function(data_original_split, encoder_list) {
+  
+  encoder_list %>% 
+    map(~apply_encoder(data_original_split, .x)) %>%
+    set_names(encoder_list)
+}
 system.time(
-  DATASET.LABEL.LIST %>% 
-    map(~print(dataset_filename(.x)))  
-)
+  data.encoded.list <- apply_all_encoders(data.original.split, ENCODER.LIST) %>% 
+    set_names(ENCODER.LIST)
+) # 24s ALL, 13s for 11 scikits, 8.2s for vtreat-cross, 2s for vtreat-design/-dummy
 
+
+# apply ALL encoders on ALL split objects
+get_data_encoded_list <- function() {
+  DATASET.LABEL.LIST %>%
+    map( ~ get_dataset_original(.x)) %>%
+    map( ~ split_dataset_original(.x, train.test.split, CATS.ONLY)) %>%
+    map( ~ apply_all_encoders(.x, ENCODER.LIST)) %>%
+    set_names((DATASET.LABEL.LIST))
+}
+get_data_encoded_list() %>% names
+
+get_data_encoded_list2 <- function() {
+  DATASET.LABEL.LIST %>%
+    map(
+      ~ get_dataset_original(.x) %>%
+        split_dataset_original(train.test.split, CATS.ONLY) %>%
+        apply_all_encoders(ENCODER.LIST)
+    ) %>%
+    set_names(DATASET.LABEL.LIST)
+} 
+get_data_encoded_list2() %>% names
+
+# # ERROR no usable vars with timex/smartflow+vtreat-design
+# microbenchmark::microbenchmark(
+#   get_data_encoded_list2(),
+#   times = 10
+# )
+
+# microbenchmark::microbenchmark(
+#   get_data_encoded_list(), get_data_encoded_list2(),
+#   times = 1
+# )
+# 
+################################################################################
+################################################################################
+# FINAL1: create list of encoded datasets
 system.time(
-  map2(
-    DATASET.LABEL.LIST, ENCODER.LIST,
-    ~apply_all_encoders(
-      .x, ENCODER.LIST, training.original, testing.original, target.label)
-  )
-)
+  data.encoded.list <- get_data_encoded_list()  
+) # 115s for ALL 5 datasets x 11 encoders
 
+# create filenames for all datasets
+dataset.filename.list <- DATASET.LABEL.LIST %>% 
+    map(~print(dataset_filename(.x))) %T>% print
+
+# FINAL2: save FINAL datasets
+map2(data.encoded.list, dataset.filename.list,
+     ~saveRDS(.x, .y))
 
 ################################################################################
-target.label
-features.labels
-ENCODING
-
-training.set %>% glimpse
-training.set %>% dim
-# testing.set %>% glimpse
-# testing.set %>% dim
-
 ################################################################################

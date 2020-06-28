@@ -5,51 +5,76 @@
 #
 ################################################################################
 
-treatment.plan <- designTreatmentsZ(
-  dframe = training.original,
-  varlist = features.labels,
-  minFraction = 0
-  # parallelCluster = clus, # 5% faster
-)
+apply_vtreat_dummy <- function(
+  encoding, training_original, testing_original, target_label) {
 
-# restrict to common variable types
-vartypes.selected <- if (CATS.ONLY) {
+  features.labels <- training_original %>% select(-target_label) %>% names
   
-  print("feature selection: CATS ONLY")
-  c("lev") 
+  treatment.plan <- designTreatmentsZ(
+    dframe = training_original,
+    varlist = features.labels,
+    minFraction = 0
+  )
   
-} else { 
+  # restrict to common variable types
+  vartypes.selected <- if (CATS.ONLY) {
+    
+    print("feature selection: CATS ONLY")
+    c("lev") 
+    
+  } else { 
+    
+    print("feature selection: ALL")
+    c("lev", "clean", "isBAD")
+  }
   
-  print("feature selection: ALL")
-  c("lev", "clean", "isBAD")
-}
-
-# see vignette('vtreatVariableTypes', package = 'vtreat') for details
-features.treated <- treatment.plan$scoreFrame %>% 
-  filter(code %in% vartypes.selected) %>% 
-  pull(varName)
-
-training.set.scores <- vtreat::prepare(
-  treatment.plan,
-  training.original,
-  scale = TRUE,
-  varRestriction = features.treated
-)
-
-if (!is.null(testing.original)) {
+  # see vignette('vtreatVariableTypes', package = 'vtreat') for details
+  features.select <- treatment.plan$scoreFrame %>% 
+    filter(code %in% vartypes.selected) %>% 
+    pull(varName)
   
-  testing.set.scores <- vtreat::prepare(
+  training.set.encoded <- vtreat::prepare(
     treatment.plan,
-    testing.original,
+    training_original,
     scale = TRUE,
-    varRestriction = features.treated
-  ) 
+    varRestriction = features.select
+  )
+  
+  if (!is.null(testing_original)) {
+    
+    testing.set.encoded <- vtreat::prepare(
+      treatment.plan,
+      testing_original,
+      scale = TRUE,
+      varRestriction = features.select
+    ) 
+  } else {
+    
+    testing.set.encoded <- NULL
+  }
+  
+  # set training.set
+  training.set.select <- training.set.encoded %>% select(features.select)
+  
+  # set testing.set
+  if (!is.null(testing.set.encoded)) {
+    testing.set.select <- testing.set.encoded %>% select(features.select)
+  } else {
+    testing.set.select <- NULL
+  }
+  
+  print("######################################################################")
+  print("TREATMENT: vtreat::designTreatmentsZ")
+  print("######################################################################")
+
+  return(list(
+    features.labels = features.select,
+    target_label = target_label,
+    training.set = training.set.select,
+    testing.set = testing.set.select
+  ))  
+  
 }
 
-# create output
-training.set <- training.set.scores
-testing.set <- if(is.null(testing.original)) { NULL } else { testing.set.scores }
-features.labels <- features.treated
-print("######################################################################")
-print("TREATMENT: vtreat::designTreatmentsZ")
-print("######################################################################")
+
+
