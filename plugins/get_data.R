@@ -123,8 +123,7 @@ get_dataset_original <- function(dataset_label) {
 # # FUNCTION: split original dataset into training/testing.set
 ################################################################################
 split_dataset_original <- function(
-  dataset_original_object,
-  encoding, train_test_split, cats_only) {
+  dataset_original_object, train_test_split, cats_only) {
 
   # retrieve dataset & labels
   dataset <- dataset_original_object$dataset
