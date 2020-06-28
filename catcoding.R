@@ -46,10 +46,10 @@ apply_encoder <- function(data_original_split, encoding) {
   target.label <- data_original_split$target.label
   # encoding <- ENCODING
   
-  if (is.null(encoding) | encoding == "no-encoding") {
+  if (is.null(encoding) | encoding == "factor-encoding") {
     
-    source("encoders/no-encoding.R")
-    encoding_function <- apply_no_encoder
+    source("encoders/factor-encoding.R")
+    encoding_function <- apply_factor_encoder
     
   } else { # ENCODINGS
     
@@ -122,7 +122,7 @@ DATASET.LABEL <- "ames"
 # DATASET.LABEL <- "smartflow-scales"
 # 
 ####################################################
-# ENCODING <- "no-encoding"
+# ENCODING <- "factor-encoding"
 # ENCODING <- "vtreat-cross"
 # ENCODING <- "vtreat-design"
 ENCODING <- "vtreat-dummy"

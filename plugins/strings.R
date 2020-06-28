@@ -13,7 +13,7 @@ DATASET.LABEL.LIST <- c(
 )
 
 ENCODER.LIST <- c(
-  "no-encoding"
+  "factor-encoding"
   , "vtreat-cross"
   , "vtreat-design"
   , "vtreat-dummy"

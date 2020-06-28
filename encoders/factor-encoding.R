@@ -1,11 +1,11 @@
 ################################################################################
 #
-# Script:  encoders/no-encoding.R
+# Script:  encoders/factor-encoding.R
 # Output:  training.set, testing.set - no encoding
 #
 ################################################################################
 
-apply_no_encoder <- function(
+apply_factor_encoder <- function(
   encoding, training_original, testing_original, target_label) {
   
   # set feature labels

@@ -21,22 +21,6 @@ NEW <- TRUE
 
 source("plugins/strings.R")
 
-####################################################
-ENCODER.LIST <- c(
-  "no-encoding"
-  , "vtreat-cross"
-  , "vtreat-design"
-  # , "vtreat-dummy"
-  , "scikit-target"
-  , "scikit-ordinal"
-  , "scikit-backward"
-  , "scikit-helmert"
-  , "scikit-james-stein"
-  , "scikit-polynomial"
-  , "scikit-binary"
-  , "scikit-onehot"
-)
-
 ################################################################################
 CV.REPEATS <- 2
 # CV.REPEATS <- 10
@@ -111,7 +95,7 @@ DATASET.LABEL <- "ames"
 # DATASET.LABEL <- "smartflow"
 # DATASET.LABEL <- "smartflow-scales"
 ####################################################
-# ENCODING <- "no-encoding"
+# ENCODING <- "factor-encoding"
 # ENCODING <- "vtreat-cross"
 # ENCODING <- "vtreat-design"
 # ENCODING <- "vtreat-dummy"
