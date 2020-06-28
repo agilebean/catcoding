@@ -111,29 +111,6 @@ apply_encoder <- function(data_original_split, encoding) {
   
 }
 ################################################################################
-ENCODER.LIST <- c(
-  "no-encoding"
-  , "vtreat-cross"
-  , "vtreat-design"
-  , "vtreat-dummy"
-  , "scikit-target"
-  , "scikit-ordinal"
-  , "scikit-backward"
-  , "scikit-helmert"
-  , "scikit-james-stein"
-  , "scikit-polynomial"
-  , "scikit-binary"
-  , "scikit-onehot"
-)
-
-
-DATASET.LABEL.LIST <- c(
-  "ames"
-  , "diamonds"
-  , "designdim"
-  , "timex"
-  , "smartflow"
-)
 
 ####################################################
 # dataset

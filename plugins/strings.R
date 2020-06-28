@@ -4,12 +4,35 @@
 # Output:       models_list_label, models_metrics_label, dataset_label
 #
 ################################################################################
-models_list_label <- function() {
+DATASET.LABEL.LIST <- c(
+  "ames"
+  , "diamonds"
+  , "designdim"
+  , "timex"
+  , "smartflow"
+)
+
+ENCODER.LIST <- c(
+  "no-encoding"
+  , "vtreat-cross"
+  , "vtreat-design"
+  , "vtreat-dummy"
+  , "scikit-target"
+  , "scikit-ordinal"
+  , "scikit-backward"
+  , "scikit-helmert"
+  , "scikit-james-stein"
+  , "scikit-polynomial"
+  , "scikit-binary"
+  , "scikit-onehot"
+)
+
+models_list_label <- function(dataset_label, encoder) {
   output_filename(
     prefix = "models/models.list",
-    DATASET.LABEL,
+    dataset_label,
     train.test.split*100,
-    ENCODING,
+    encoder,
     paste0(CV.REPEATS, "repeats")
   )
 }
@@ -29,8 +52,7 @@ dataset_filename <- function(dataset_label) {
   output_filename(
     prefix = "data/data",
     dataset_label,
-    train.test.split*100,
-    ENCODING
+    train.test.split*100
   )
 }
 
