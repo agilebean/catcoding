@@ -8,11 +8,11 @@
 apply_vtreat_dummy <- function(
   encoding, training_original, testing_original, target_label) {
 
-  features.labels <- training_original %>% select(-target_label) %>% names
+  column.labels <- training_original %>% names
   
   treatment.plan <- designTreatmentsZ(
     dframe = training_original,
-    varlist = features.labels,
+    varlist = column.labels,
     minFraction = 0
   )
   
@@ -54,22 +54,20 @@ apply_vtreat_dummy <- function(
   }
   
   # set training.set
-  training.set.select <- training.set.encoded %>% select(features.select)
+  training.set.select <- training.set.encoded %>% 
+    select(features.select, target_label)
   
   # set testing.set
   if (!is.null(testing.set.encoded)) {
-    testing.set.select <- testing.set.encoded %>% select(features.select)
+    testing.set.select <- testing.set.encoded %>% 
+      select(features.select, target_label)
   } else {
     testing.set.select <- NULL
   }
   
-  print("######################################################################")
-  print("TREATMENT: vtreat::designTreatmentsZ")
-  print("######################################################################")
-
   return(list(
     features.labels = features.select,
-    target_label = target_label,
+    target.label = target_label,
     training.set = training.set.select,
     testing.set = testing.set.select
   ))  

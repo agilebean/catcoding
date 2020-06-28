@@ -11,14 +11,12 @@ apply_no_encoder <- function(
   # set feature labels
   features.original <- training_original %>% select(-target_label) %>% names
   
-  print("######################################################################")
-  print(paste("TREATMENT:", encoding))
-  print("######################################################################")
-
-return(list(
-  features.labels = features.original,
-  target_label = target_label,
-  training.set = training_original,
-  testing.set = testing_original
-))
+  return(
+    list(
+      features.labels = features.original,
+      target.label = target_label,
+      training.set = training_original,
+      testing.set = testing_original
+    )
+  )
 }

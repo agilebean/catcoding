@@ -9,7 +9,9 @@ packs <- c(
   "magrittr",
   "vtreat",
   "caret",
-  "machinelearningtools"
+  "machinelearningtools",
+  "doParallel",
+  "foreach"
 )
 sapply(packs, require, character.only = TRUE)
 # devtools::install_github("agilebean/machinelearningtools")
@@ -19,20 +21,30 @@ NEW <- FALSE
 
 source("plugins/strings.R")
 
+####################################################
+# dataset
+# DATASET.LABEL <- "diamonds"
+DATASET.LABEL <- "ames"
+# DATASET.LABEL <- "designdim"
+# DATASET.LABEL <- "timex"
+# DATASET.LABEL <- "smartflow"
+# DATASET.LABEL <- "smartflow-scales"
+# 
+####################################################
 ENCODER.LIST <- c(
-  "none",
-  "vtreat-cross",
-  "vtreat-dummy",
-  "scikit-target",
-  "scikit-ordinal",
-  "scikit-backward",
-  "scikit-helmert",
-  "scikit-james-stein",
-  "scikit-polynomial",
-  "scikit-binary",
-  "scikit-onehot"
+  "no-encoding"
+  , "vtreat-cross"
+  , "vtreat-design"
+  , "vtreat-dummy"
+  , "scikit-target"
+  , "scikit-ordinal"
+  , "scikit-backward"
+  , "scikit-helmert"
+  , "scikit-james-stein"
+  , "scikit-polynomial"
+  , "scikit-binary"
+  , "scikit-onehot"
 )
-
 CV.REPEATS <- 2
 # CV.REPEATS <- 10
 TRY.FIRST <- 1000
@@ -46,7 +58,7 @@ training.configuration <- trainControl(
 
 models_list_label() 
 models_metrics_label()
-dataset_label()
+dataset_filename(DATASET.LABEL)
 # prep_label()
 
 training.configuration <- trainControl(
@@ -59,8 +71,24 @@ training.configuration <- trainControl(
 algorithm.list <- c(
   "lm"
   , "gbm"
-  , "rf"
+  # , "rf"
 )
+
+####################################################
+ENCODING <- "no-encoding"
+# ENCODING <- "vtreat-cross"
+# ENCODING <- "vtreat-design"
+# ENCODING <- "vtreat-dummy"
+# ENCODING <- "scikit-target"
+# ENCODING <- "scikit-ordinal"
+# ENCODING <- "scikit-helmert" # reached elapsed time limit
+# ENCODING <- "scikit-backward" # reached elapsed time limit
+# ENCODING <- "scikit-james-stein"
+# ENCODING <- "scikit-polynomial"
+# ENCODING <- "scikit-binary"
+# ENCODING <- "scikit-onehot"
+# ENCODING <- "scikit-woe" # target must be binary
+####################################################
 
 if (NEW) {
   
@@ -70,17 +98,22 @@ if (NEW) {
     
   } else {
     
+    
+    data.list <- readRDS(dataset_filename(DATASET.LABEL))
+    
     system.time(
       models.list <- benchmark_algorithms(
-        target_label = target.label,
-        features_labels = features.labels,
-        training_set = training.set.encoded,
-        testing_set = testing.set.encoded,
+        target_label = data.list[[ENCODING]]$target.label,
+        features_labels = data.list[[ENCODING]]$features.labels,
+        training_set = data.list[[ENCODING]]$training.set,
+        testing_set = data.list[[ENCODING]]$testing.set,
         training_configuration = training.configuration,
         algorithm_list = algorithm.list,
         cv_repeats = CV.REPEATS,
         try_first = TRY.FIRST,
-        models_list_name = models_list_label()
+        models_list_name = models_list_label(),
+        push = FALSE,
+        beep = TRUE
       )
     )
   }
@@ -89,7 +122,7 @@ if (NEW) {
   
   models.list <- readRDS(models_list_label())
 }
-
+models.metrics <- models.list %>% get_model_metrics() %T>% print
 
 if (NEW) {
   models.metrics <- models.list %>% get_model_metrics() %T>% print

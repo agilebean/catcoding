@@ -7,6 +7,7 @@
 
 apply_scikit_encoder <- function(
   encoding, training_original, testing_original, target_label) {
+  
   use_condaenv(condaenv = "reticulate", required = TRUE)
   # py_config()
   # import("category_encoders")
@@ -17,7 +18,7 @@ apply_scikit_encoder <- function(
   CAT.labels <- training_original %>% 
     select(-target_label) %>% 
     select(where(is.factor)) %>% 
-    names %T>% print
+    names
   
   ## this passes the arguments literally
   # system("python _encoding_scikit-encoders.py encoding CAT_labels", wait = FALSE)
@@ -44,18 +45,15 @@ apply_scikit_encoder <- function(
     select(-target_label) %>% names
   
   if (!is.null(testing_original)) {
-    testing.set.select <- testing_original %>% select(features.labels.select)
+    testing.set.select <- testing_original %>% 
+      select(target_label, features.labels.select)
   } else {
     testing.set.select <- NULL
   }
   
-  print("######################################################################")
-  print(paste("TREATMENT:", ENCODING))
-  print("######################################################################")
-  
   return(list(
     features.labels = features.labels.select,
-    target_label = target_label,
+    target.label = target_label,
     training.set = training.set.transformed,
     testing.set = testing.set.select
   ))

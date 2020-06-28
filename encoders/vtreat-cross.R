@@ -6,7 +6,7 @@
 ################################################################################
 
 apply_vtreat_cross <- function(
-  encoding, training_original, testing_original, target_label, cluster) {
+  encoding, training_original, testing_original, target_label) {
   
   # decide regression or classification
   target <- training_original[[target_label]]
@@ -33,7 +33,6 @@ apply_vtreat_cross <- function(
   clusterOff(clus)
   
   # get treated training.set
-  treatments <- training.set.cross$treatments
   training.set.encoded <- training.set.cross$crossFrame %>% 
     as_tibble() %T>% print
   
@@ -48,9 +47,7 @@ apply_vtreat_cross <- function(
     c("lev", "clean", "isBAD")
   }
   
-  # training.set.encoded %>% select(-target_label) %>% names
-  
-  features.select <- treatments$scoreFrame %>%
+  features.select <- training.set.cross$treatments$scoreFrame %>%
     # code "clean":  a numerical variable with no NAs or NaNs
     # code "lev": an indicator variable for a specific level of the original categorical variable.
     # filter(code %in% c("clean", "lev")) %>%
@@ -70,22 +67,20 @@ apply_vtreat_cross <- function(
   }
   
   # set training.set
-  training.set.select <- training.set.encoded %>% select(features.select)
+  training.set.select <- training.set.encoded %>% 
+    select(features.select, target_label)
 
   # set testing.set
   if (!is.null(testing.set.encoded)) {
-    testing.set.select <- testing.set.encoded %>% select(features.select)
+    testing.set.select <- testing.set.encoded %>% 
+      select(features.select, target_label)
   } else {
     testing.set.select <- NULL
   }
   
-  print("######################################################################")
-  print("TREATMENT: vtreat::mkCrossFrameNExperiment")
-  print("######################################################################")
-  
   return(list(
     features.labels = features.select,
-    target_label = target_label,
+    target.label = target_label,
     training.set = training.set.select,
     testing.set = testing.set.select
   ))

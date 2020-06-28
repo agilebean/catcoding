@@ -5,10 +5,9 @@
 #
 ################################################################################
 
-
 apply_vtreat_design <- function(
   encoding, training_original, testing_original, target_label) {
- 
+  
   # to extract calibration.set from training.set, subset index by calibration.ratio 
   # tricky: subset too short: sample(nrow(training.original) * calibration.ratio)
   calib <- 0.2
@@ -22,7 +21,7 @@ apply_vtreat_design <- function(
   calibration.set <- training_original %>% slice(calibration.index)
   training.small <- training_original %>% slice(-calibration.index)
   
-  features.labels <- training_original %>% select(-target_label) %>% names
+  features.original <- training_original %>% select(-target_label) %>% names
   
   # scoreFrame <- treatment.plan$scoreFrame %>%
   #   select(varName, origName, code) %T>% print
@@ -46,7 +45,7 @@ apply_vtreat_design <- function(
     print("************ Calculate features with recommended == TRUE")
     treatment.plan <- designTreatmentsN(
       dframe = calibration.set,
-      varlist = features.labels,
+      varlist = features.original,
       outcomename = target_label
     )
     features.select <- treatment.plan$scoreFrame %>%
@@ -60,7 +59,7 @@ apply_vtreat_design <- function(
 
   print(features.select)
   
-  training.set.encoded <-  vtreat::prepare(
+  training.set.encoded <- vtreat::prepare(
     treatment.plan,
     training.small,
     scale = TRUE,
@@ -79,22 +78,20 @@ apply_vtreat_design <- function(
   }
   
   # set training.set
-  training.set.select <- training.set.encoded %>% select(features.select)
+  training.set.select <- training.set.encoded %>% 
+    select(features.select, target_label)
   
   # set testing.set
   if (!is.null(testing.set.encoded)) {
-    testing.set.select <- testing.set.encoded %>% select(features.select)
+    testing.set.select <- testing.set.encoded %>% 
+      select(features.select, target_label)
   } else {
     testing.set.select <- NULL
   }
   
-  print("######################################################################")
-  print("TREATMENT: vtreat::designTreatmentsN")
-  print("######################################################################")
-
   return(list(
     features.labels = features.select,
-    target_label = target_label,
+    target.label = target_label,
     training.set = training.set.select,
     testing.set = testing.set.select
   ))
