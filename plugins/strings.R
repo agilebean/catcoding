@@ -37,7 +37,6 @@ ENCODER.LIST <- c(
   , "scikit-polynomial"
   , "scikit-sum"
   , "scikit-target"
-  # , "scikit-woe" # only for binary classification >ValueError fit_transform()
 )
 
 VARTYPES.SELECT <- if (CATS.ONLY) {
