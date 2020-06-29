@@ -34,6 +34,7 @@ apply_vtreat_design <- function(
       dframe = calibration.set,
       varlist = features.original,
       outcomename = target_label
+      verbose = FALSE
     )
     features.select <- treatment.plan$scoreFrame %>%
       filter(code %in% VARTYPES.SELECT) %>%

@@ -14,7 +14,8 @@ apply_vtreat_dummy <- function(
   treatment.plan <- designTreatmentsZ(
     dframe = training_original,
     varlist = column.labels,
-    minFraction = 0
+    minFraction = 0,
+    verbose = FALSE
   )
   
   # select features
