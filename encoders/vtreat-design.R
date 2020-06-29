@@ -25,19 +25,6 @@ apply_vtreat_design <- function(
   
   # scoreFrame <- treatment.plan$scoreFrame %>%
   #   select(varName, origName, code) %T>% print
-  
-  vartypes.select <- if (CATS.ONLY) {
-    
-    print("feature selection: CATS ONLY")
-    c("lev") 
-    
-  } else { 
-    
-    print("feature selection: ALL")
-    # code "clean":  a numerical variable with no NAs or NaNs
-    # code "lev": an indicator variable for a specific level of the original categorical variable.
-    c("lev", "clean", "isBad")
-  }
 
   success <- FALSE
   while(!success) {
@@ -49,7 +36,7 @@ apply_vtreat_design <- function(
       outcomename = target_label
     )
     features.select <- treatment.plan$scoreFrame %>%
-      filter(code %in% vartypes.select) %>%
+      filter(code %in% VARTYPES.SELECT) %>%
       # vtreat recommendations to filter out useless variables
       filter(recommended == TRUE) %>%
       pull(varName)
@@ -62,7 +49,6 @@ apply_vtreat_design <- function(
   training.set.encoded <- vtreat::prepare(
     treatment.plan,
     training.small,
-    scale = TRUE,
     varRestriction = features.select
   )
   
@@ -70,7 +56,6 @@ apply_vtreat_design <- function(
     testing.set.encoded <-  vtreat::prepare(
       treatment.plan,
       testing_original,
-      scale = TRUE,
       varRestriction = features.select
     )
   } else {

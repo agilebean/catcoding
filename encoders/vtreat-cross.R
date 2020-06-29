@@ -26,9 +26,7 @@ apply_vtreat_cross <- function(
     dframe = training_original, 
     varlist = features.original,
     outcomename = target_label,
-    parallelCluster = clus,
-    rareCount = 0,  # Note set this to something larger, like 5
-    rareSig = c()
+    parallelCluster = clus
   )
   clusterOff(clus)
   
@@ -36,31 +34,21 @@ apply_vtreat_cross <- function(
   training.set.encoded <- training.set.cross$crossFrame %>% 
     as_tibble() %T>% print
   
-  vartypes.selected <- if (CATS.ONLY) {
-    
-    print("feature selection: CATS ONLY")
-    c("lev")
-    
-  } else { 
-    
-    print("feature selection: ALL")
-    c("lev", "clean", "isBAD")
-  }
-  
+  # select features
   features.select <- training.set.cross$treatments$scoreFrame %>%
     # code "clean":  a numerical variable with no NAs or NaNs
     # code "lev": an indicator variable for a specific level of the original categorical variable.
     # filter(code %in% c("clean", "lev")) %>%
-    filter(code %in% vartypes.selected) %>%
+    filter(code %in% VARTYPES.SELECT) %>%
     # vtreat recommendations to filter out useless variables
     filter(recommended == TRUE) %>%
     pull(varName) %T>% print
   
   if (!is.null(testing_original)) {
     testing.set.encoded <- vtreat::prepare(
-      treatments,
+      training.set.cross$treatments,
       testing_original,
-      pruneSig=c()
+      pruneSig = NULL
     )      
   } else {
     testing.set.encoded <- NULL

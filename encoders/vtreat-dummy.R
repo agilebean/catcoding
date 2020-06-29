@@ -8,6 +8,7 @@
 apply_vtreat_dummy <- function(
   encoding, training_original, testing_original, target_label) {
 
+  # training_original <- training.set
   column.labels <- training_original %>% names
   
   treatment.plan <- designTreatmentsZ(
@@ -16,27 +17,14 @@ apply_vtreat_dummy <- function(
     minFraction = 0
   )
   
-  # restrict to common variable types
-  vartypes.selected <- if (CATS.ONLY) {
-    
-    print("feature selection: CATS ONLY")
-    c("lev") 
-    
-  } else { 
-    
-    print("feature selection: ALL")
-    c("lev", "clean", "isBAD")
-  }
-  
-  # see vignette('vtreatVariableTypes', package = 'vtreat') for details
+  # select features
   features.select <- treatment.plan$scoreFrame %>% 
-    filter(code %in% vartypes.selected) %>% 
+    filter(code %in% VARTYPES.SELECT) %>% 
     pull(varName)
   
   training.set.encoded <- vtreat::prepare(
     treatment.plan,
     training_original,
-    scale = TRUE,
     varRestriction = features.select
   )
   
@@ -45,7 +33,6 @@ apply_vtreat_dummy <- function(
     testing.set.encoded <- vtreat::prepare(
       treatment.plan,
       testing_original,
-      scale = TRUE,
       varRestriction = features.select
     ) 
   } else {

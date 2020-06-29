@@ -22,9 +22,7 @@ sapply(packs, require, character.only = TRUE)
 ####################################################
 # data splits
 
-# QUICK-TEST: use only cats to see whether it's worth catcoding 
-# CATS.ONLY <- TRUE
-CATS.ONLY <- FALSE
+
 
 ################################################################################
 # PREP <- TRUE
