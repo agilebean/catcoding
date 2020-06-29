@@ -26,8 +26,7 @@ apply_vtreat_cross <- function(
     dframe = training_original, 
     varlist = features.original,
     outcomename = target_label,
-    parallelCluster = clus,
-    verbose = FALSE
+    parallelCluster = clus
   )
   clusterOff(clus)
   

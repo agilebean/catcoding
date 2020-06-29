@@ -120,9 +120,9 @@ DATASET.LABEL <- "ames"
 # 
 ####################################################
 # ENCODING <- "factor-encoding"
-ENCODING <- "vtreat-cross"
+# ENCODING <- "vtreat-cross"
 # ENCODING <- "vtreat-design"
-# ENCODING <- "vtreat-dummy"
+ENCODING <- "vtreat-dummy"
 # ENCODING <- "scikit-target"
 # ENCODING <- "scikit-ordinal"
 # ENCODING <- "scikit-helmert" # reached elapsed time limit
@@ -202,7 +202,7 @@ get_data_ALL_encoded_list <- function() {
 system.time(
   data.ALL.encoded.list <- get_data_ALL_encoded_list()  
 ) # 116.3s for 55 encoders (5 datasets x 11 encoders)
-# 177s for 76 encoders (4 datasets x 19 encoders) = ~2.3s
+# 171s for 76 encoders (4 datasets x 19 encoders) = ~2.3s
 # 29.7s for 19 encoders (diamonds) 
 data.ALL.encoded.list %>% names
 

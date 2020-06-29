@@ -7,15 +7,13 @@
 
 apply_vtreat_dummy <- function(
   encoding, training_original, testing_original, target_label) {
-
-  # training_original <- training.set
-  column.labels <- training_original %>% names
+  
+  features.labels <- training_original %>% select(-target_label) %>% names
   
   treatment.plan <- designTreatmentsZ(
     dframe = training_original,
-    varlist = column.labels,
-    minFraction = 0,
-    verbose = FALSE
+    varlist = features.labels,
+    minFraction = 0
   )
   
   # select features
@@ -29,27 +27,25 @@ apply_vtreat_dummy <- function(
     varRestriction = features.select
   )
   
+  # set training.set
+  training.set.select <- training.set.encoded %>% 
+    select(features.select) %>% 
+    cbind(., training_original[target_label])
+  
+  # set testing.set
   if (!is.null(testing_original)) {
     
     testing.set.encoded <- vtreat::prepare(
       treatment.plan,
       testing_original,
       varRestriction = features.select
-    ) 
+    )
+    testing.set.select <- testing.set.encoded %>% 
+      select(features.select) %>% 
+      cbind(., testing_original[target_label])
+    
   } else {
     
-    testing.set.encoded <- NULL
-  }
-  
-  # set training.set
-  training.set.select <- training.set.encoded %>% 
-    select(features.select, target_label)
-  
-  # set testing.set
-  if (!is.null(testing.set.encoded)) {
-    testing.set.select <- testing.set.encoded %>% 
-      select(features.select, target_label)
-  } else {
     testing.set.select <- NULL
   }
   
