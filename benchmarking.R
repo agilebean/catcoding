@@ -29,14 +29,7 @@ TRY.FIRST <- NULL
 
 training.configuration <- trainControl(
   method = "repeatedcv",
-  number = 5,
-  repeats = CV.REPEATS,
-  savePredictions = "final"
-)
-
-training.configuration <- trainControl(
-  method = "repeatedcv",
-  number = 5,
+  number = 10,
   repeats = CV.REPEATS,
   savePredictions = "final"
 )
@@ -44,12 +37,13 @@ training.configuration <- trainControl(
 algorithm.list <- c(
   "lm"
   , "gbm"
-  # , "rf"
+  , "rf"
 )
 
 ################################################################################
 # benchmarking
 ################################################################################
+
 if (NEW) {
   system.time(
     benchmark.ALL.data.encoder.list <- DATASET.LABEL.LIST %>% 
@@ -152,7 +146,6 @@ benchmark.all.dataset %>%
 ################################################################################
 # read all encoded datasets for ALL datasets
 ################################################################################
-
 system.time(
   benchmark.all.datasets.all <- DATASET.LABEL.LIST %>% 
     map(
@@ -189,23 +182,59 @@ system.time(
     set_names(paste0("benchmark.", DATASET.LABEL.LIST))
 )
 # 
-# 57.6 >> EXP2 (60encoders, full datasets)
+# 57.6s >> EXP2 (60encoders, full datasets)
+# (15s + 33s) >> EXP (50+4 (diamonds) encoders, )
 
+# EXP2
 # benchmark.label <- paste0(
 #   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, "try1000.rds") %T>% print
+# EXP3
+# benchmark.label <- paste0(
+#   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".rds") %T>% print
+# all <- benchmark.all.datasets.all
+# dia <- benchmark.all.datasets.all
+# 
+# benchmark.all.datasets.all <- all %>% 
+#   list_modify(benchmark.diamonds = dia$benchmark.diamonds)
 
 benchmark.label <- paste0(
-  "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".rds") %T>% print
+  "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".folds5.rds") %T>% print
 
 benchmark.all.datasets.all %>% saveRDS(benchmark.label)
 benchmark.all.datasets.all <- readRDS(benchmark.label) %T>% print
 
 
 ################################################################################
+# SCRIBBLE
+################################################################################
+# utility function to change list element name
+rename_list_element <- function() {
+  DATASET.LABEL.LIST %>% 
+    map(
+      function(DATASET_LABEL) {
+        data.list <- readRDS(dataset_filename(DATASET_LABEL))
+        data.list %>% names
+        names(data.list) <- str_replace(names(data.list), "no-encoding", "factor-encoding")
+        data.list %>% saveRDS(dataset_filename(DATASET_LABEL))
+      })
+}
 
+read_list_names <- function() {
+  return.list <- DATASET.LABEL.LIST %>% 
+    map(
+      function(DATASET_LABEL) {
+        data.list <- readRDS(dataset_filename(DATASET_LABEL))
+        data.list
+      }) %>% 
+    set_names(DATASET.LABEL.LIST)
+  return.list
+}
 
-
-
+object <- read_list_names()
+object %>% names
+object$ames$`vtreat-dummy`
+object$ames$`factor-encoding`
+object$ames$`scikit-onehot`
 
 
 

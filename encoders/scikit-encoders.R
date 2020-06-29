@@ -30,16 +30,12 @@ apply_scikit_encoder <- function(
   
   ### Note: replaced fit().transform() by fit_transform()
   ### see https://github.com/scikit-learn-contrib/category_encoders/issues/167#issuecomment-461489109
+  ### Note: apply trained model on training.set >> creates "intercept"!
   # train encoder model on training.set & train encoder model on training.set
   training.set.transformed <- encoder$fit_transform(
     training_original, training_original[[target_label]]
   )
   
-  # # train encoder model on training.set
-  # encoder$fit(training.set, training.set[[target_label]])
-  # # apply trained model on training.set >> creates "intercept"!
-  # training.set2 <- encoder$transform(training.set)
-  # 
   
   features.labels.select <- training.set.transformed %>% 
     select(-target_label) %>% names

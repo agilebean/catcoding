@@ -21,8 +21,7 @@ sapply(packs, require, character.only = TRUE)
 
 ####################################################
 # data splits
-train.test.split <- 1.0
-calibration.ratio <- 0.3  # only for vtreat-design
+
 # QUICK-TEST: use only cats to see whether it's worth catcoding 
 # CATS.ONLY <- TRUE
 CATS.ONLY <- FALSE
@@ -152,7 +151,7 @@ system.time(
 # create split objects for 1 dataset
 system.time(
   data.original.split <- split_dataset_original(
-    data.original.object, train.test.split, CATS.ONLY
+    data.original.object, TRAIN.TEST.SPLIT, CATS.ONLY
   )  
 ) # 0.03s
 
@@ -160,7 +159,7 @@ system.time(
 get_data_split_list <- function() {
   DATASET.LABEL.LIST %>% 
     map(~ get_dataset_original(.x)) %>% 
-    map(~ split_dataset_original(., train.test.split, CATS.ONLY)) %>% 
+    map(~ split_dataset_original(., TRAIN.TEST.SPLIT, CATS.ONLY)) %>% 
     set_names((DATASET.LABEL.LIST))
 }
 # get_data_split_list() %>% names
@@ -193,7 +192,7 @@ apply_all_encoders <- function(data_original_split, encoder_list) {
 get_data_ALL_encoded_list <- function() {
   DATASET.LABEL.LIST %>%
     map( ~ get_dataset_original(.x)) %>%
-    map( ~ split_dataset_original(.x, train.test.split, CATS.ONLY)) %>%
+    map( ~ split_dataset_original(.x, TRAIN.TEST.SPLIT, CATS.ONLY)) %>%
     map( ~ apply_all_encoders(.x, ENCODER.LIST)) %>%
     set_names((DATASET.LABEL.LIST))
 }
@@ -229,7 +228,7 @@ system.time(
 #   DATASET.LABEL.LIST %>%
 #     map(
 #       ~ get_dataset_original(.x) %>%
-#         split_dataset_original(train.test.split, CATS.ONLY) %>%
+#         split_dataset_original(TRAIN.TEST.SPLIT, CATS.ONLY) %>%
 #         apply_all_encoders(ENCODER.LIST)
 #     ) %>%
 #     set_names(DATASET.LABEL.LIST)
