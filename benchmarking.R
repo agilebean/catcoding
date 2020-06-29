@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Script:       benchamrk.R
+# Script:       benchmarking.R
 # Benchmarking: lm, gbm, rf
 #
 ################################################################################
@@ -29,7 +29,7 @@ TRY.FIRST <- NULL
 
 training.configuration <- trainControl(
   method = "repeatedcv",
-  number = 10,
+  number = 5,
   repeats = CV.REPEATS,
   savePredictions = "final"
 )
@@ -50,6 +50,7 @@ if (NEW) {
       map(
         function(DATASET_LABEL) {
           
+          print(paste("*** Dataset:", DATASET_LABEL))
           data.list <- readRDS(dataset_filename(DATASET_LABEL))
           
           benchmark.encoder.list <- ENCODER.LIST %>% 
@@ -78,8 +79,27 @@ if (NEW) {
   )
 } 
 # 429s >> EXP1 (60encoders, TRY.FIRST = 1000)
-# 1183s = 19.7m >> EXP2 (60encoders, full datasets)
+# 1183s = 19.7m >> EXP2 (60encoders, 5 datasets)
+# 20940 = 349m >> EXP3 
 ################################################################################
+
+# benchmark.ALL.data.encoder.list$ames$`scikit-target` %>% 
+benchmark.ALL.data.encoder.list$ames$`vtreat-dummy` %>% 
+  get_model_metrics()
+
+CORRECT <- benchmark.ALL.data.encoder.list %>% 
+  map(
+    ~.x %>% 
+      # .$`scikit-target` %>%
+      .$`vtreat-dummy` %>% 
+      get_model_metrics(.) %>%
+      .$benchmark.all %>%
+      print
+  )
+
+CORRECT %>% map(~.x)
+CORRECT %>% map_dfr(~.x, .id = "dataset")
+CORRECT$ames %>% names
 
 ####################################################
 # DATASET.LABEL <- "diamonds"
@@ -146,27 +166,53 @@ benchmark.all.dataset %>%
 ################################################################################
 # read all encoded datasets for ALL datasets
 ################################################################################
+
+# ENCODER <- "scikit-target"
+ENCODER <- "vtreat-dummy"
 system.time(
-  benchmark.all.datasets.all <- DATASET.LABEL.LIST %>% 
+  WRONG <- DATASET.LABEL.LIST %>% 
     map(
       function(DATASET_LABEL) {
         
-        models.lists.dataset.labels <- dir("models/") %>% 
-          startsWith(paste0("models.list.", DATASET_LABEL)) %>% 
-          dir("models/")[.] %T>% print
+        models.lists.dataset.label <- models_list_label(DATASET_LABEL, ENCODER)
         
+        models.lists.dataset.label %>% print
         system.time(
-          models.lists.dataset <- models.lists.dataset.labels %>% 
-            map(~paste0("models/", .x) %>% readRDS(.)) %>% 
-            set_names(paste0("models.list.", ENCODER.LIST))
-        ) # 4.5s
-        models.lists.dataset %>% names
+          models.lists.dataset <- models.lists.dataset.label %>% readRDS(.)
+        ) # 4.5s EXP2 > 22.6s EXP4
         
+        # CORRECT[[DATASET_LABEL]] %>% 
+        #   saveRDS(models.lists.dataset.label)
+        models.lists.dataset %>%
+          get_model_metrics(.) %>%
+          pluck("benchmark.all") %>%
+          filter(RMSE.mean == min(RMSE.mean))
+      }
+    ) %>% 
+    set_names(DATASET.LABEL.LIST)
+)
+WRONG %>% names
+WRONG %>% map(~.x)
+WRONG %>% map_df(~.x, .id = "dataset")
+
+CORRECT %>% names
+CORRECT[[DATASET.LABEL]]
+
+system.time(
+  benchmarks.all.datasets.all <- DATASET.LABEL.LIST %>% 
+    map(
+      function(DATASET_LABEL) {
+        
+        models.lists.dataset <- ENCODER.LIST %>% 
+          map(~ models_list_label(DATASET_LABEL, .) %>% readRDS(.)) %>% 
+          set_names(paste0("models.list.", ENCODER.LIST))
+        models.lists.dataset %>% names
+
         system.time(
           metrics.lists.dataset <- models.lists.dataset %>% 
             map(~ get_model_metrics(.x)) %>% 
             set_names(paste0("metrics.list.", ENCODER.LIST))
-        ) # 0.7s
+        ) # 0.7s, 2.2s
         metrics.lists.dataset %>% names
         
         benchmarks.all.dataset <- metrics.lists.dataset %>% 
@@ -181,9 +227,10 @@ system.time(
     ) %>% 
     set_names(paste0("benchmark.", DATASET.LABEL.LIST))
 )
+benchmarks.all.datasets.all
 # 
-# 57.6s >> EXP2 (60encoders, full datasets)
-# (15s + 33s) >> EXP (50+4 (diamonds) encoders, )
+# 57.6s >> EXP2 (60 encoders, full datasets)
+# 46.5s >> EXP4 (76 encoders, 4 datasets)
 
 # EXP2
 # benchmark.label <- paste0(
@@ -194,14 +241,17 @@ system.time(
 # all <- benchmark.all.datasets.all
 # dia <- benchmark.all.datasets.all
 # 
-# benchmark.all.datasets.all <- all %>% 
+# benchmarks.all.datasets.all <- all %>% 
 #   list_modify(benchmark.diamonds = dia$benchmark.diamonds)
-
 benchmark.label <- paste0(
   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".folds5.rds") %T>% print
 
-benchmark.all.datasets.all %>% saveRDS(benchmark.label)
-benchmark.all.datasets.all <- readRDS(benchmark.label) %T>% print
+# EXP4
+benchmark.label <- paste0(
+  "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".folds10.rds") %T>% print
+
+# benchmarks.all.datasets.all %>% saveRDS(benchmark.label)
+benchmarks.all.datasets.all <- readRDS(benchmark.label) %T>% print
 
 
 ################################################################################
