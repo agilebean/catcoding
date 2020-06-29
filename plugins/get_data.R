@@ -86,7 +86,7 @@ get_dataset_original <- function(dataset_label) {
     # convert Likert to factor
     dataset %<>% 
       mutate(across(features.labels, as.factor)) %>% 
-      mutate(age = as.numeric(age))
+      mutate(across(c(age, smartphonehours), as.numeric))
     
     
   } else if (dataset_label == "smartflow.scales") {
