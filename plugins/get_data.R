@@ -141,7 +141,7 @@ split_dataset_original <- function(
   )
   training.set <- dataset[train.index, ]
   
-  if (train.test.split < 1.0) {
+  if (train_test_split < 1.0) {
     
     testing.set <- dataset[-train.index, ]  
   } else { # default case: whole dataset

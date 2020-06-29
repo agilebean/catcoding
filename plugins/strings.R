@@ -21,7 +21,7 @@ ENCODER.LIST <- c(
   "factor-encoding"
   , "vtreat-cross"
   , "vtreat-design"
-  # , "vtreat-dummy"
+  , "vtreat-dummy"
   , "scikit-backward"
   , "scikit-baseN"
   , "scikit-binary"
@@ -37,7 +37,7 @@ ENCODER.LIST <- c(
   , "scikit-polynomial"
   , "scikit-sum"
   , "scikit-target"
-  , "scikit-woe"
+  # , "scikit-woe" # only for binary classification >ValueError fit_transform()
 )
 
 VARTYPES.SELECT <- if (CATS.ONLY) {
