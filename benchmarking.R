@@ -16,8 +16,8 @@ packs <- c(
 sapply(packs, require, character.only = TRUE)
 # devtools::install_github("agilebean/machinelearningtools")
 # unloadNamespace("machinelearningtools")
-NEW <- TRUE
-# NEW <- FALSE
+# NEW <- TRUE
+NEW <- FALSE
 
 source("plugins/strings.R")
 
@@ -81,6 +81,7 @@ if (NEW) {
 # 429s >> EXP1 (60encoders, TRY.FIRST = 1000)
 # 1183s = 19.7m >> EXP2 (60encoders, 5 datasets)
 # 20940 = 349m >> EXP3 
+# 7552 = 126m >> EXP5 - diamonds
 ################################################################################
 
 # benchmark.ALL.data.encoder.list$ames$`scikit-target` %>% 
@@ -202,7 +203,10 @@ system.time(
   benchmarks.all.datasets.all <- DATASET.LABEL.LIST %>% 
     map(
       function(DATASET_LABEL) {
-        
+        # DATASET_LABEL <- "ames"
+        # DATASET_LABEL <- "designdim"
+        # DATASET_LABEL <- "timex"
+        # DATASET_LABEL <- "smartflow"
         models.lists.dataset <- ENCODER.LIST %>% 
           map(~ models_list_label(DATASET_LABEL, .) %>% readRDS(.)) %>% 
           set_names(paste0("models.list.", ENCODER.LIST))
@@ -211,18 +215,31 @@ system.time(
         system.time(
           metrics.lists.dataset <- models.lists.dataset %>% 
             map(~ get_model_metrics(.x)) %>% 
-            set_names(paste0("metrics.list.", ENCODER.LIST))
+            set_names(ENCODER.LIST)
+            # set_names(paste0("metrics.list.", ENCODER.LIST))
         ) # 0.7s, 2.2s
         metrics.lists.dataset %>% names
         
         benchmarks.all.dataset <- metrics.lists.dataset %>% 
           map(~ pluck(.x, "benchmark.all")) %T>% print
         
-        benchmarks.all.dataset %>% 
+        # benchmarks.full <- benchmarks.all.dataset %>% 
+        #   # .id argument gets name
+        #   map_df(~.x, .id = "encoder") %>% 
+        #   arrange(RMSE.mean)
+        
+        # create list of the best single encoder per dataset
+        benchmarks.top1 <- benchmarks.all.dataset %>% 
           map_df(~ .x %>% filter(RMSE.mean == min(RMSE.mean))) %>% 
           mutate(encoder = ENCODER.LIST) %>% 
           select(encoder, everything()) %>% 
           arrange(RMSE.mean)
+        
+        # return(list(
+        #   benchmarks.full = benchmarks.full,
+        #   benchmarks.top1 = benchmarks.top1
+        # ))
+        return(benchmarks.top1)
       }
     ) %>% 
     set_names(paste0("benchmark.", DATASET.LABEL.LIST))
@@ -231,10 +248,12 @@ benchmarks.all.datasets.all
 # 
 # 57.6s >> EXP2 (60 encoders, full datasets)
 # 46.5s >> EXP4 (76 encoders, 4 datasets)
+# 39.4s >> EXP5 (76 encoders, 4 datasets)
 
 # EXP2
 # benchmark.label <- paste0(
 #   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, "try1000.rds") %T>% print
+#
 # EXP3
 # benchmark.label <- paste0(
 #   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".rds") %T>% print
@@ -243,16 +262,22 @@ benchmarks.all.datasets.all
 # 
 # benchmarks.all.datasets.all <- all %>% 
 #   list_modify(benchmark.diamonds = dia$benchmark.diamonds)
+# 
+# benchmark.label <- paste0(
+#   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".folds5ml2.rds") %T>% print
+#
+# EXP4
+# benchmark.label <- paste0(
+#   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".folds10.rds") %T>% print
+# #
+# EXP5
 benchmark.label <- paste0(
   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".folds5.rds") %T>% print
-
-# EXP4
-benchmark.label <- paste0(
-  "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".folds10.rds") %T>% print
 
 # benchmarks.all.datasets.all %>% saveRDS(benchmark.label)
 benchmarks.all.datasets.all <- readRDS(benchmark.label) %T>% print
 
+benchmarks.all.datasets.all
 
 ################################################################################
 # SCRIBBLE
