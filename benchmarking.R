@@ -199,24 +199,23 @@ WRONG %>% map_df(~.x, .id = "dataset")
 CORRECT %>% names
 CORRECT[[DATASET.LABEL]]
 
-system.time(
-  benchmarks.all.datasets.all <- DATASET.LABEL.LIST %>% 
+create_benchmarks_all_datasets_all <- function(
+  DATASET_LABEL_LIST, ENCODER_LIST) {
+  
+  benchmarks.all.datasets.all <- DATASET_LABEL_LIST %>% 
     map(
       function(DATASET_LABEL) {
-        # DATASET_LABEL <- "ames"
-        # DATASET_LABEL <- "designdim"
-        # DATASET_LABEL <- "timex"
-        # DATASET_LABEL <- "smartflow"
-        models.lists.dataset <- ENCODER.LIST %>% 
+        
+        models.lists.dataset <- ENCODER_LIST %>% 
           map(~ models_list_label(DATASET_LABEL, .) %>% readRDS(.)) %>% 
-          set_names(paste0("models.list.", ENCODER.LIST))
+          set_names(ENCODER_LIST)
         models.lists.dataset %>% names
-
+        
         system.time(
           metrics.lists.dataset <- models.lists.dataset %>% 
             map(~ get_model_metrics(.x)) %>% 
-            set_names(ENCODER.LIST)
-            # set_names(paste0("metrics.list.", ENCODER.LIST))
+            set_names(ENCODER_LIST)
+          # set_names(paste0("metrics.list.", ENCODER.LIST))
         ) # 0.7s, 2.2s
         metrics.lists.dataset %>% names
         
@@ -242,7 +241,13 @@ system.time(
         return(benchmarks.top1)
       }
     ) %>% 
-    set_names(paste0("benchmark.", DATASET.LABEL.LIST))
+    set_names(paste0("benchmark.", DATASET_LABEL_LIST))
+  
+}
+
+system.time(
+  benchmarks.all.datasets.all <- 
+    create_benchmarks_all_datasets_all(DATASET.LABEL.LIST, ENCODER.LIST)
 )
 benchmarks.all.datasets.all
 # 
