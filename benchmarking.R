@@ -167,38 +167,6 @@ benchmark.all.dataset %>%
 ################################################################################
 # read all encoded datasets for ALL datasets
 ################################################################################
-
-# ENCODER <- "scikit-target"
-ENCODER <- "vtreat-dummy"
-system.time(
-  WRONG <- DATASET.LABEL.LIST %>% 
-    map(
-      function(DATASET_LABEL) {
-        
-        models.lists.dataset.label <- models_list_label(DATASET_LABEL, ENCODER)
-        
-        models.lists.dataset.label %>% print
-        system.time(
-          models.lists.dataset <- models.lists.dataset.label %>% readRDS(.)
-        ) # 4.5s EXP2 > 22.6s EXP4
-        
-        # CORRECT[[DATASET_LABEL]] %>% 
-        #   saveRDS(models.lists.dataset.label)
-        models.lists.dataset %>%
-          get_model_metrics(.) %>%
-          pluck("benchmark.all") %>%
-          filter(RMSE.mean == min(RMSE.mean))
-      }
-    ) %>% 
-    set_names(DATASET.LABEL.LIST)
-)
-WRONG %>% names
-WRONG %>% map(~.x)
-WRONG %>% map_df(~.x, .id = "dataset")
-
-CORRECT %>% names
-CORRECT[[DATASET.LABEL]]
-
 create_benchmarks_all_datasets_all <- function(
   DATASET_LABEL_LIST, ENCODER_LIST) {
   
@@ -284,6 +252,39 @@ benchmarks.all.datasets.all <- readRDS(benchmark.label) %T>% print
 
 benchmarks.all.datasets.all
 
+################################################################################
+# DEBUG WRONG models.list
+################################################################################
+# ENCODER <- "scikit-target"
+ENCODER <- "vtreat-dummy"
+system.time(
+  WRONG <- DATASET.LABEL.LIST %>% 
+    map(
+      function(DATASET_LABEL) {
+        
+        models.lists.dataset.label <- models_list_label(DATASET_LABEL, ENCODER)
+        
+        models.lists.dataset.label %>% print
+        system.time(
+          models.lists.dataset <- models.lists.dataset.label %>% readRDS(.)
+        ) # 4.5s EXP2 > 22.6s EXP4
+        
+        # CORRECT[[DATASET_LABEL]] %>% 
+        #   saveRDS(models.lists.dataset.label)
+        models.lists.dataset %>%
+          get_model_metrics(.) %>%
+          pluck("benchmark.all") %>%
+          filter(RMSE.mean == min(RMSE.mean))
+      }
+    ) %>% 
+    set_names(DATASET.LABEL.LIST)
+)
+WRONG %>% names
+WRONG %>% map(~.x)
+WRONG %>% map_df(~.x, .id = "dataset")
+
+CORRECT %>% names
+CORRECT[[DATASET.LABEL]]
 ################################################################################
 # SCRIBBLE
 ################################################################################
