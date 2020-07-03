@@ -19,6 +19,8 @@ sapply(packs, require, character.only = TRUE)
 NEW <- TRUE
 # NEW <- FALSE
 
+# ENCODER.LIST <- c("scikit-loo")
+# ENCODER <- c("scikit-loo")
 source("plugins/strings.R")
 
 ################################################################################
@@ -36,12 +38,13 @@ training.configuration <- trainControl(
 
 algorithm.list <- c(
   "lm"
-  , "gbm"
-  , "rf"
+  # , "gbm"
+  # , "rf"
+  , "ranger"
+  , "xgbTree"
 )
 
-ENCODER.LIST <- c("scikit-loo")
-ENCODER <- c("scikit-loo")
+
 ################################################################################
 # benchmarking
 ################################################################################
@@ -201,10 +204,10 @@ create_benchmarks_all_datasets_all <- function(
         benchmarks.all.dataset <- metrics.lists.dataset %>% 
           map(~ pluck(.x, "benchmark.all")) %T>% print
         
-        # benchmarks.full <- benchmarks.all.dataset %>% 
-        #   # .id argument gets name
-        #   map_df(~.x, .id = "encoder") %>% 
-        #   arrange(RMSE.mean)
+        benchmarks.full <- benchmarks.all.dataset %>%
+          # .id argument gets name
+          map_df(~.x, .id = "encoder") %>%
+          arrange(RMSE.mean)
         
         # create list of the best single encoder per dataset
         benchmarks.top1 <- benchmarks.all.dataset %>% 
@@ -217,7 +220,8 @@ create_benchmarks_all_datasets_all <- function(
         #   benchmarks.full = benchmarks.full,
         #   benchmarks.top1 = benchmarks.top1
         # ))
-        return(benchmarks.top1)
+        # return(benchmarks.top1)
+        return(benchmarks.full)
       }
     ) %>% 
     set_names(DATASET_LABEL_LIST)
@@ -228,14 +232,15 @@ create_benchmarks_all_datasets_all <- function(
 system.time(
   benchmarks.all.datasets.all <- 
     create_benchmarks_all_datasets_all(DATASET.LABEL.LIST, ENCODER.LIST)
-)
+) 
 benchmarks.all.datasets.all
 benchmarks.all.datasets.all %>% map_df(~.x, .id = "data")
 # 
 # 57.6s >> EXP2 (60 encoders, full datasets)
 # 46.5s >> EXP4 (76 encoders, 4 datasets)
 # 39.4s >> EXP5 (76 encoders, 4 datasets)
-
+# 41.3s >> EXP6 (76 encoders, 4 datasets)
+# 
 # EXP2
 # benchmark.label <- paste0(
 #   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, "try1000.rds") %T>% print
