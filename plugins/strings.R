@@ -9,6 +9,11 @@ TRAIN.TEST.SPLIT <- 1.0
 # CATS.ONLY <- TRUE
 CATS.ONLY <- FALSE
 
+# PREPROCESS.OPTION <- "pca"
+# PREPROCESS.OPTION <- "ica"
+PREPROCESS.OPTION <- "YeoJohnson"
+# PREPROCESS.OPTION <- NULL
+
 DATASET.LABEL.LIST <- c(
   # "diamonds"
   "ames"
@@ -52,12 +57,13 @@ VARTYPES.SELECT <- if (CATS.ONLY) {
   c("lev", "clean", "isBad")
 }
 
-models_list_label <- function(dataset_label, encoder) {
+models_list_label <- function(dataset_label, encoding) {
   output_filename(
     prefix = "models/models.list",
     dataset_label,
     TRAIN.TEST.SPLIT*100,
-    encoder,
+    encoding,
+    PREPROCESS.OPTION,
     paste0(CV.REPEATS, "repeats")
   )
 }
@@ -68,7 +74,8 @@ models_metrics_label <- function() {
     DATASET.LABEL,
     TRAIN.TEST.SPLIT*100,
     ENCODING,
-    paste0(CV.REPEATS, "repeats")
+    PREPROCESS.OPTION,
+    paste0("cv", CV.REPEATS)
   )
 }
 
@@ -79,6 +86,15 @@ dataset_filename <- function(dataset_label) {
     dataset_label,
     TRAIN.TEST.SPLIT*100
   )
+}
+
+benchmark_filename <- function() {
+  output_filename(
+    prefix = "output/benchmarks.all.datasets.all",
+    paste0("cv", CV.REPEATS),
+    PREPROCESS.OPTION
+  )
+  
 }
 
 prep_label <- function() {

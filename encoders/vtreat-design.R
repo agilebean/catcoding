@@ -26,14 +26,26 @@ apply_vtreat_design <- function(
   # scoreFrame <- treatment.plan$scoreFrame %>%
   #   select(varName, origName, code) %T>% print
 
+  # decide regression or classification
+  target <- training_original[[target_label]]
+  if (is.numeric(target)) {
+    
+    treatment_function <- vtreat::designTreatmentsN
+    
+  } else if (is.factor(target)) {
+    
+    treatment_function <- vtreat::designTreatmentsC
+  }
+  
   success <- FALSE
   while(!success) {
     
     print("************ Calculate features with recommended == TRUE")
-    treatment.plan <- designTreatmentsN(
+    treatment.plan <- treatment_function(
       dframe = calibration.set,
       varlist = features.original,
-      outcomename = target_label
+      outcomename = target_label,
+      scale = TRUE
     )
     features.select <- treatment.plan$scoreFrame %>%
       filter(code %in% VARTYPES.SELECT) %>%

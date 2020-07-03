@@ -38,6 +38,9 @@ get_dataset_original <- function(dataset_label) {
     # convert Likert to factor
     dataset %<>% mutate(across(features.labels, as.factor))
     
+    # convert Likert to ordinal
+    dataset %<>% mutate(across(where(is.factor), as.ordered))
+    
   } else if (dataset_label == "timex") {
     
     data.descriptive <- readRDS("data/timex.descriptive.rds") 
@@ -66,6 +69,11 @@ get_dataset_original <- function(dataset_label) {
       mutate(across(features.labels, as.factor)) %>% 
       mutate(age = as.numeric(age))
     
+    # convert Likert to ordinal
+    dataset %<>% 
+      mutate(across(-c(referral:relationship, target.label),
+                    as.ordered))
+    
     
   } else if (dataset_label == "smartflow") {
     
@@ -88,6 +96,10 @@ get_dataset_original <- function(dataset_label) {
       mutate(across(features.labels, as.factor)) %>% 
       mutate(across(c(age, smartphonehours), as.numeric))
     
+    # convert Likert to ordinal
+    dataset %<>% 
+      mutate(across(-c(referral:relationship, target.label),
+                    as.ordered))
     
   } else if (dataset_label == "smartflow.scales") {
     
