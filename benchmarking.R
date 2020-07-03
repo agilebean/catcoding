@@ -16,8 +16,8 @@ packs <- c(
 sapply(packs, require, character.only = TRUE)
 # devtools::install_github("agilebean/machinelearningtools")
 # unloadNamespace("machinelearningtools")
-# NEW <- TRUE
-NEW <- FALSE
+NEW <- TRUE
+# NEW <- FALSE
 
 source("plugins/strings.R")
 
@@ -40,6 +40,8 @@ algorithm.list <- c(
   , "rf"
 )
 
+ENCODER.LIST <- c("scikit-loo")
+ENCODER <- c("scikit-loo")
 ################################################################################
 # benchmarking
 ################################################################################
@@ -85,14 +87,16 @@ if (NEW) {
 ################################################################################
 
 # benchmark.ALL.data.encoder.list$ames$`scikit-target` %>% 
-benchmark.ALL.data.encoder.list$ames$`vtreat-dummy` %>% 
+# benchmark.ALL.data.encoder.list$ames$`vtreat-dummy` %>% 
+benchmark.ALL.data.encoder.list$ames$`scikit-loo` %>% 
   get_model_metrics()
 
 CORRECT <- benchmark.ALL.data.encoder.list %>% 
   map(
     ~.x %>% 
       # .$`scikit-target` %>%
-      .$`vtreat-dummy` %>% 
+      # .$`vtreat-dummy` %>% 
+      .$`scikit-loo` %>% 
       get_model_metrics(.) %>%
       .$benchmark.all %>%
       print
@@ -114,7 +118,8 @@ DATASET.LABEL <- "ames"
 # ENCODING <- "vtreat-cross"
 # ENCODING <- "vtreat-design"
 # ENCODING <- "vtreat-dummy"
-ENCODING <- "scikit-target" # ++3*ames
+# ENCODING <- "scikit-target" # ++3*ames
+ENCODING <- "scikit-loo"
 # ENCODING <- "scikit-ordinal"
 # ENCODING <- "scikit-helmert" # reached elapsed time limit
 # ENCODING <- "scikit-backward" # reached elapsed time limit
@@ -135,7 +140,7 @@ models.metrics <- models.list %>% get_model_metrics() %T>% print
 ####################################################
 
 ################################################################################
-# read all encoded datasets for one dataset
+# read all encoded datasets for ONE dataset
 ################################################################################
 models.lists.dataset.labels <- dir("models/") %>% 
   startsWith(paste0("models.list.", DATASET.LABEL)) %>% 
@@ -144,23 +149,26 @@ models.lists.dataset.labels <- dir("models/") %>%
 system.time(
   models.lists.dataset <- models.lists.dataset.labels %>% 
     map(~paste0("models/", .x) %>% readRDS) %>% 
-    set_names(paste0("models.list.", ENCODER.LIST))
-) # 4.5s
+    set_names(
+      gsub("models\\.list\\.(.+)\\.(.+)\\.(.*)\\.(.*)\\.rds", "\\3", 
+           models.lists.dataset.labels)
+    )
+) # 4.5s 24.2s 21.7s
 models.lists.dataset %>% names
+models.lists.dataset
 
 system.time(
   metrics.lists.dataset <- models.lists.dataset %>% 
-    map(~ get_model_metrics(.x)) %>% 
-    set_names(paste0("metrics.list.", ENCODER.LIST))
-) # 0.7s
+    map(~ get_model_metrics(.x)) 
+) # 0.7s 1.54s
 metrics.lists.dataset %>% names
 
 benchmarks.all.dataset <- metrics.lists.dataset %>% 
   map(~ pluck(.x, "benchmark.all")) %T>% print
 
-benchmark.all.dataset %>% 
+benchmarks.all.dataset %>% 
   map_df(~ .x %>% filter(RMSE.mean == min(RMSE.mean))) %>% 
-  mutate(encoder = ENCODER.LIST) %>% 
+  mutate(encoder = names(benchmarks.all.dataset)) %>% 
   select(encoder, everything()) %>% 
   arrange(RMSE.mean)
 
@@ -173,6 +181,9 @@ create_benchmarks_all_datasets_all <- function(
   benchmarks.all.datasets.all <- DATASET_LABEL_LIST %>% 
     map(
       function(DATASET_LABEL) {
+        
+        # DATASET_LABEL <- "ames"
+        # ENCODER_LIST <- ENCODER.LIST
         
         models.lists.dataset <- ENCODER_LIST %>% 
           map(~ models_list_label(DATASET_LABEL, .) %>% readRDS(.)) %>% 
@@ -198,7 +209,7 @@ create_benchmarks_all_datasets_all <- function(
         # create list of the best single encoder per dataset
         benchmarks.top1 <- benchmarks.all.dataset %>% 
           map_df(~ .x %>% filter(RMSE.mean == min(RMSE.mean))) %>% 
-          mutate(encoder = ENCODER.LIST) %>% 
+          mutate(encoder =  names(benchmarks.all.dataset)) %>% 
           select(encoder, everything()) %>% 
           arrange(RMSE.mean)
         
@@ -209,7 +220,8 @@ create_benchmarks_all_datasets_all <- function(
         return(benchmarks.top1)
       }
     ) %>% 
-    set_names(paste0("benchmark.", DATASET_LABEL_LIST))
+    set_names(DATASET_LABEL_LIST)
+    # set_names(paste0("benchmark.", DATASET_LABEL_LIST))
   
 }
 
@@ -218,6 +230,7 @@ system.time(
     create_benchmarks_all_datasets_all(DATASET.LABEL.LIST, ENCODER.LIST)
 )
 benchmarks.all.datasets.all
+benchmarks.all.datasets.all %>% map_df(~.x, .id = "data")
 # 
 # 57.6s >> EXP2 (60 encoders, full datasets)
 # 46.5s >> EXP4 (76 encoders, 4 datasets)
