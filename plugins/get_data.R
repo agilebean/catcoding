@@ -139,7 +139,11 @@ split_dataset_original <- function(
   train.index <- createDataPartition(
     dataset[[target.label]], p = train_test_split, list = FALSE
   )
-  training.set <- dataset[train.index, ]
+  training.set <- dataset %>% 
+    # subset
+    slice(train.index) %>% 
+    # shuffle
+    sample_n(nrow(.))
   
   if (train_test_split < 1.0) {
     

@@ -122,8 +122,10 @@ DATASET.LABEL <- "ames"
 # ENCODING <- "factor-encoding"
 # ENCODING <- "vtreat-cross"
 # ENCODING <- "vtreat-design"
-ENCODING <- "vtreat-dummy"
+# ENCODING <- "vtreat-dummy"
 # ENCODING <- "scikit-target"
+ENCODING <- "scikit-loo"
+# ENCODING <- "scikit-hashing" 
 # ENCODING <- "scikit-ordinal"
 # ENCODING <- "scikit-helmert" # reached elapsed time limit
 # ENCODING <- "scikit-backward" # reached elapsed time limit
@@ -153,6 +155,7 @@ system.time(
   )  
 ) # 0.03s
 
+data.original.split$training.set %>% summary
 # create split objects for ALL datasets
 get_data_split_list <- function() {
   DATASET.LABEL.LIST %>% 
@@ -166,6 +169,8 @@ get_data_split_list <- function() {
 system.time(
   data.encoded.split <- apply_encoder(data.original.split, ENCODING)  
 ) # 1.1s
+
+data.encoded.split$training.set %>% summary
 
 # # DEBUG ERROR no usable vars with timex/smartflow+vtreat-design
 # microbenchmark::microbenchmark(
@@ -205,6 +210,9 @@ system.time(
 # 171s for 76 encoders (4 datasets x 19 encoders) = ~2.3s
 # 29.7s for 19 encoders (diamonds) 
 data.ALL.encoded.list %>% names
+data.ALL.encoded.list$ames$`scikit-loo`
+data.ALL.encoded.list$ames$`scikit-target`
+
 
 # create filenames for all datasets
 data.ALL.filename.list <- DATASET.LABEL.LIST %>% 
