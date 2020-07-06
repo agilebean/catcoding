@@ -38,9 +38,13 @@ apply_vtreat_design <- function(
   }
   
   success <- FALSE
-  while(!success) {
-    
+  counter <- 1
+  
+  
+  while(!success & counter <= 3) {
+    print(success)
     print("************ Calculate features with recommended == TRUE")
+    
     treatment.plan <- treatment_function(
       dframe = calibration.set,
       varlist = features.original,
@@ -52,7 +56,15 @@ apply_vtreat_design <- function(
       filter(recommended == TRUE) %>%
       pull(varName)
     
-    if (!is_empty(features.select)) success <- TRUE
+    counter <- counter  + 1
+    
+    print(counter)
+    print(features.select)
+    
+    if (length(features.select) > 0) { 
+      success <- TRUE
+      print("SUCCESS")
+    }
   }
 
   print(features.select)

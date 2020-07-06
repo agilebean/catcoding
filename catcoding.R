@@ -20,9 +20,8 @@ sapply(packs, require, character.only = TRUE)
 # unloadNamespace("machinelearningtools")
 
 ####################################################
-# data splits
-
-
+# run this for step_lencode_keras
+compareVersion("2.0", as.character(tensorflow::tf_version()))
 
 ################################################################################
 # PREP <- TRUE
@@ -70,12 +69,18 @@ apply_encoder <- function(data_original_split, encoding) {
       # PREP <- TRUE
       PREP <- FALSE
       source("encoders/embed-steps.R")
+      encoding_function <- apply_embed_encoder
       
     } else if (startsWith(encoding, "scikit")) {
       
       source("encoders/scikit-encoders.R")
-      
       encoding_function <-  apply_scikit_encoder
+      
+    } else if (encoding == "integer-encoding") {
+      
+      source("encoders/integer-encoding.R")
+      encoding_function <- apply_integer_encoder
+      
     }
   }
   
@@ -85,6 +90,7 @@ apply_encoder <- function(data_original_split, encoding) {
       encoding, training.original, testing.original, target.label
     )
   ) %>% .["elapsed"] %>% round(., digits = 3)
+  
   # get categorical features
   no.cats <- training.original %>% select(where(is.factor)) %>% ncol
   
@@ -112,19 +118,19 @@ apply_encoder <- function(data_original_split, encoding) {
 ####################################################
 # dataset
 # DATASET.LABEL <- "diamonds"
-DATASET.LABEL <- "ames"
+# DATASET.LABEL <- "ames"
 # DATASET.LABEL <- "designdim"
-# DATASET.LABEL <- "timex"
+DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
 # DATASET.LABEL <- "smartflow-scales"
 # 
 ####################################################
 # ENCODING <- "factor-encoding"
 # ENCODING <- "vtreat-cross"
-# ENCODING <- "vtreat-design"
+ENCODING <- "vtreat-design"
 # ENCODING <- "vtreat-dummy"
 # ENCODING <- "scikit-target"
-ENCODING <- "scikit-loo"
+# ENCODING <- "scikit-loo"
 # ENCODING <- "scikit-hashing" 
 # ENCODING <- "scikit-ordinal"
 # ENCODING <- "scikit-helmert" # reached elapsed time limit
@@ -138,6 +144,7 @@ ENCODING <- "scikit-loo"
 # ENCODING <- "embed-bayes"
 # ENCODING <- "embed-glm"
 # ENCODING <- "embed-keras"
+# ENCODING <- "integer-encoding"
 ################################################################################
 # get dataset
 source("plugins/get_data.R")
@@ -155,6 +162,10 @@ system.time(
   )  
 ) # 0.03s
 
+data.original.split$training.set %>% 
+  select(where(is.factor)) %>% str
+
+data.original.split$training.set %>% glimpse
 data.original.split$training.set %>% summary
 # create split objects for ALL datasets
 get_data_split_list <- function() {
@@ -170,8 +181,9 @@ system.time(
   data.encoded.split <- apply_encoder(data.original.split, ENCODING)  
 ) # 1.1s
 
+data.encoded.split$training.set %>% glimpse
 data.encoded.split$training.set %>% summary
-
+data.encoded.split$features.labels %>% length()
 # # DEBUG ERROR no usable vars with timex/smartflow+vtreat-design
 # microbenchmark::microbenchmark(
 #   apply_encoder(data.original.split, ENCODING),
@@ -207,18 +219,18 @@ get_data_ALL_encoded_list <- function() {
 system.time(
   data.ALL.encoded.list <- get_data_ALL_encoded_list()  
 ) # 116.3s for 55 encoders (5 datasets x 11 encoders)
-# 171s for 76 encoders (4 datasets x 19 encoders) = ~2.3s
 # 29.7s for 19 encoders (diamonds) 
+# 178s for 76 encoders (4 datasets x 19 encoders) = ~2.3s
+# 178s for 88 encoders (4 datasets x 22 encoders) = ~2.3s
 data.ALL.encoded.list %>% names
-data.ALL.encoded.list$ames$`scikit-loo`
 data.ALL.encoded.list$ames$`scikit-target`
+data.ALL.encoded.list$ames$`scikit-loo`
+data.ALL.encoded.list$ames$`scikit-loo`$target.label
 
 
 # create filenames for all datasets
 data.ALL.filename.list <- DATASET.LABEL.LIST %>% 
-    map(~ dataset_filename(.x) %>% 
-          str_remove(paste0(".", ENCODING))
-        ) %T>% print
+    map(~ dataset_filename(.x)) %T>% print
 
 # FINAL2: save FINAL datasets
 system.time(
