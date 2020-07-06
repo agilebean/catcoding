@@ -11,8 +11,8 @@ CATS.ONLY <- FALSE
 
 # PREPROCESS.OPTION <- "pca"
 # PREPROCESS.OPTION <- "ica"
-PREPROCESS.OPTION <- "YeoJohnson"
-# PREPROCESS.OPTION <- NULL
+# PREPROCESS.OPTION <- "YeoJohnson"
+PREPROCESS.OPTION <- NULL
 
 DATASET.LABEL.LIST <- c(
   # "diamonds"
@@ -24,6 +24,9 @@ DATASET.LABEL.LIST <- c(
 
 ENCODER.LIST <- c(
   "factor-encoding"
+  , "integer-encoding"
+  , "embed-glm"
+  , "embed-keras"
   , "vtreat-cross"
   , "vtreat-design"
   , "vtreat-dummy"
