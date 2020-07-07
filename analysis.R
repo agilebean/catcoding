@@ -13,18 +13,18 @@ packs <- c(
   "doParallel",
   "foreach"
 )
-devtools::install_github("agilebean/machinelearningtools")
-unloadNamespace("machinelearningtools")
+# devtools::install_github("agilebean/machinelearningtools")
+# unloadNamespace("machinelearningtools")
 sapply(packs, require, character.only = TRUE)
 NEW <- TRUE
 # NEW <- FALSE
 
 source("plugins/strings.R")
 
-DATASET.LABEL <- "ames"
+# DATASET.LABEL <- "ames"
 DATASET.LABEL <- "designdim"
-DATASET.LABEL <- "timex"
-DATASET.LABEL <- "smartflow"
+# DATASET.LABEL <- "timex"
+# DATASET.LABEL <- "smartflow"
 
 # ENCODING <- "scikit-loo"
 # models.list <- readRDS(models_list_label(DATASET.LABEL, ENCODING))
@@ -63,7 +63,8 @@ get_models_list_dataset <- function(
         
       } else { 
         # get labels containing no preprocess option
-        !grepl("pca|ica|YeoJohnson", .)
+        # !grepl("pca|ica|YeoJohnson", .)
+        grepl("none", .)
         
       }
     } %>% 
@@ -72,13 +73,14 @@ get_models_list_dataset <- function(
   print("****************************************************")
   print("Reading...")
   print(models.lists.dataset.preprocess.labels)
-
+  
   models.lists.dataset <- models.lists.dataset.preprocess.labels %>% 
-    map(~paste0("models/", .x) %>% readRDS) %>% 
+    map(~paste0("models/", .x) %>% readRDS) %>%
     set_names(
-      gsub("models\\.list\\.(.+)\\.(.+)\\.(.+)\\.(.*)\\.rds", "\\3", 
+      gsub("models\\.list\\.(.+)\\.([0-9]+)\\.(.+)\\.(.*)\\.(.*)\\.rds", "\\3", 
            models.lists.dataset.preprocess.labels)
     )
+  models.lists.dataset %>% names
   
   print("****************************************************")
   print("Read successfully all above datasets...")
@@ -87,13 +89,13 @@ get_models_list_dataset <- function(
   models.lists.dataset
 }
 
-# system.time(
-#   # models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, "pca")
-#   models.lists.dataset <- get_models_list_dataset(DATASET.LABEL)
-# )
-# 
-# models.lists.dataset %>% names
-# models.lists.dataset$`scikit-onehot` 
+system.time(
+  # models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, "pca")
+  models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, "none")
+)
+
+models.lists.dataset %>% names
+models.lists.dataset$`embed-glm`
 
 
 # select the algorithm with lowest RMSE.median
@@ -144,17 +146,24 @@ visualize_sampling_models_list <- function(
     coord_flip() +
     # geom_boxplot(fill = "#778899") + # lightslategrey
     geom_boxplot(fill = boxfill) +
-    geom_point(aes(color = encoder), alpha = 0.25, size = 1.5) +
-    geom_point(aes(color = encoder), alpha = 1, size = 1.5, shape = 1) +
+    # geom_point(aes(color = encoder), alpha = 0.25, size = 1.5) +
+    # geom_point(aes(color = encoder), alpha = 1, size = 1.5, shape = 1) +
+    geom_jitter(aes(color = encoder), alpha = 1, size = 0.5, shape = 1) +
     # scale_color_brewer(guide = "none", palette = palette) +
     scale_color_manual(guide = "none", values = color.values) +
-    labs(title = paste("Dataset:", dataset_label)) +
+    labs(
+      title = paste("Dataset:", dataset_label),
+      x = "model",
+      y = "RMSE"
+    ) +
     theme_minimal()  
   
   plot.sampling.folds.ordered
 }
 
-# visualize_sampling_models_list(models.lists.dataset, "RMSE")
+# DATASET.LABEL <- "ames"
+DATASET.LABEL <- "designdim"
+visualize_sampling_models_list(models.lists.dataset, DATASET.LABEL, "RMSE")
 # visualize_sampling_models_list(models.lists.dataset, "RMSE", "Greys")
 # visualize_sampling_models_list(
 #   DATASET.LABEL, models.lists.dataset, "RMSE", "Blues", "#778899")
