@@ -21,8 +21,8 @@ NEW <- TRUE
 
 source("plugins/strings.R")
 
-# DATASET.LABEL <- "ames"
-DATASET.LABEL <- "designdim"
+DATASET.LABEL <- "ames"
+# DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
 
@@ -48,8 +48,7 @@ DATASET.LABEL <- "designdim"
 
 
 get_models_list_dataset <- function(
-  dataset_label,
-  preprocess_option = NULL) {
+  dataset_label, preprocess_option = NULL, cv_repeats) {
   
   models.lists.dataset.labels <- dir("models/") %>% 
     startsWith(., paste0("models.list.", dataset_label)) %>% 
@@ -59,7 +58,8 @@ get_models_list_dataset <- function(
     { 
       if (!is.null(preprocess_option)) { 
         # get labels containing a preprocess option, e.g. "pca"
-        grepl(preprocess_option, .)
+        grepl(preprocess_option, .) &
+        grepl(paste0(cv_repeats, "repeats"), .)
         
       } else { 
         # get labels containing no preprocess option
@@ -91,7 +91,7 @@ get_models_list_dataset <- function(
 
 system.time(
   # models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, "pca")
-  models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, "none")
+  models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, "none", 20)
 )
 
 models.lists.dataset %>% names
@@ -118,12 +118,25 @@ get_sampling_models_list <- function(models_list, metric, median_sort = TRUE) {
   best.model.metric.sampling
 }
 
+# return the sampling folds for the best algorithm
+sampling.folds <- models.lists.dataset %>% 
+  # imap(~ mutate(.x, name = .y))
+  map(~ get_sampling_models_list(.x, "RMSE")) %>% 
+  # tricky tricky: concatenate the sampling folds for all best algorithms
+  imap_dfc(~ set_names(.x, .y)) %T>% print
+
+
+
+# visualize final benchmarking
 visualize_sampling_models_list <- function(
-  models_lists_dataset, dataset_label, metric, 
+  dataset_label, preprocess_option = "none", metric, cv_repeats,
   palette = "Set1", boxfill = "#DCDCDC") {
   
+  models.lists.dataset <- get_models_list_dataset(
+    DATASET.LABEL, preprocess_option, cv_repeats)
+  
   # return the sampling folds for the best algorithm
-  sampling.folds <- models_lists_dataset %>% 
+  sampling.folds <- models.lists.dataset %>% 
     # imap(~ mutate(.x, name = .y))
     map(~ get_sampling_models_list(.x, metric)) %>% 
     # tricky tricky: concatenate the sampling folds for all best algorithms
@@ -148,7 +161,7 @@ visualize_sampling_models_list <- function(
     geom_boxplot(fill = boxfill) +
     # geom_point(aes(color = encoder), alpha = 0.25, size = 1.5) +
     # geom_point(aes(color = encoder), alpha = 1, size = 1.5, shape = 1) +
-    geom_jitter(aes(color = encoder), alpha = 1, size = 0.5, shape = 1) +
+    geom_jitter(aes(color = encoder), alpha = 1, size = 1, shape = 1) +
     # scale_color_brewer(guide = "none", palette = palette) +
     scale_color_manual(guide = "none", values = color.values) +
     labs(
@@ -156,14 +169,25 @@ visualize_sampling_models_list <- function(
       x = "model",
       y = "RMSE"
     ) +
-    theme_minimal()  
+    theme_minimal() +
+    theme(
+      axis.text = element_text(size = 12),
+      axis.title = element_text(size = 12)
+    )
   
   plot.sampling.folds.ordered
 }
 
-# DATASET.LABEL <- "ames"
-DATASET.LABEL <- "designdim"
-visualize_sampling_models_list(models.lists.dataset, DATASET.LABEL, "RMSE")
+DATASET.LABEL <- "ames"
+# DATASET.LABEL <- "designdim"
+# DATASET.LABEL <- "timex"
+# DATASET.LABEL <- "smartflow"
+visualize_sampling_models_list(DATASET.LABEL, PREPROCESS.OPTION, "RMSE", 20)
+ggsave(
+  dpi = 300, width = 6, height = 6,
+  paste0("figures/study2-", DATASET.LABEL, ".png") %T>% print)
+
+
 # visualize_sampling_models_list(models.lists.dataset, "RMSE", "Greys")
 # visualize_sampling_models_list(
 #   DATASET.LABEL, models.lists.dataset, "RMSE", "Blues", "#778899")
