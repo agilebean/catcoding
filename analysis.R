@@ -27,8 +27,8 @@ DATASET.LABEL <- "ames"
 # DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
 
-# ENCODING <- "scikit-loo"
-# models.list <- readRDS(models_list_label(DATASET.LABEL, ENCODING))
+ENCODING <- "scikit-loo"
+models.list <- readRDS(models_list_label(DATASET.LABEL, ENCODING))
 
 ####################################################
 # models.lists.dataset.labels <- dir("models/") %>% 
@@ -130,8 +130,8 @@ ggsave(
 ########################################################################
 # Study 2
 ########################################################################
-DATASET.LABEL <- "ames"
-# DATASET.LABEL <- "designdim"
+# DATASET.LABEL <- "ames"
+DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
 visualize_sampling_models_list(DATASET.LABEL, PREPROCESS.OPTION, "RMSE", 20)
@@ -146,32 +146,9 @@ ggsave(
 # visualize_sampling_models_list(
 #   DATASET.LABEL, models.lists.dataset, "RMSE", "Blues", "#778899")
 
-# DATASET.LABEL.LIST
+PREPROCESS.OPTION.LIST <- c("none", "pca", "ica", "YeoJohnson")
 
-
-# PREPROCESS.OPTION <- NULL
-# system.time(
-#   sampling.boxplots <- DATASET.LABEL.LIST %>% 
-#     map(function(dataset_label) {
-#       
-#       get_models_list_dataset(
-#         dataset_label, preprocess_option = PREPROCESS.OPTION
-#       ) %>% 
-#         visualize_sampling_models_list(
-#           ., dataset_label, "RMSE", "Blues", "#778899"
-#         )
-#   }) %>% 
-#     set_names(DATASET.LABEL.LIST)
-# ) # 41.6s /4 datasets
-# 
-# sampling.boxplots$ames
-# sampling.boxplots$designdim
-# sampling.boxplots$timex
-# sampling.boxplots$smartflow
-
-
-PREPROCESS.OPTION.LIST <- c(NULL, "pca", "ica", "YeoJohnson")
-
+PREPROCESS.OPTION.LIST <- "none"
 system.time(
   
   sampling.boxplots.preprocess <- PREPROCESS.OPTION.LIST %>% 
