@@ -198,8 +198,8 @@ apply_all_encoders <- function(data_original_split, encoder_list) {
     set_names(encoder_list)
 }
 # system.time(
-#   data.encoded.list <- apply_all_encoders(data.original.split, ENCODER.LIST) %>%
-#     set_names(ENCODER.LIST)
+#   data.encoded.list <- apply_all_encoders(data.original.split, ENCODER.LIST.study1) %>%
+#     set_names(ENCODER.LIST.study1)
 # ) # 24s ALL, 13s for 11 scikits, 8.2s for vtreat-cross, 2s for vtreat-design/-dummy
 
 
@@ -208,7 +208,7 @@ get_data_ALL_encoded_list <- function() {
   DATASET.LABEL.LIST %>%
     map( ~ get_dataset_original(.x)) %>%
     map( ~ split_dataset_original(.x, TRAIN.TEST.SPLIT, CATS.ONLY)) %>%
-    map( ~ apply_all_encoders(.x, ENCODER.LIST)) %>%
+    map( ~ apply_all_encoders(.x, ENCODER.LIST.study1)) %>%
     set_names((DATASET.LABEL.LIST))
 }
 # get_data_ALL_encoded_list() %>% names
@@ -248,7 +248,7 @@ system.time(
 #     map(
 #       ~ get_dataset_original(.x) %>%
 #         split_dataset_original(TRAIN.TEST.SPLIT, CATS.ONLY) %>%
-#         apply_all_encoders(ENCODER.LIST)
+#         apply_all_encoders(ENCODER.LIST.study1)
 #     ) %>%
 #     set_names(DATASET.LABEL.LIST)
 # } 

@@ -12,7 +12,8 @@ CATS.ONLY <- FALSE
 # PREPROCESS.OPTION <- "pca"
 # PREPROCESS.OPTION <- "ica"
 # PREPROCESS.OPTION <- "YeoJohnson"
-PREPROCESS.OPTION <- NULL
+# PREPROCESS.OPTION <- NULL
+PREPROCESS.OPTION <- "none"
 
 DATASET.LABEL.LIST <- c(
   # "diamonds"
@@ -22,7 +23,7 @@ DATASET.LABEL.LIST <- c(
   , "smartflow"
 )
 
-ENCODER.LIST <- c(
+ENCODER.LIST.study1 <- c(
   "factor-encoding"
   , "integer-encoding"
   , "embed-glm"
@@ -47,6 +48,33 @@ ENCODER.LIST <- c(
   , "scikit-target"
 )
 
+ENCODER.LIST.study2 <- c(
+  "factor-encoding"
+  , "integer-encoding"
+  , "embed-glm"
+  , "embed-keras"
+  # , "vtreat-cross"
+  # , "vtreat-design"
+  # , "vtreat-dummy"
+  # , "scikit-backward"
+  # , "scikit-baseN"
+  # , "scikit-binary"
+  # , "scikit-catboost"
+  # , "scikit-glmm"
+  # , "scikit-hashing"
+  , "scikit-helmert"
+  , "scikit-james-stein"
+  , "scikit-loo"
+  , "scikit-Mestimate"
+  , "scikit-onehot"
+  , "scikit-ordinal"
+  , "scikit-polynomial"
+  # , "scikit-sum"
+  # , "scikit-target"
+)
+
+
+
 VARTYPES.SELECT <- if (CATS.ONLY) {
   
   print("feature selection: CATS ONLY")
@@ -67,7 +95,7 @@ models_list_label <- function(dataset_label, encoding) {
     TRAIN.TEST.SPLIT*100,
     encoding,
     PREPROCESS.OPTION,
-    paste0(CV.REPEATS, "repeats")
+    paste0("cv", CV.REPEATS)
   )
 }
 

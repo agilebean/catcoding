@@ -19,14 +19,26 @@ sapply(packs, require, character.only = TRUE)
 NEW <- TRUE
 # NEW <- FALSE
 
-# ENCODER.LIST <- c("scikit-loo")
+if (getwd() == "/home/rstudio") {
+  setwd("sync")
+}
+# ENCODER.LIST.study2 <- c("scikit-loo")
 # ENCODER <- c("scikit-loo")
+
 source("plugins/strings.R")
 
+if (!is.null(PREPROCESS.OPTION) & PREPROCESS.OPTION != "none") {
+  preprocess_string <- c("center", "scale", "zv", PREPROCESS.OPTION)  
+} else {
+  preprocess_string <- NULL
+}
+preprocess_string
+
 ################################################################################
-CV.REPEATS <- 2
+# CV.REPEATS <- 2
 # CV.REPEATS <- 10
-# TRY.FIRST <- 1000
+CV.REPEATS <- 20
+# TRY.FIRST <- 200
 TRY.FIRST <- NULL
 
 training.configuration <- trainControl(
@@ -37,10 +49,11 @@ training.configuration <- trainControl(
 )
 
 algorithm.list <- c(
-  "lm"
-  , "gbm"
+  # "lm"
+  # "knn"
+  # , "gbm"
   # , "rf"
-  , "ranger"
+  "ranger"
   , "xgbTree"
 )
 
@@ -51,14 +64,14 @@ algorithm.list <- c(
 
 if (NEW) {
   system.time(
-    benchmark.ALL.data.encoder.list <- DATASET.LABEL.LIST %>% 
+    benchmark.ALL.data.ENCODER.LIST.study2 <- DATASET.LABEL.LIST %>% 
       map(
         function(DATASET_LABEL) {
           
           print(paste("*** Dataset:", DATASET_LABEL))
           data.list <- readRDS(dataset_filename(DATASET_LABEL))
           
-          benchmark.encoder.list <- ENCODER.LIST %>% 
+          benchmark.ENCODER.LIST.study2 <- ENCODER.LIST.study2 %>% 
             map(
               function(ENCODER) {
                 print(paste("ENCODER:", ENCODER))
@@ -71,14 +84,16 @@ if (NEW) {
                   algorithm_list = algorithm.list,
                   cv_repeats = CV.REPEATS,
                   try_first = TRY.FIRST,
-                  models_list_name = 
-                    models_list_label(DATASET_LABEL, ENCODER, PREPROCESS.OPTION),
+                  models_list_name = models_list_label(DATASET_LABEL, ENCODER),
+                  # models_list_name = NULL,
+                  preprocess_configuration = preprocess_string,
                   push = TRUE,
-                  beep = TRUE
+                  # push = FALSE,
+                  beep = FALSE
                 )
               }
             ) %>% 
-            set_names(ENCODER.LIST)
+            set_names(ENCODER.LIST.study2)
         }
       ) %>% 
       set_names(DATASET.LABEL.LIST)
@@ -90,14 +105,19 @@ if (NEW) {
 # 7552 = 126m >> EXP5 - diamonds
 # 1639s = 27.3m >> EXP6 (54 encoders, 3 datasets)
 # 3773s = 62.9m >> EXP7 (54 encoders, 3 datasets, 4 algorithms)
+# 5570s = 92.8m >> EXP9 (72 encoders, 4 datasets) PCA
+# 1407s = 23.5m >> EXP10(72 encoders, 4 datasets) ICA
+# 5475s = 91.3m >> EXP11(72 encoders, 4 datasets) YeoJohnson
+# 5634s = 93.9m >> EXP1 (44 encoders, 2 datasets, cv10 = 11.000 runs)
+# 7205s = 120.1m >> EXP2 (44 encoders, 4 datasets, cv20 = 6.400 runs)
 ################################################################################
 
-# benchmark.ALL.data.encoder.list$ames$`scikit-target` %>% 
-# benchmark.ALL.data.encoder.list$ames$`vtreat-dummy` %>% 
-# benchmark.ALL.data.encoder.list$ames$`scikit-loo` %>% 
-#   get_model_metrics()
+# benchmark.ALL.data.ENCODER.LIST.study2$ames$`scikit-target` %>%
+# benchmark.ALL.data.ENCODER.LIST.study2$ames$`vtreat-dummy` %>% 
+benchmark.ALL.data.ENCODER.LIST.study2$ames$`scikit-loo` %>%
+  get_model_metrics()
 # 
-# CORRECT <- benchmark.ALL.data.encoder.list %>% 
+# CORRECT <- benchmark.ALL.data.ENCODER.LIST.study2 %>% 
 #   map(
 #     ~.x %>% 
 #       # .$`scikit-target` %>%
@@ -124,26 +144,36 @@ DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "smartflow"
 # DATASET.LABEL <- "smartflow-scales"
 ####################################################
+
+# ENCODING <- "embed-keras"
 # ENCODING <- "factor-encoding"
+# ENCODING <- "scikit-binary"
+# ENCODING <- "scikit-helmert" # reached elapsed time limit
+# ENCODING <- "scikit-loo"
+# ENCODING <- "scikit-Mestimate"
+# ENCODING <- "scikit-ordinal"
+# ENCODING <- "scikit-backward" # reached elapsed time limit
+ENCODING <- "scikit-james-stein" # ++2*ames
+# ENCODING <- "scikit-polynomial" # ++3*ames
+# ENCODING <- "scikit-onehot"
+# ENCODING <- "scikit-target" # ++3*ames
+# ENCODING <- "scikit-woe" # target must be binary
 # ENCODING <- "vtreat-cross"
 # ENCODING <- "vtreat-design"
 # ENCODING <- "vtreat-dummy"
-# ENCODING <- "scikit-target" # ++3*ames
-ENCODING <- "scikit-loo"
-# ENCODING <- "scikit-ordinal"
-# ENCODING <- "scikit-helmert" # reached elapsed time limit
-# ENCODING <- "scikit-backward" # reached elapsed time limit
-# ENCODING <- "scikit-james-stein" # ++2*ames
-# ENCODING <- "scikit-polynomial" # ++3*ames
-# ENCODING <- "scikit-binary"
-# ENCODING <- "scikit-onehot"
-# ENCODING <- "scikit-woe" # target must be binary
+
 ####################################################
 models_list_label(DATASET.LABEL, ENCODING)
 # models_metrics_label()
 # dataset_filename(DATASET.LABEL)
 models.list <- readRDS(models_list_label(DATASET.LABEL, ENCODING))
 models.metrics <- models.list %>% get_model_metrics() %T>% print
+ggsave(
+  dpi = 300, width = 6, height = 4,
+  paste0("figures/study1-", DATASET.LABEL, "-", ENCODING, ".png") %T>% print)
+
+
+
 ####################################################
 models.lists.dataset.labels <- dir("models/") %>% 
   startsWith(paste0("models.list.", DATASET.LABEL)) %>% 
@@ -189,7 +219,7 @@ create_benchmarks_all_datasets_all <- function(
         # DATASET_LABEL <- "designdim"
         # DATASET_LABEL <- "timex"
         # DATASET_LABEL <- "smartflow"
-        # ENCODER_LIST <- ENCODER.LIST
+        # ENCODER_LIST <- ENCODER.LIST.study2
         
         models.lists.dataset <- ENCODER_LIST %>% 
           map(~ models_list_label(DATASET_LABEL, .) %>% readRDS(.)) %>%
@@ -200,7 +230,7 @@ create_benchmarks_all_datasets_all <- function(
         metrics.lists.dataset <- models.lists.dataset %>% 
           map(~ get_model_metrics(.x)) %>% 
           set_names(ENCODER_LIST)
-        # set_names(paste0("metrics.list.", ENCODER.LIST))
+        # set_names(paste0("metrics.list.", ENCODER.LIST.study2))
         # 0.7s, 2.2s
         metrics.lists.dataset %>% names
         
@@ -238,8 +268,8 @@ create_benchmarks_all_datasets_all <- function(
 
 system.time(
   benchmarks.all.datasets.all <- 
-    create_benchmarks_all_datasets_all(DATASET.LABEL.LIST, ENCODER.LIST)
-)
+    create_benchmarks_all_datasets_all(DATASET.LABEL.LIST, ENCODER.LIST.study2)
+) # 18.7s
 benchmarks.all.datasets.all
 benchmarks.all.datasets.all %>% map_df(~.x, .id = "data")
 # 
@@ -248,7 +278,7 @@ benchmarks.all.datasets.all %>% map_df(~.x, .id = "data")
 # 39.4s >> EXP5 (76 encoders, 4 datasets)
 # 41.3s >> EXP6 (76 encoders, 4 datasets)
 # 15.0s >> EXP7 (54 encoders, 3 datasets)
-# 
+# 17.1s >> EXP1 ()
 # EXP2
 # benchmark.label <- paste0(
 #   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, "try1000.rds") %T>% print
@@ -263,7 +293,7 @@ benchmarks.all.datasets.all %>% map_df(~.x, .id = "data")
 #   list_modify(benchmark.diamonds = dia$benchmark.diamonds)
 # 
 # benchmark.label <- paste0(
-#   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".folds5ml2.rds") %T>% print
+#   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".ml2.rds") %T>% print
 #
 # EXP4
 # benchmark.label <- paste0(
@@ -271,32 +301,52 @@ benchmarks.all.datasets.all %>% map_df(~.x, .id = "data")
 # #
 # EXP5
 # benchmark.label <- paste0(
-#   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".folds5.rds") %T>% print
+#   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".rds") %T>% print
 
 # EXP6
-benchmark.label <- paste0(
-  "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".folds5.factor.rds") %T>% print
+benchmark.label <- "output/benchmarks.all.datasets.all.cv2.factor.rds"
 
 # EXP7
-benchmark.label <- paste0(
-  "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".folds5.ordinal.rds") %T>% print
+benchmark.label <- "output/benchmarks.all.datasets.all.cv2.ordinal.rds" %T>% print
 
 # EXP8
-benchmark.label <- paste0(
-  "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".folds5.ordinal4.rds") %T>% print
+# benchmark.label <- paste0(
+#   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".ordinal4.rds") %T>% print
 
-benchmarks.all.datasets.all %>% saveRDS(benchmark.label)
+# EXP9 pca
+benchmark.label <- "output/benchmarks.all.datasets.all.cv2.pca.rds"
+
+# EXP10 ica
+benchmark.label <- "output/benchmarks.all.datasets.all.cv2.ica.rds"
+
+# EXP11 yeo
+benchmark.label <- "output/benchmarks.all.datasets.all.cv2.yeo.rds"
+
+# EXP1 final
+benchmark.label <- "output/benchmarks.all.datasets.all.cv10.none.rds"
+
+# benchmarks.all.datasets.all %>% saveRDS(benchmark.label)
 benchmarks.all.datasets.all <- readRDS(benchmark.label) # %T>% print
+
+# all alg
+benchmarks.all.datasets.all
+benchmarks.all.datasets.all$designdim %>% arrange(encoder) %>% print(n = 50)
+benchmarks.all.datasets.all$timex %>% arrange(encoder) %>% print(n = 50)
+
+
+benchmarks.all.datasets.all$designdim %>% 
+  group_by(encoder, model) %>% 
+  summarize(model, RMSE.median = min(RMSE.median))
 
 # top2 alg
 benchmarks.all.datasets.all %>% 
   imap(~ mutate(.x, dataset = .y)) %>% 
-  map_df(~ .x %>% slice_min(order_by = RMSE.mean, n = 2))
+  map_df(~ .x %>% slice_min(order_by = RMSE.median, n = 2))
 
 # top1 alg worse with ordinal
 benchmarks.all.datasets.all %>% 
   imap(~ mutate(.x, dataset = .y)) %>% 
-  map_df(~ .x %>% filter(RMSE.mean == min(RMSE.mean, na.rm = TRUE)))
+  map_df(~ .x %>% filter(RMSE.median == min(RMSE.median, na.rm = TRUE)))
 
 
 ################################################################################
