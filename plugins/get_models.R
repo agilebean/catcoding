@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Script:  plugins/getdata.R
+# Script:  plugins/get_models.R
 # Output:  training.set, testing.set, features.labels
 #
 ################################################################################

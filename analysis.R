@@ -20,6 +20,7 @@ NEW <- TRUE
 # NEW <- FALSE
 
 source("plugins/strings.R")
+source("plugins/get_models.R")
 
 DATASET.LABEL <- "ames"
 # DATASET.LABEL <- "designdim"
@@ -46,85 +47,21 @@ DATASET.LABEL <- "ames"
 #     )
 # ) # 4.5s 24.2s 21.7s 2.13s
 
-
-get_models_list_dataset <- function(
-  dataset_label, preprocess_option = NULL, cv_repeats) {
-  
-  models.lists.dataset.labels <- dir("models/") %>% 
-    startsWith(., paste0("models.list.", dataset_label)) %>% 
-    dir("models/")[.] 
-  
-  models.lists.dataset.preprocess.labels <- models.lists.dataset.labels %>% 
-    { 
-      if (!is.null(preprocess_option)) { 
-        # get labels containing a preprocess option, e.g. "pca"
-        grepl(preprocess_option, .) &
-        grepl(paste0(cv_repeats, "repeats"), .)
-        
-      } else { 
-        # get labels containing no preprocess option
-        # !grepl("pca|ica|YeoJohnson", .)
-        grepl("none", .)
-        
-      }
-    } %>% 
-    models.lists.dataset.labels[.]
-  
-  print("****************************************************")
-  print("Reading...")
-  print(models.lists.dataset.preprocess.labels)
-  
-  models.lists.dataset <- models.lists.dataset.preprocess.labels %>% 
-    map(~paste0("models/", .x) %>% readRDS) %>%
-    set_names(
-      gsub("models\\.list\\.(.+)\\.([0-9]+)\\.(.+)\\.(.*)\\.(.*)\\.rds", "\\3", 
-           models.lists.dataset.preprocess.labels)
-    )
-  models.lists.dataset %>% names
-  
-  print("****************************************************")
-  print("Read successfully all above datasets...")
-  print("****************************************************")
-  
-  models.lists.dataset
-}
-
-system.time(
-  # models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, "pca")
-  models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, "none", 20)
-)
-
+if (NEW) {
+  system.time(
+    # models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, "pca")
+    models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, "none", 20)
+  )  
+} # ~3s
 models.lists.dataset %>% names
-models.lists.dataset$`embed-glm`
-
-
-# select the algorithm with lowest RMSE.median
-get_sampling_models_list <- function(models_list, metric, median_sort = TRUE) {
-  
-  models.metrics <- models_list %>% get_model_metrics(median_sort) 
-  
-  best.model.label <- models.metrics$benchmark.all %>% 
-    filter(RMSE.median == min(RMSE.median, na.rm = TRUE)) %>% 
-    .$model
-  
-  best.model.sampling <- models.metrics$resamples.values %>% 
-    select(starts_with(best.model.label))
-  
-  best.model.metric.sampling <- best.model.sampling %>%
-    select(ends_with(metric)) %>%
-    # remove "~RMSE" or "~Accuracy" from column names
-    rename_with(~gsub(paste0("~", metric), "", .)) 
-
-  best.model.metric.sampling
-}
 
 # return the sampling folds for the best algorithm
 sampling.folds <- models.lists.dataset %>% 
   # imap(~ mutate(.x, name = .y))
   map(~ get_sampling_models_list(.x, "RMSE")) %>% 
   # tricky tricky: concatenate the sampling folds for all best algorithms
-  imap_dfc(~ set_names(.x, .y)) %T>% print
-
+  imap_dfc(~ set_names(.x, .y)) %>% 
+  as_tibble() %T>% print
 
 
 # visualize final benchmarking
@@ -161,7 +98,7 @@ visualize_sampling_models_list <- function(
     geom_boxplot(fill = boxfill) +
     # geom_point(aes(color = encoder), alpha = 0.25, size = 1.5) +
     # geom_point(aes(color = encoder), alpha = 1, size = 1.5, shape = 1) +
-    geom_jitter(aes(color = encoder), alpha = 1, size = 1, shape = 1) +
+    geom_jitter(aes(color = encoder), alpha = 1, size = 0.5, shape = 1) +
     # scale_color_brewer(guide = "none", palette = palette) +
     scale_color_manual(guide = "none", values = color.values) +
     labs(
@@ -178,14 +115,31 @@ visualize_sampling_models_list <- function(
   plot.sampling.folds.ordered
 }
 
+
+########################################################################
+# Study 1
+########################################################################
+DATASET.LABEL <- "designdim"
+# DATASET.LABEL <- "timex"
+visualize_sampling_models_list(DATASET.LABEL, PREPROCESS.OPTION, "RMSE", 10,
+                               palette = "Blues", boxfill = "#778899")
+ggsave(
+  dpi = 300, width = 6, height = 9,
+  paste0("figures/study1-", DATASET.LABEL, ".png") %T>% print)
+
+########################################################################
+# Study 2
+########################################################################
 DATASET.LABEL <- "ames"
 # DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
 visualize_sampling_models_list(DATASET.LABEL, PREPROCESS.OPTION, "RMSE", 20)
 ggsave(
-  dpi = 300, width = 6, height = 6,
+  dpi = 300, width = 6, height = 4.5,
+  # paste0("figures/study2-", DATASET.LABEL, ".png") %T>% print)
   paste0("figures/study2-", DATASET.LABEL, ".png") %T>% print)
+
 
 
 # visualize_sampling_models_list(models.lists.dataset, "RMSE", "Greys")
@@ -227,7 +181,7 @@ system.time(
         map(function(dataset_label) {
           
           get_models_list_dataset(
-            dataset_label, preprocess_option = preprocess_option
+            dataset_label, preprocess_option
           ) %>% 
             visualize_sampling_models_list(
               ., dataset_label, "RMSE", "Blues", "#778899"
