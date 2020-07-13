@@ -17,7 +17,7 @@ get_models_list_dataset <- function(
       if (!is.null(preprocess_option)) { 
         # get labels containing a preprocess option, e.g. "pca"
         grepl(preprocess_option, .) &
-          grepl(paste0(cv_repeats, "repeats"), .)
+          grepl(paste0("cv", cv_repeats), .)
         
       } else { 
         # get labels containing no preprocess option

@@ -74,6 +74,14 @@ ENCODER.LIST.study2 <- c(
 )
 
 
+ENCODER.LIST.study3 <- c(
+  "scikit-loo",
+  "scikit-Mestimate",
+  "embed-glm",
+  "embed-keras",
+  "scikit-ordinal",
+  "scikit-onehot"
+)
 
 VARTYPES.SELECT <- if (CATS.ONLY) {
   
