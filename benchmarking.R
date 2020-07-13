@@ -16,8 +16,8 @@ packs <- c(
 sapply(packs, require, character.only = TRUE)
 # devtools::install_github("agilebean/machinelearningtools")
 # unloadNamespace("machinelearningtools")
-# NEW <- TRUE
-NEW <- FALSE
+NEW <- TRUE
+# NEW <- FALSE
 
 if (getwd() == "/home/rstudio") {
   setwd("sync")
@@ -36,8 +36,8 @@ preprocess_string
 
 ################################################################################
 # CV.REPEATS <- 2
-# CV.REPEATS <- 10
-CV.REPEATS <- 20
+CV.REPEATS <- 10
+# CV.REPEATS <- 20
 # TRY.FIRST <- 200
 TRY.FIRST <- NULL
 
@@ -140,8 +140,8 @@ benchmark.ALL.data.ENCODER.LIST.study2$ames$`scikit-loo` %>%
 ####################################################
 # DATASET.LABEL <- "diamonds"
 # DATASET.LABEL <- "ames"
-DATASET.LABEL <- "designdim"
-# DATASET.LABEL <- "timex"
+# DATASET.LABEL <- "designdim"
+DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
 # DATASET.LABEL <- "smartflow-scales"
 ####################################################
@@ -149,6 +149,7 @@ DATASET.LABEL <- "designdim"
 # ENCODING <- "embed-keras"
 # ENCODING <- "factor-encoding"
 # ENCODING <- "scikit-binary"
+# ENCODING <- "scikit-glmm"
 # ENCODING <- "scikit-helmert" # reached elapsed time limit
 # ENCODING <- "scikit-loo"
 # ENCODING <- "scikit-Mestimate"
@@ -216,11 +217,12 @@ create_benchmarks_all_datasets_all <- function(
     map(
       function(DATASET_LABEL) {
         
-        # DATASET_LABEL <- "ames"
+        DATASET_LABEL <- "ames"
         # DATASET_LABEL <- "designdim"
         # DATASET_LABEL <- "timex"
         # DATASET_LABEL <- "smartflow"
         # ENCODER_LIST <- ENCODER.LIST.study2
+        ENCODER_LIST <- "scikit-loo"
         
         metric.sort <- ifelse(median_sort,
                               rlang::sym("RMSE.median"), 
@@ -228,9 +230,13 @@ create_benchmarks_all_datasets_all <- function(
                               )
         
         models.lists.dataset <- ENCODER_LIST %>% 
-          map(~ models_list_label(DATASET_LABEL, .) %>% readRDS(.)) %>%
+          map(~ models_list_label(DATASET_LABEL, .) %T>% print %>% readRDS(.)) %>%
           set_names(ENCODER_LIST)
         models.lists.dataset %>% names
+        
+        models.lists.dataset$`scikit-loo`$ranger$trainingData
+        
+        
         
         metrics.lists.dataset <- models.lists.dataset %>% 
           map(~ get_model_metrics(.x, median_sort = median_sort)) %>% 
@@ -240,7 +246,7 @@ create_benchmarks_all_datasets_all <- function(
         metrics.lists.dataset %>% names
         
         benchmarks.all.dataset <- metrics.lists.dataset %>% 
-          map(~ pluck(.x, "benchmark.all")) %T>% print
+          map(~ pluck(.x, "benchmark.all")) 
         
         benchmarks.full <- benchmarks.all.dataset %>%
           # .id argument gets name
@@ -255,7 +261,7 @@ create_benchmarks_all_datasets_all <- function(
           map_df(~ .x %>% 
                    filter(!!metric.sort == min(!!metric.sort, na.rm = TRUE))) %>% 
           select(encoder, everything()) %>% 
-          arrange(!!metric.sort)
+          arrange(!!metric.sort) %T>% print
         
         benchmarks.top2 <- benchmarks.all.dataset %>% 
           # tricky tricky: create column with list element name!
@@ -265,7 +271,7 @@ create_benchmarks_all_datasets_all <- function(
           select(encoder, everything()) %>% 
           arrange(!!metric.sort)
 
-        return(benchmarks.top2)
+        return(benchmarks.top1)
       }
     ) %>% 
     set_names(DATASET_LABEL_LIST)
@@ -274,10 +280,22 @@ create_benchmarks_all_datasets_all <- function(
 
 system.time(
   benchmarks.all.datasets.all <- 
-    create_benchmarks_all_datasets_all(DATASET.LABEL.LIST, ENCODER.LIST.study2)
+    create_benchmarks_all_datasets_all(
+      DATASET.LABEL.LIST, ENCODER.LIST.study2, median_sort = FALSE)
 ) # 18.7s
 benchmarks.all.datasets.all
-benchmarks.all.datasets.all %>% map_df(~.x, .id = "data")
+
+benchmarks.all.datasets.all %>% 
+  map(~select(.x, encoder:model))
+
+benchmarks.all.datasets.all %>% 
+  map(~select(.x, encoder:model)) %>% 
+  # knitr::kable(format = "latex")
+  knitr::kable()
+
+
+
+# benchmarks.all.datasets.all %>% map_df(~.x, .id = "data")
 # 
 # 57.6s >> EXP2 (60 encoders, full datasets)
 # 46.5s >> EXP4 (76 encoders, 4 datasets)
