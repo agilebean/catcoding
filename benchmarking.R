@@ -16,8 +16,8 @@ packs <- c(
 sapply(packs, require, character.only = TRUE)
 # devtools::install_github("agilebean/machinelearningtools")
 # unloadNamespace("machinelearningtools")
-NEW <- TRUE
-# NEW <- FALSE
+# NEW <- TRUE
+NEW <- FALSE
 
 if (getwd() == "/home/rstudio") {
   setwd("sync")
@@ -110,6 +110,7 @@ if (NEW) {
 # 5475s = 91.3m >> EXP11(72 encoders, 4 datasets) YeoJohnson
 # 5634s = 93.9m >> EXP1 (44 encoders, 2 datasets, cv10 = 11.000 runs)
 # 7205s = 120.1m >> EXP2 (44 encoders, 4 datasets, cv20 = 6.400 runs)
+# 6941s = 115.7m >> EXP2 with 80 N2 cpus 78c/m
 ################################################################################
 
 # benchmark.ALL.data.ENCODER.LIST.study2$ames$`scikit-target` %>%
@@ -209,7 +210,7 @@ benchmarks.all.dataset %>%
 # read all encoded datasets for ALL datasets
 ################################################################################
 create_benchmarks_all_datasets_all <- function(
-  DATASET_LABEL_LIST, ENCODER_LIST) {
+  DATASET_LABEL_LIST, ENCODER_LIST, median_sort = TRUE) {
   
   benchmarks.all.datasets.all <- DATASET_LABEL_LIST %>% 
     map(
@@ -221,14 +222,18 @@ create_benchmarks_all_datasets_all <- function(
         # DATASET_LABEL <- "smartflow"
         # ENCODER_LIST <- ENCODER.LIST.study2
         
+        metric.sort <- ifelse(median_sort,
+                              rlang::sym("RMSE.median"), 
+                              rlang::sym("RMSE.mean")
+                              )
+        
         models.lists.dataset <- ENCODER_LIST %>% 
           map(~ models_list_label(DATASET_LABEL, .) %>% readRDS(.)) %>%
-          # map(~ models_list_label() %>% readRDS(.)) %>% 
           set_names(ENCODER_LIST)
         models.lists.dataset %>% names
         
         metrics.lists.dataset <- models.lists.dataset %>% 
-          map(~ get_model_metrics(.x)) %>% 
+          map(~ get_model_metrics(.x, median_sort = median_sort)) %>% 
           set_names(ENCODER_LIST)
         # set_names(paste0("metrics.list.", ENCODER.LIST.study2))
         # 0.7s, 2.2s
@@ -240,24 +245,25 @@ create_benchmarks_all_datasets_all <- function(
         benchmarks.full <- benchmarks.all.dataset %>%
           # .id argument gets name
           map_df(~.x, .id = "encoder") %>%
-          arrange(RMSE.mean)
+          arrange(!!metric.sort)
         
         # create list of the best single encoder per dataset
         benchmarks.top1 <- benchmarks.all.dataset %>% 
           # tricky tricky: create column with list element name!
           # https://stackoverflow.com/a/48255884/7769076
           imap(~ mutate(.x, encoder = .y)) %>% 
-          map_df(~ .x %>% filter(RMSE.mean == min(RMSE.mean, na.rm = TRUE))) %>% 
+          map_df(~ .x %>% 
+                   filter(!!metric.sort == min(!!metric.sort, na.rm = TRUE))) %>% 
           select(encoder, everything()) %>% 
-          arrange(RMSE.mean)
+          arrange(!!metric.sort)
         
         benchmarks.top2 <- benchmarks.all.dataset %>% 
           # tricky tricky: create column with list element name!
           # https://stackoverflow.com/a/48255884/7769076
           imap(~ mutate(.x, encoder = .y)) %>% 
-          map_df(~ .x %>% slice_min(order_by = RMSE.mean, n = 2)) %>% 
+          map_df(~ .x %>% slice_min(order_by = !!metric.sort, n = 2)) %>% 
           select(encoder, everything()) %>% 
-          arrange(RMSE.mean)
+          arrange(!!metric.sort)
 
         return(benchmarks.top2)
       }
