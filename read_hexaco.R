@@ -19,11 +19,13 @@ nominal <- TRUE # wit
 # NEW <- TRUE
 NEW <- FALSE
 
-filename <- "data/HEXACO Online data with sex age Years 1-4"
-filename.sav <- paste0(filename, ".sav")
-filename.rds <- paste0(filename, ".rds")
+dataset.label <- "data/dataset hexaco.rds"
 
 if (NEW) {
+  
+  filename <- "data/HEXACO Online data with sex age Years 1-4"
+  filename.sav <- paste0(filename, ".sav")
+  filename.rds <- paste0(filename, ".rds")
   
   system.time(
     file.raw <- sjlabelled::read_spss(
@@ -42,26 +44,74 @@ if (NEW) {
       .$variable.labels %T>% print    
   ) # 1.2s
   
-} else {
+  file.raw %>% glimpse()
+  file.raw %>% summary()
+  file.raw$sexnumeric %>% table
+  
+  # missing values
+  file.raw %>% map_df(~ is.na(.) %>% sum) %>% select(where(~ sum(.) != 0))
+  
+  file.raw %>% dim
+  file.raw %>% na.omit %>% dim
+  
+  data.raw <- file.raw %>% 
+    select(-id) %>% 
+    na.omit %>% 
+    as_tibble()
+  
   system.time(
-    file.raw <- readRDS(filename.rds) 
-  ) # 0.8s
+    data.raw %>% saveRDS(dataset.label)  
+  ) # 10.4s
+  
+} else {
+  # system.time(
+  #   file.raw <- readRDS(filename.rds) 
+  # ) # 0.8s
+  
+  system.time(
+    data.raw <- readRDS(dataset.label)
+  ) # 0.75s
 }
 
-file.raw %>% glimpse()
-file.raw %>% summary()
-file.raw$sexnumeric %>% table
 
-# missing values
-file.raw %>% map_df(~ is.na(.x) %>% sum) %>% 
-  # https://stackoverflow.com/a/65608760/7769076
-  select(where(~ is.numeric(.x) && sum(.x) != 0))
+data.raw %>% glimpse()
+data.raw %>% summary()
+# dataset %>% select(where(is.numeric)) %>% boxplot
 
-# can be shorter bec factor column is converted into int:
-file.raw %>% map_df(~ is.na(.) %>% sum) %>% select(where(~ sum(.) != 0))
+data.play <- data.raw %>% head(100)
 
-# https://stackoverflow.com/a/63545281/7769076
-file.raw %>% map_df(~ is.na(.x) %>% sum) %>% select(where(~ any(. != 0)))
+data.play %>% names()
 
+system.time(
+  dataset <- data.play %>% 
+  # dataset <- data.raw %>% 
+    rename(sex = sexnumeric) %>% 
+    mutate(sex = fct_recode(
+      sex,
+      male = "1",
+      female = "2")) %>% 
+    mutate(
+      across()
+    ) %>% 
+    select(-sex, -user_age, everything()) %>% 
+    # remove the facet scores bec. they are derived as means of item scores
+    select(-c(101:125))
+)
 
+reverse_code <- function(item_vector, min, max) {
+  max + min - item_vector 
+}
+
+dataset %>% names
+dataset$Oaesa1 + dataset$Oaesa1 %>% reverse_code(1, 5)
+
+dataset
+dataset %>% 
+  mutate(
+    across(
+      c(1,2),
+      ~reverse_code(.x, 1, 5)
+    )
+  )
+  
 
