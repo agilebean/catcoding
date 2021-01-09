@@ -40,7 +40,7 @@ apply_embed_encoder <- function(
     paste(collapse = " + ") %>% 
     paste(target_label, "~", .) %>% 
     as.formula %>% 
-    recipe(training_original)
+    recipe(training_original) 
     
   # add encoder to recipe
   recipe.encoding <- recipe.base %>% 

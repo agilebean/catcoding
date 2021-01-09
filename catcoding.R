@@ -21,11 +21,11 @@ sapply(packs, require, character.only = TRUE)
 
 ####################################################
 # run this for step_lencode_keras
-compareVersion("2.0", as.character(tensorflow::tf_version()))
+# compareVersion("2.0", as.character(tensorflow::tf_version()))
 
 ################################################################################
-# PREP <- TRUE
-PREP <- FALSE
+PREP <- TRUE
+# PREP <- FALSE
 
 ################################################################################
 # apply encoding on dataset
@@ -117,17 +117,18 @@ apply_encoder <- function(data_original_split, encoding) {
 
 ####################################################
 # dataset
+DATASET.LABEL <- "pci"
 # DATASET.LABEL <- "diamonds"
 # DATASET.LABEL <- "ames"
 # DATASET.LABEL <- "designdim"
-DATASET.LABEL <- "timex"
+# DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
 # DATASET.LABEL <- "smartflow-scales"
 # 
 ####################################################
 # ENCODING <- "factor-encoding"
 # ENCODING <- "vtreat-cross"
-ENCODING <- "vtreat-design"
+# ENCODING <- "vtreat-design"
 # ENCODING <- "vtreat-dummy"
 # ENCODING <- "scikit-target"
 # ENCODING <- "scikit-loo"
@@ -143,7 +144,7 @@ ENCODING <- "vtreat-design"
 ####################################################
 # ENCODING <- "embed-bayes"
 # ENCODING <- "embed-glm"
-# ENCODING <- "embed-keras"
+ENCODING <- "embed-keras"
 # ENCODING <- "integer-encoding"
 ################################################################################
 # get dataset
@@ -163,6 +164,7 @@ system.time(
   )  
 ) # 0.03s
 
+# show factors
 data.original.split$training.set %>% 
   select(where(is.factor)) %>% str
 
@@ -219,11 +221,15 @@ get_data_ALL_encoded_list <- function() {
 # FINAL1: create list of encoded datasets
 system.time(
   data.ALL.encoded.list <- get_data_ALL_encoded_list()  
-) # 116.3s for 55 encoders (5 datasets x 11 encoders)
+) 
+# 116.3s for 55 encoders (5 datasets x 11 encoders)
 # 29.7s for 19 encoders (diamonds) 
+# 29.5s for 22 encoders (pci)
 # 178s for 76 encoders (4 datasets x 19 encoders) = ~2.3s
 # 178s for 88 encoders (4 datasets x 22 encoders) = ~2.3s
 data.ALL.encoded.list %>% names
+data.ALL.encoded.list$pci$`embed-keras`
+data.ALL.encoded.list$pci$`scikit-loo`
 data.ALL.encoded.list$ames$`scikit-target`
 data.ALL.encoded.list$ames$`scikit-loo`
 data.ALL.encoded.list$ames$`scikit-loo`$target.label

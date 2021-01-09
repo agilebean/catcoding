@@ -13,8 +13,14 @@ get_dataset_original <- function(dataset_label) {
   print("**********************************************************************")
   print("*************************************************")
   print(paste("***** DATASET:", dataset_label, "*****"))
-  
-  if (dataset_label == "diamonds") {
+
+  if (dataset_label == "pci") {
+    
+    dataset <- readRDS("data/pci/dataset pci.rds")
+    target.label <- "job_score"
+    features.labels <- dataset %>% select(-target.label) %>% names
+    
+  } else  if (dataset_label == "diamonds") {
     
     dataset <- diamonds
     target.label <- "price"
