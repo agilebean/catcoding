@@ -33,7 +33,10 @@ CV.REPEATS <- 2
 
 ENCODING <- "scikit-loo"
 # ENCODING <- "factor-encoding"
-models.list <- readRDS(models_list_label(DATASET.LABEL, ENCODING))
+
+PREPROCESS.OPTION <- "none"
+
+# models.list <- readRDS(models_list_label(DATASET.LABEL, ENCODING))
 
 ####################################################
 # models.lists.dataset.labels <- dir("models/") %>% 
@@ -57,7 +60,7 @@ if (NEW) {
     # models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, "pca")
     models.lists.dataset <- get_models_list_dataset(
       DATASET.LABEL, 
-      "none", 
+      PREPROCESS.OPTION, 
       CV.REPEATS
       )
   )  
