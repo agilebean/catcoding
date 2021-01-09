@@ -16,8 +16,8 @@ packs <- c(
 # devtools::install_github("agilebean/machinelearningtools")
 # unloadNamespace("machinelearningtools")
 sapply(packs, require, character.only = TRUE)
-# NEW <- TRUE
-NEW <- FALSE
+NEW <- TRUE
+# NEW <- FALSE
 
 source("plugins/labels.R")
 source("plugins/get_models.R")
@@ -28,10 +28,11 @@ source("plugins/get_models.R")
 # DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
 DATASET.LABEL <- "pci"
-CV.REPEATS <- ""
+# CV.REPEATS <- ""
+CV.REPEATS <- 2
 
 ENCODING <- "scikit-loo"
-# ENCODING <- "scikit-loo"
+# ENCODING <- "factor-encoding"
 models.list <- readRDS(models_list_label(DATASET.LABEL, ENCODING))
 
 ####################################################
@@ -54,9 +55,13 @@ models.list <- readRDS(models_list_label(DATASET.LABEL, ENCODING))
 if (NEW) {
   system.time(
     # models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, "pca")
-    models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, "none", 20)
+    models.lists.dataset <- get_models_list_dataset(
+      DATASET.LABEL, 
+      "none", 
+      CV.REPEATS
+      )
   )  
-} # ~3s
+} # ~10.2s/11 encoders
 models.lists.dataset %>% names
 
 # return the sampling folds for the best algorithm
@@ -123,10 +128,12 @@ visualize_sampling_models_list <- function(
 ########################################################################
 # Study 1
 ########################################################################
-DATASET.LABEL <- "designdim"
+DATASET.LABEL <- "pci"
+# DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "timex"
-visualize_sampling_models_list(DATASET.LABEL, PREPROCESS.OPTION, "RMSE", 10,
-                               palette = "Blues", boxfill = "#778899")
+visualize_sampling_models_list(
+  DATASET.LABEL, PREPROCESS.OPTION, "RMSE", CV.REPEATS,
+  palette = "Blues", boxfill = "#778899")
 ggsave(
   dpi = 300, width = 6, height = 9,
   paste0("figures/study1-", DATASET.LABEL, ".png") %T>% print)
@@ -134,11 +141,13 @@ ggsave(
 ########################################################################
 # Study 2
 ########################################################################
+DATASET.LABEL <- "pci"
 # DATASET.LABEL <- "ames"
-DATASET.LABEL <- "designdim"
+# DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
-visualize_sampling_models_list(DATASET.LABEL, PREPROCESS.OPTION, "RMSE", 20)
+visualize_sampling_models_list(
+  DATASET.LABEL, PREPROCESS.OPTION, "RMSE", CV.REPEATS)
 ggsave(
   dpi = 300, width = 6, height = 4.5,
   # paste0("figures/study2-", DATASET.LABEL, ".png") %T>% print)
@@ -150,9 +159,9 @@ ggsave(
 # visualize_sampling_models_list(
 #   DATASET.LABEL, models.lists.dataset, "RMSE", "Blues", "#778899")
 
-PREPROCESS.OPTION.LIST <- c("none", "pca", "ica", "YeoJohnson")
-
+# PREPROCESS.OPTION.LIST <- c("none", "pca", "ica", "YeoJohnson")
 PREPROCESS.OPTION.LIST <- "none"
+
 system.time(
   
   sampling.boxplots.preprocess <- PREPROCESS.OPTION.LIST %>% 
@@ -161,20 +170,22 @@ system.time(
       DATASET.LABEL.LIST %>% 
         map(function(dataset_label) {
           
-          get_models_list_dataset(
-            dataset_label, preprocess_option
-          ) %>% 
             visualize_sampling_models_list(
-              ., dataset_label, "RMSE", "Blues", "#778899"
+              dataset_label, 
+              preprocess_option, 
+              metric = "RMSE", 
+              cv_repeats = CV.REPEATS, 
+              palette = "Blues", 
+              boxfill = "#778899"
             )
         }) %>% 
         set_names(DATASET.LABEL.LIST)
     }) %>% 
     set_names(PREPROCESS.OPTION.LIST)
 
-) #  /4 datasets x 4 preprocess options
+) #  11.0s/1 datasets x 4 preprocess options
 
-sampling.boxplots
-sampling.boxplots.preprocess$pca
-sampling.boxplots.preprocess$ica
-sampling.boxplots.preprocess$YeoJohnson
+sampling.boxplots.preprocess$none
+# sampling.boxplots.preprocess$pca
+# sampling.boxplots.preprocess$ica
+# sampling.boxplots.preprocess$YeoJohnson
