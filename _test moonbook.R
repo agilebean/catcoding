@@ -1,5 +1,5 @@
 
-source("_labels.R")
+source("plugins/labels.R")
 
 system.time(
   data.raw <- readRDS(dataset.label)

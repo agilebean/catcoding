@@ -16,7 +16,7 @@ sapply(libraries, require, character.only = TRUE)
 # NEW <- TRUE
 NEW <- FALSE
 
-source("_labels.R")
+source("plugins/labels.R")
 
 if (NEW) {
   
