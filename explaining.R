@@ -28,7 +28,7 @@ sapply(packs, require, character.only = TRUE)
 NEW <- TRUE
 # NEW <- FALSE
 
-source("plugins/strings.R")
+source("plugins/labels.R")
 source("plugins/get_models.R")
 
 # CV.REPEATS <- 1

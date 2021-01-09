@@ -25,7 +25,7 @@ if (getwd() == "/home/rstudio") {
 # ENCODER.LIST.study2 <- c("scikit-loo")
 # ENCODER <- c("scikit-loo")
 
-source("plugins/strings.R")
+source("plugins/labels.R")
 
 if (!is.null(PREPROCESS.OPTION) & PREPROCESS.OPTION != "none") {
   preprocess_string <- c("center", "scale", "zv", PREPROCESS.OPTION)  
@@ -35,11 +35,11 @@ if (!is.null(PREPROCESS.OPTION) & PREPROCESS.OPTION != "none") {
 preprocess_string
 
 ################################################################################
-# CV.REPEATS <- 2
-CV.REPEATS <- 10
+CV.REPEATS <- 2
+# CV.REPEATS <- 10
 # CV.REPEATS <- 20
-# TRY.FIRST <- 200
-TRY.FIRST <- NULL
+TRY.FIRST <- 200
+# TRY.FIRST <- NULL
 
 training.configuration <- trainControl(
   method = "repeatedcv",
@@ -49,14 +49,15 @@ training.configuration <- trainControl(
 )
 
 algorithm.list <- c(
-  # "lm"
-  # "knn"
+  "lm"
+  # , "knn"
   # , "gbm"
   # , "rf"
-  "ranger"
-  , "xgbTree"
+  # , "ranger"
+  # , "xgbTree"
 )
 
+dataset_filename(dataset_label = "pci")
 
 ################################################################################
 # benchmarking
@@ -67,6 +68,9 @@ if (NEW) {
     benchmark.ALL.data.ENCODER.LIST.study2 <- DATASET.LABEL.LIST %>% 
       map(
         function(DATASET_LABEL) {
+          
+          DATASET_LABEL <- "pci"
+          
           
           print(paste("*** Dataset:", DATASET_LABEL))
           data.list <- readRDS(dataset_filename(DATASET_LABEL))

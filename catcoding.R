@@ -147,8 +147,9 @@ ENCODING <- "vtreat-design"
 # ENCODING <- "integer-encoding"
 ################################################################################
 # get dataset
+source("plugins/labels.R")
 source("plugins/get_data.R")
-source("plugins/strings.R")
+
 
 # get original dataset
 system.time(

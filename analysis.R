@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Script:       analysis.R
+# Script:  analysis.R
 # Purpose: generate plots for publication
 #
 ################################################################################
@@ -16,16 +16,19 @@ packs <- c(
 # devtools::install_github("agilebean/machinelearningtools")
 # unloadNamespace("machinelearningtools")
 sapply(packs, require, character.only = TRUE)
-NEW <- TRUE
-# NEW <- FALSE
+# NEW <- TRUE
+NEW <- FALSE
 
-source("plugins/strings.R")
+source("plugins/labels.R")
 source("plugins/get_models.R")
 
-DATASET.LABEL <- "ames"
+
+# DATASET.LABEL <- "ames"
 # DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
+DATASET.LABEL <- "pci"
+CV.REPEATS <- ""
 
 ENCODING <- "scikit-loo"
 models.list <- readRDS(models_list_label(DATASET.LABEL, ENCODING))
