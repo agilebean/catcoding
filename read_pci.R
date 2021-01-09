@@ -16,7 +16,14 @@ sapply(libraries, require, character.only = TRUE)
 # NEW <- TRUE
 NEW <- FALSE
 
-source("plugins/labels.R")
+# labels
+data.prefix <- "data/pci/"
+# filename <- "PCI-Translation"
+filename <- "PCI-Translation-cso"
+filename.xlsx <- paste0(data.prefix, filename, ".xlsx") 
+filename.rds <- paste0(data.prefix, filename, ".rds") %>% tolower
+dataset.label <- "data/data.pci.100.rds"
+
 
 if (NEW) {
   
