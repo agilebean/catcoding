@@ -22,8 +22,8 @@ data.prefix <- "data/pci/"
 filename <- "PCI-Translation-cso"
 filename.xlsx <- paste0(data.prefix, filename, ".xlsx") 
 filename.rds <- paste0(data.prefix, filename, ".rds") %>% tolower
-dataset.label <- "data/data.pci.100.rds"
-
+dataset.label <- "dataset pci"
+dataset.rds <- paste0(data.prefix, dataset.label, ".rds") %>% tolower
 
 if (NEW) {
   
@@ -91,7 +91,9 @@ data.raw %<>% slice(-c(1:2))
 
 names(data.raw) %<>% tolower() %>% 
   gsub(" ", "_", .) %>% 
-  gsub("%", "", .)
+  gsub("%", "", .) %>% 
+  # tricky: "-" not allowed in recipes!
+  gsub("-", "_", .)
 
 data.raw$passed %>% table
 factor.labels <- c("company", "job_type", "passed",
@@ -150,11 +152,11 @@ dataset <- data.korean %>%
 dataset %>% summary
 
 system.time(
-  dataset %>% saveRDS(dataset.label)  
+  dataset %>% saveRDS(dataset.rds)  
 ) # 0.05s
 
 system.time(
-  dataset <- readRDS(dataset.label)
+  dataset <- readRDS(dataset.rds)
 ) # 0.75s
 
 
