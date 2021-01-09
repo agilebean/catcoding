@@ -63,7 +63,7 @@ data.raw %<>% set_names(1:length(data.raw))
 
 data.raw %>% slice(1:2) %>% t
 
-names.col1_3 <- c("company_name", "job_type", "passed")
+names.col1_3 <- c("company", "job_type", "passed")
 names.col4_27 <- data.raw[1, c(4:27)] %>% as.character()
 names.col4_27 %>% t
 names.col28_30 <- c("agreement", "neutrality", "disagreement")
@@ -87,7 +87,7 @@ names(data.raw) %<>% tolower() %>%
   gsub("%", "", .)
 
 data.raw$passed %>% table
-factor.labels <- c("company_name", "job_type", "passed",
+factor.labels <- c("company", "job_type", "passed",
                    "division")
 
 data.korean <- data.raw %>% 
@@ -102,14 +102,14 @@ data.korean %>% map_df(~ is.na(.) %>% sum) %>% select(where(~ sum(.) != 0))
 
 dataset <- data.korean %>% 
   mutate(
-    company_name = fct_recode(
-      company_name,
-      company1 = "공영홈쇼핑", 
-      company2 = "광명도시공사", 
-      company3 = "전력거래소", 
-      company4 = "한국서부발전㈜", 
-      company5 = "한국소방산업기술원", 
-      company6 = "한국해양진흥공사"
+    company = fct_recode(
+      company,
+      company1 = "공영홈쇼핑", # Public Home Shopping
+      company2 = "광명도시공사", # Gwangmyeong City Corporation|Construction
+      company3 = "전력거래소", # Power exchange
+      company4 = "한국서부발전㈜", # Korea Western Power Co., Ltd.
+      company5 = "한국소방산업기술원", # Korea Fire Industry Technology Institute
+      company6 = "한국해양진흥공사" # Korea Ocean Promotion Corporation
     )
   ) %>%
   mutate(
@@ -147,5 +147,12 @@ system.time(
 ) # 0.05s
 
 system.time(
-  data.raw <- readRDS(dataset.label)
+  dataset <- readRDS(dataset.label)
 ) # 0.75s
+
+
+dataset %>%
+  group_by(company) %>%
+  # group_by(passed) %>%
+  tally() %>%
+  mutate(perc = n/sum(n)*100)
