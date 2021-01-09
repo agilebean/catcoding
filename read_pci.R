@@ -124,15 +124,15 @@ dataset <- data.korean %>%
   mutate(
     passed = fct_recode(
       passed,
-      failed = "불합격", 
-      passed = "합격"
+      not_hired = "불합격", 
+      hired = "합격"
     )
   ) %>% 
   mutate(
     division = fct_recode(
       division,
-      executive = "관리직", 
-      whitecollar = "사무직", 
+      managerial = "관리직", 
+      support = "사무직", 
       sales = "영업/판매직", 
       driver = "운전직", 
     )
