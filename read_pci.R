@@ -37,10 +37,6 @@ if (NEW) {
   system.time(
     file.raw <- readRDS(filename.rds) %>% as_tibble
   ) # 0.08s
-  
-  # system.time(
-  #   data.raw <- readRDS(dataset.label)
-  # ) # 0.75s
 }
 
 file.raw %>% glimpse()
@@ -150,5 +146,6 @@ system.time(
   dataset %>% saveRDS(dataset.label)  
 ) # 0.05s
 
-
-
+system.time(
+  data.raw <- readRDS(dataset.label)
+) # 0.75s
