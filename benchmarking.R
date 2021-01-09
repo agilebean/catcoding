@@ -38,8 +38,8 @@ preprocess_string
 CV.REPEATS <- 2
 # CV.REPEATS <- 10
 # CV.REPEATS <- 20
-TRY.FIRST <- 200
-# TRY.FIRST <- NULL
+# TRY.FIRST <- 100
+TRY.FIRST <- NULL
 
 training.configuration <- trainControl(
   method = "repeatedcv",
@@ -50,11 +50,11 @@ training.configuration <- trainControl(
 
 algorithm.list <- c(
   "lm"
-  # , "knn"
-  # , "gbm"
-  # , "rf"
-  # , "ranger"
-  # , "xgbTree"
+  , "knn"
+  , "gbm"
+  , "xgbTree"
+  , "rf"
+  , "ranger"
 )
 
 dataset_filename(dataset_label = "pci")
@@ -69,9 +69,6 @@ if (NEW) {
       map(
         function(DATASET_LABEL) {
           
-          DATASET_LABEL <- "pci"
-          
-          
           print(paste("*** Dataset:", DATASET_LABEL))
           data.list <- readRDS(dataset_filename(DATASET_LABEL))
           
@@ -79,6 +76,9 @@ if (NEW) {
             map(
               function(ENCODER) {
                 print(paste("ENCODER:", ENCODER))
+                # print(models_list_label(DATASET_LABEL, ENCODER))
+                # print(data.list[[ENCODER]])
+                
                 models.list <- benchmark_algorithms(
                   target_label = data.list[[ENCODER]]$target.label,
                   features_labels = data.list[[ENCODER]]$features.labels,
@@ -142,10 +142,11 @@ benchmark.ALL.data.ENCODER.LIST.study2$ames$`scikit-loo` %>%
 ################################################################################
 
 ####################################################
+DATASET.LABEL <- "pci"
 # DATASET.LABEL <- "diamonds"
 # DATASET.LABEL <- "ames"
 # DATASET.LABEL <- "designdim"
-DATASET.LABEL <- "timex"
+# DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
 # DATASET.LABEL <- "smartflow-scales"
 ####################################################
