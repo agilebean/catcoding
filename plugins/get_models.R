@@ -51,8 +51,11 @@ get_models_list_dataset <- function(
 # select the algorithm with lowest RMSE.median
 get_sampling_models_list <- function(models_list, metric, median_sort = TRUE) {
   
+  require(machinelearningtools)
+  
   models.metrics <- models_list %>% get_model_metrics(median_sort) 
   
+  # TODO: RMSE.median = metric(RMSE/accuracy)+centrality_metric(mean or median)
   best.model.label <- models.metrics$benchmark.all %>% 
     filter(RMSE.median == min(RMSE.median, na.rm = TRUE)) %>% 
     .$model

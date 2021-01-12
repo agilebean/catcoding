@@ -141,10 +141,11 @@ DATASET.LABEL <- "pci"
 # ENCODING <- "scikit-binary"
 # ENCODING <- "scikit-onehot"
 # ENCODING <- "scikit-woe" # target must be binary
+ENCODING <- "scikit-Mestimate"
 ####################################################
 # ENCODING <- "embed-bayes"
 # ENCODING <- "embed-glm"
-ENCODING <- "embed-keras"
+# ENCODING <- "embed-keras"
 # ENCODING <- "integer-encoding"
 ################################################################################
 # get dataset
