@@ -29,11 +29,17 @@ features.labels <- dataset %>%
   select(-target.label, -starts_with("addicted")) %>% names
 
 # convert Likert to factor
-smartflow <- dataset %>% 
+dataset %<>% 
   mutate(across(features.labels, as.factor)) %>% 
   mutate(across(c(age, smartphonehours), as.numeric)) %>% 
   # convert Likert to ordinal
   mutate(across(-c(referral:relationship, target.label),
                 as.ordered))
+
+# create data structure
+smartflow <- list()
+smartflow$target.label <- target.label
+smartflow$features.labels <- features.labels
+smartflow$data <- dataset
 
 usethis::use_data(smartflow, overwrite = TRUE)

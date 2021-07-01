@@ -1,82 +1,9 @@
 ################################################################################
 #
-# Script:  plugins/getdata.R
+# Script:  src/getdata.R
 # Output:  training.set, testing.set, features.labels
 #
 ################################################################################
-
-################################################################################
-# 
-# GOAL:   retrieve original dataset
-# INPUT:  dataset_label
-# OUTPUT: dataset, target.label, features.labels
-# 
-################################################################################
-get_dataset_original <- function(dataset_label) {
-  
-  print("**********************************************************************")
-  print("*************************************************")
-  print(paste("***** DATASET:", dataset_label, "*****"))
-
-  if (dataset_label == "pci") {
-    
-    target.label <- "job_score"
-    features.labels <- pci %>% select(-target.label) %>% names
-    
-  } else  if (dataset_label == "diamonds") {
-    
-    # define target and features
-    target.label <- "price"
-    features.labels <- dataset %>% select(-target.label) %>% names
-    
-  } else if (dataset_label == "ames") {
-    
-    # define target and features
-    target.label <- "Sale_Price"
-    features.labels <- dataset %>% select(-target.label) %>% names
-    
-  } else if (dataset_label == "designdim") {
-    
-    target.label <- "NPS"
-    features.labels <- designdim %>% select(-target.label) %>% names
-    
-  } else if (dataset_label == "timex") {
-    
-    # define target and features
-    target.label <- "HAPPINESS"
-    features.labels <- timex %>% 
-      select(-target.label) %>% 
-      select(-c(active:ashamed)) %>% #DV: PANAS-PA/-NA 
-      select(-starts_with("lifesatis"), -happy) %>% #DV: lifesatis+happiness-global
-      names
-    
-  } else if (dataset_label == "smartflow") {
-    
-    target.label <- "SMADDICTION"
-    features.labels <- smartflow %>% 
-      select(-target.label, -starts_with("addicted")) %>% names
-    
-  } else if (dataset_label == "smartflow.scales") {
-    
-    # define target and features
-    target.label <- "SmartphoneAddiction"
-    features.labels <- smartflow.scales %>% 
-      select(-target.label, -SmartphoneHours) %>% names
-    
-  }
-  
-  # subset features & remove other DV items
-  dataset %<>% select(target.label, features.labels)
-  
-  # put target as last column
-  dataset %<>% relocate(target.label, .after = last_col())
-  
-  return(list(
-    dataset = dataset,
-    target.label = target.label,
-    features.labels = features.labels
-  ))
-}
 
 ################################################################################
 # # FUNCTION: split original dataset into training/testing.set
@@ -85,7 +12,7 @@ split_dataset_original <- function(
   dataset_original_object, train_test_split, cats_only = FALSE) {
   
   # retrieve dataset & labels
-  dataset <- dataset_original_object$dataset
+  dataset <- dataset_original_object$data
   target.label <- dataset_original_object$target.label
   features.labels <- dataset_original_object$features.labels
   

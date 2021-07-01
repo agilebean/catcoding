@@ -12,10 +12,15 @@ dataset <- readRDS(filepath) %>% as_tibble()
 target.label <- "NPS"
 features.labels <- dataset %>% select(-target.label) %>% names
 
-# convert Likert to factor
-designdim <- dataset %>% 
+dataset %<>% 
   mutate(across(features.labels, as.factor)) %>% 
   # convert Likert to ordinal
   mutate(across(where(is.factor), as.ordered))
+
+# create data structure
+designdim <- list()
+designdim$target.label <- target.label
+designdim$features.labels <- features.labels
+designdim$data <- dataset
 
 usethis::use_data(designdim, overwrite = TRUE)

@@ -6,6 +6,10 @@ dataset <- AmesHousing::make_ames()
 target.label <- "Sale_Price"
 features.labels <- dataset %>% select(-target.label) %>% names
 
-ames <- dataset
+# create data structure
+ames <- list()
+ames$target.label <- target.label
+ames$features.labels <- features.labels
+ames$data <- dataset
 
 usethis::use_data(ames, overwrite = TRUE)

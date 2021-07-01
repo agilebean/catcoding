@@ -6,4 +6,10 @@ dataset <- ggplot2::diamonds
 target.label <- "price"
 features.labels <- dataset %>% select(-target.label) %>% names
 
-usethis::use_data(dataset, overwrite = TRUE)
+# create data structure
+diamonds <- list()
+diamonds$target.label <- target.label
+diamonds$features.labels <- features.labels
+diamonds$data <- dataset
+
+usethis::use_data(diamonds, overwrite = TRUE)

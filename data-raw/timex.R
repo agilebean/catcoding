@@ -35,11 +35,20 @@ features.labels <- dataset %>%
   names
 
 # convert Likert to factor
-timex <- dataset %>% 
+dataset %<>% 
   mutate(across(features.labels, as.factor)) %>% 
   mutate(age = as.numeric(age)) %>% 
   # convert Likert to ordinal
   mutate(across(-c(referral:relationship, target.label),
                 as.ordered))
+
+# create data structure
+timex <- list()
+timex$target.label <- target.label
+timex$features.labels <- features.labels
+timex$data <- dataset
+
+usethis::use_data(timex, overwrite = TRUE)
+
 
 usethis::use_data(timex, overwrite = TRUE)

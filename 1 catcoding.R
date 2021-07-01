@@ -13,7 +13,8 @@ packs <- c(
   "machinelearningtools",
   "reticulate",
   "doParallel",
-  "foreach"
+  "foreach",
+  "catcoding"
 )
 sapply(packs, require, character.only = TRUE)
 # devtools::install_github("agilebean/machinelearningtools")
@@ -151,16 +152,19 @@ ENCODING <- "scikit-onehot"
 # ENCODING <- "integer-encoding"
 ################################################################################
 
-
+source("src/get_data.R")
 # get original dataset
-system.time(
-  data.original.object <- get_dataset_original(DATASET.LABEL)
-) # 0.15s
+
+data <- timex
+
+# subset features & remove other DV items
+dataset <- data$data %>% 
+  select(data$target.label, data$features.labels) %>% print
 
 # create split objects for 1 dataset
 system.time(
   data.original.split <- split_dataset_original(
-    data.original.object, TRAIN.TEST.SPLIT, CATS.ONLY
+    data, TRAIN.TEST.SPLIT, CATS.ONLY
   )  
 ) # 0.03s
 

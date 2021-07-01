@@ -27,8 +27,14 @@ features.labels <- dataset %>%
   select(-target.label, -SmartphoneHours) %>% names
 
 # convert Likert to factor
-smartflow.scales <- dataset %>% 
+dataset %<>% 
   mutate(across(referral:relationship, as.factor)) %>% 
   mutate(age = as.numeric(age))
+
+# create data structure
+smartflow.scales <- list()
+smartflow.scales$target.label <- target.label
+smartflow.scales$features.labels <- features.labels
+smartflow.scales$data <- dataset
 
 usethis::use_data(smartflow.scales, overwrite = TRUE)
