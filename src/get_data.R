@@ -6,7 +6,11 @@
 ################################################################################
 
 ################################################################################
-# FUNCTION: retrieve original dataset
+# 
+# GOAL:   retrieve original dataset
+# INPUT:  dataset_label
+# OUTPUT: dataset, target.label, features.labels
+# 
 ################################################################################
 get_dataset_original <- function(dataset_label) {
   
@@ -16,115 +20,48 @@ get_dataset_original <- function(dataset_label) {
 
   if (dataset_label == "pci") {
     
-    dataset <- readRDS("data/pci/dataset pci.rds")
     target.label <- "job_score"
-    features.labels <- dataset %>% select(-target.label) %>% names
+    features.labels <- pci %>% select(-target.label) %>% names
     
   } else  if (dataset_label == "diamonds") {
     
-    dataset <- diamonds
+    # define target and features
     target.label <- "price"
     features.labels <- dataset %>% select(-target.label) %>% names
     
   } else if (dataset_label == "ames") {
     
-    dataset <- AmesHousing::make_ames()
-    
+    # define target and features
     target.label <- "Sale_Price"
     features.labels <- dataset %>% select(-target.label) %>% names
     
   } else if (dataset_label == "designdim") {
     
-    # no desc.stats exists. tricky: design.descriptives are design features!
-    dataset <- readRDS("data/designdim.items.rds") %>% as_tibble()
-    
     target.label <- "NPS"
-    features.labels <- dataset %>% select(-target.label) %>% names
-    
-    # convert Likert to factor
-    dataset %<>% mutate(across(features.labels, as.factor))
-    
-    # convert Likert to ordinal
-    dataset %<>% mutate(across(where(is.factor), as.ordered))
+    features.labels <- designdim %>% select(-target.label) %>% names
     
   } else if (dataset_label == "timex") {
     
-    data.descriptive <- readRDS("data/timex.descriptive.rds") 
-    data.items <- readRDS("data/timex.items.rds")
-    
-    dataset <- cbind(data.descriptive, data.items) %>% 
-      select(referral:happy, -feedback, -email) %>% 
-      mutate(
-        HAPPINESS = rowMeans(
-          select(., active:alert, starts_with("lifesatis"), happy)
-        )
-      ) %>% 
-      na.omit() %>% # n=252, 82
-      as_tibble()
-    
+    # define target and features
     target.label <- "HAPPINESS"
-    features.labels <-
-      dataset %>% 
+    features.labels <- timex %>% 
       select(-target.label) %>% 
       select(-c(active:ashamed)) %>% #DV: PANAS-PA/-NA 
       select(-starts_with("lifesatis"), -happy) %>% #DV: lifesatis+happiness-global
       names
     
-    # convert Likert to factor
-    dataset %<>% 
-      mutate(across(features.labels, as.factor)) %>% 
-      mutate(age = as.numeric(age))
-    
-    # convert Likert to ordinal
-    dataset %<>% 
-      mutate(across(-c(referral:relationship, target.label),
-                    as.ordered))
-    
-    
   } else if (dataset_label == "smartflow") {
     
-    data.descriptive <- readRDS("data/smartflow.descriptive.rds") 
-    data.items <- readRDS("data/smartflow.items.rds")
-    
-    dataset <- cbind(data.descriptive, data.items) %>% 
-      select(-feedback, -email) %>% 
-      mutate(., SMADDICTION = rowMeans(
-        select(., starts_with("addicted")), na.rm = TRUE)) %>% 
-      na.omit() %>% # n=307
-      as_tibble()
-    
     target.label <- "SMADDICTION"
-    features.labels <- dataset %>% 
+    features.labels <- smartflow %>% 
       select(-target.label, -starts_with("addicted")) %>% names
-    
-    # convert Likert to factor
-    dataset %<>% 
-      mutate(across(features.labels, as.factor)) %>% 
-      mutate(across(c(age, smartphonehours), as.numeric))
-    
-    # convert Likert to ordinal
-    dataset %<>% 
-      mutate(across(-c(referral:relationship, target.label),
-                    as.ordered))
     
   } else if (dataset_label == "smartflow.scales") {
     
-    data.descriptives <- readRDS("data/smartflow.descriptive.rds") 
-    data.scales <- readRDS("data/smartflow.scales.rds")
-    
-    dataset <- cbind(data.descriptives, data.scales) %>% 
-      select(-feedback, -email) %>% 
-      na.omit() %>% # n=307
-      as_tibble()
-    
+    # define target and features
     target.label <- "SmartphoneAddiction"
-    features.labels <- dataset %>% 
-      select(-SmartphoneHours) %>% names
-    
-    # convert Likert to factor
-    dataset %<>% 
-      mutate(across(referral:relationship, as.factor)) %>% 
-      mutate(age = as.numeric(age))
+    features.labels <- smartflow.scales %>% 
+      select(-target.label, -SmartphoneHours) %>% names
     
   }
   
@@ -146,7 +83,7 @@ get_dataset_original <- function(dataset_label) {
 ################################################################################
 split_dataset_original <- function(
   dataset_original_object, train_test_split, cats_only = FALSE) {
-
+  
   # retrieve dataset & labels
   dataset <- dataset_original_object$dataset
   target.label <- dataset_original_object$target.label
@@ -157,6 +94,7 @@ split_dataset_original <- function(
   train.index <- createDataPartition(
     dataset[[target.label]], p = train_test_split, list = FALSE
   )
+  
   training.set <- dataset %>% 
     # subset
     slice(train.index) %>% 

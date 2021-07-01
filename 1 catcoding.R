@@ -18,6 +18,8 @@ packs <- c(
 sapply(packs, require, character.only = TRUE)
 # devtools::install_github("agilebean/machinelearningtools")
 # unloadNamespace("machinelearningtools")
+source("src/labels.R")
+source("src/get_data.R")
 
 ####################################################
 # run this for step_lencode_keras
@@ -139,18 +141,15 @@ DATASET.LABEL <- "pci"
 # ENCODING <- "scikit-james-stein"
 # ENCODING <- "scikit-polynomial"
 # ENCODING <- "scikit-binary"
-# ENCODING <- "scikit-onehot"
+ENCODING <- "scikit-onehot"
 # ENCODING <- "scikit-woe" # target must be binary
-ENCODING <- "scikit-Mestimate"
+# ENCODING <- "scikit-Mestimate"
 ####################################################
 # ENCODING <- "embed-bayes"
 # ENCODING <- "embed-glm"
 # ENCODING <- "embed-keras"
 # ENCODING <- "integer-encoding"
 ################################################################################
-# get dataset
-source("plugins/labels.R")
-source("plugins/get_data.R")
 
 
 # get original dataset

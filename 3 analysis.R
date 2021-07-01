@@ -17,12 +17,11 @@ packs <- c(
 # devtools::install_github("agilebean/machinelearningtools")
 # unloadNamespace("machinelearningtools")
 sapply(packs, require, character.only = TRUE)
+source("src/labels.R")
+source("src/get_models.R")
+
 # NEW <- TRUE
 NEW <- FALSE
-
-source("plugins/labels.R")
-source("plugins/get_models.R")
-
 
 # DATASET.LABEL <- "ames"
 # DATASET.LABEL <- "designdim"

@@ -1,0 +1,17 @@
+Package: catcoding
+Title: Compare Categorical Encoding Algorithms
+Version: 1.0.0
+Authors@R: 
+    person(given = "Chaehan",
+           family = "So",
+           role = c("aut", "cre"),
+           email = "chaehan.so@gmail.com",
+           comment = c(ORCID = "0000-0002-0546-2947"))
+Description: This package applies categorical encoding algorithms on selected psychological datasets.
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Depends: 
+    R (>= 2.10)

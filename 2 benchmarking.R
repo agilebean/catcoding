@@ -16,6 +16,8 @@ packs <- c(
 sapply(packs, require, character.only = TRUE)
 # devtools::install_github("agilebean/machinelearningtools")
 # unloadNamespace("machinelearningtools")
+source("src/labels.R")
+
 NEW <- TRUE
 # NEW <- FALSE
 
@@ -25,7 +27,7 @@ if (getwd() == "/home/rstudio") {
 # ENCODER.LIST.study2 <- c("scikit-loo")
 # ENCODER <- c("scikit-loo")
 
-source("plugins/labels.R")
+
 
 if (!is.null(PREPROCESS.OPTION) & PREPROCESS.OPTION != "none") {
   preprocess_string <- c("center", "scale", "zv", PREPROCESS.OPTION)  

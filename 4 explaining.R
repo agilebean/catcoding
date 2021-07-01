@@ -19,7 +19,8 @@ packs <- c(
 sapply(packs, require, character.only = TRUE)
 # devtools::install_github("agilebean/machinelearningtools", force = TRUE)
 # unloadNamespace("machinelearningtools")
-
+source("src/labels.R")
+source("src/get_models.R")
 
 ################################################################################
 #
@@ -27,9 +28,6 @@ sapply(packs, require, character.only = TRUE)
 
 NEW <- TRUE
 # NEW <- FALSE
-
-source("plugins/labels.R")
-source("plugins/get_models.R")
 
 # CV.REPEATS <- 1
 # CV.REPEATS <- 10
