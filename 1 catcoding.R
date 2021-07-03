@@ -6,117 +6,24 @@
 #
 ################################################################################
 packs <- c(
+  # "catcoding",
   "tidyverse",
   "magrittr",
-  "vtreat",
-  "caret",
+  # "caret",
   "machinelearningtools",
   "reticulate",
   "doParallel",
-  "foreach",
-  "catcoding"
+  "foreach"
 )
 sapply(packs, require, character.only = TRUE)
 # devtools::install_github("agilebean/machinelearningtools")
 # unloadNamespace("machinelearningtools")
 source("src/labels.R")
-source("src/get_data.R")
 
 ####################################################
 # run this for step_lencode_keras
 # compareVersion("2.0", as.character(tensorflow::tf_version()))
-
 ################################################################################
-PREP <- TRUE
-# PREP <- FALSE
-
-################################################################################
-# apply encoding on dataset
-apply_encoder <- function(data_prepped, encoding) {
-  
-  print("######################################################################")
-  print(paste("ENCODING:", encoding))
-  print("#####################")
-  print("Encoding...")
-  
-  # data_prepped <- data.prepped
-  training.original <- data_prepped$training.set
-  testing.original <- data_prepped$testing.set
-  target.label <- data_prepped$target.label
-  
-  if (is.null(encoding) | encoding == "factor-encoding") {
-    
-    source("encoders/factor-encoding.R")
-    encoding_function <- apply_factor_encoder
-    
-  } else { # ENCODINGS
-    
-    if (encoding == "vtreat-cross") {
-      
-      source("encoders/vtreat-cross.R")
-      encoding_function <- apply_vtreat_cross
-      
-    } else if (encoding == "vtreat-design") {
-      
-      source("encoders/vtreat-design.R")
-      encoding_function <- apply_vtreat_design
-      
-    } else if (encoding == "vtreat-dummy") { # DUMMY ENCODING
-      
-      source("encoders/vtreat-dummy.R")
-      encoding_function <- apply_vtreat_dummy
-      
-    } else if (startsWith(encoding, "embed")) {
-      
-      # PREP <- TRUE
-      PREP <- FALSE
-      source("encoders/embed-steps.R")
-      encoding_function <- apply_embed_encoder
-      
-    } else if (startsWith(encoding, "scikit")) {
-      
-      source("encoders/scikit-encoders.R")
-      encoding_function <-  apply_scikit_encoder
-      
-    } else if (encoding == "integer-encoding") {
-      
-      source("encoders/integer-encoding.R")
-      encoding_function <- apply_integer_encoder
-      
-    }
-  }
-  
-  # apply encoding function
-  time.encoding <- system.time(
-    data.encoded <- encoding_function(
-      encoding, training.original, testing.original, target.label
-    )
-  ) %>% .["elapsed"] %>% round(., digits = 3)
-  
-  # get categorical features
-  no.cats <- training.original %>% select(where(is.factor)) %>% ncol
-  
-  # get #features-original (-1 for target)
-  no.features.original <- training.original %>% ncol -1
-  
-  # get #features-encoded (-1 for target)
-  no.features.encoded <- data.encoded$training.set %>% ncol -1
-  
-  # inform about feature generation stats
-  print("#####################")
-  print(paste("...finished encoding in:", time.encoding, "seconds"))
-  print(paste(
-    "From", no.cats, "categorical of", no.features.original,
-    "original features in total, generated", 
-    no.features.encoded, "features."
-  ))
-  print("######################################################################")
-  
-  return(data.encoded)
-  
-}
-
-
 # apply ALL encoders on 1 split object
 apply_all_encoders <- function(data_prepped, encoder_list) {
   
@@ -131,7 +38,7 @@ get_data_ALL_encoded_list <- function(data_label_list) {
     map( ~ prep_dataset_original(.x, TRAIN.SPLIT, CATS.ONLY)) %>%
     map( ~ apply_all_encoders(.x, ENCODER.LIST.study1)) %>%
     set_names(data_label_list) %T>% 
-    imap(~ .x %>% saveRDS(.y %>% dataset_filename))
+    imap(~ .x %>% saveRDS(.y %>% dataset_filename(suffix = "rda")))
     # imap(~print(.y))
 }
 
@@ -194,7 +101,6 @@ ENCODING <- "scikit-onehot"
 # ENCODING <- "integer-encoding"
 ################################################################################
 
-source("src/get_data.R")
 # create split objects for 1 dataset
 data.prepped <- prep_dataset_original(DATASET.LABEL, TRAIN.SPLIT, CATS.ONLY)  
 # 0.06s
@@ -230,16 +136,6 @@ data.encoded$features.labels %>% length()
 ################################################################################
 # SCRIBBLE
 ################################################################################
-# get_data_encoded_list2 <- function() {
-#   DATASET.LABEL.LIST %>%
-#     map(
-#       ~ get_dataset_original(.x) %>%
-#         prep_dataset_original(TRAIN.SPLIT, CATS.ONLY) %>%
-#         apply_all_encoders(ENCODER.LIST.study1)
-#     ) %>%
-#     set_names(DATASET.LABEL.LIST)
-# } 
-# get_data_encoded_list2() %>% names
 
 # # DEBUG ERROR no usable vars with timex/smartflow+vtreat-design
 # microbenchmark::microbenchmark(

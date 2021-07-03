@@ -4,24 +4,26 @@
 # Output:       models_list_label, models_metrics_label, dataset_label
 #
 ################################################################################
-TRAIN.TEST.SPLIT <- 1.0
-# QUICK-TEST: use only cats to see whether it's worth catcoding 
-# CATS.ONLY <- TRUE
-CATS.ONLY <- FALSE
+TRAIN.SPLIT <- 1.0
 
-# PREPROCESS.OPTION <- "pca"
-# PREPROCESS.OPTION <- "ica"
-# PREPROCESS.OPTION <- "YeoJohnson"
-# PREPROCESS.OPTION <- NULL
-PREPROCESS.OPTION <- "none"
+# use only cats
+CATS.ONLY <- TRUE
+# CATS.ONLY <- FALSE
+
+# TRANSFORM <- "pca"
+# TRANSFORM <- "ica"
+# TRANSFORM <- "YeoJohnson"
+TRANSFORM <- NULL
+# TRANSFORM <- "none"
+
+preprocess_string <- c("center", "scale", "zv", TRANSFORM) %>% print
 
 DATASET.LABEL.LIST <- c(
-  # "diamonds"
-  "pci"
-  # , "ames"
-  # , "designdim"
-  # , "timex"
-  # , "smartflow"
+  "diamonds"
+  , "ames"
+  , "designdim"
+  , "timex"
+  , "smartflow"
 )
 
 ENCODER.LIST.study1 <- c(
@@ -36,8 +38,8 @@ ENCODER.LIST.study1 <- c(
   , "scikit-baseN"
   , "scikit-binary"
   , "scikit-catboost"
-  , "scikit-glmm"
-  , "scikit-hashing"
+  # , "scikit-glmm"
+  # , "scikit-hashing"
   , "scikit-helmert"
   , "scikit-james-stein"
   , "scikit-loo"
@@ -97,25 +99,37 @@ VARTYPES.SELECT <- if (CATS.ONLY) {
   c("lev", "clean", "isBad")
 }
 
-models_list_label <- function(dataset_label, encoding) {
+models_list_label <- function(
+  dataset_label = DATASET.LABEL,
+  prefix = "models/models.list",
+  encoding = ENCODING,
+  preprocess_option = TRANSFORM,
+  cv_repeats = paste0("cv", CV.REPEATS)
+  ) {
   output_filename(
-    prefix = "models/models.list",
+    prefix = prefix,
     dataset_label,
-    TRAIN.TEST.SPLIT*100,
+    TRAIN.SPLIT*100,
     encoding,
-    PREPROCESS.OPTION,
-    paste0("cv", CV.REPEATS)
+    preprocess_option,
+    cv_repeats
   )
 }
 
-models_metrics_label <- function() {
+models_metrics_label <- function(
+  dataset_label = DATASET.LABEL,
+  prefix = "models/models.metrics",
+  encoding = ENCODING,
+  preprocess_option = TRANSFORM,
+  cv_repeats = paste0("cv", CV.REPEATS)
+  ) {
   output_filename(
-    prefix = "models/models.metrics",
-    DATASET.LABEL,
-    TRAIN.TEST.SPLIT*100,
-    ENCODING,
-    PREPROCESS.OPTION,
-    paste0("cv", CV.REPEATS)
+    prefix = prefix,
+    dataset_label,
+    TRAIN.SPLIT*100,
+    encoding,
+    preprocess_option,
+    cv_repeats
   )
 }
 
@@ -124,17 +138,20 @@ dataset_filename <- function(dataset_label) {
   output_filename(
     prefix = "data/data",
     dataset_label,
-    TRAIN.TEST.SPLIT*100
+    "encoded"
   )
 }
 
-benchmark_filename <- function() {
+benchmark_filename <- function(
+  prefix = "output/benchmarks.all.datasets.all",
+  cv_repeats = paste0("cv", CV.REPEATS),
+  transform = TRANSFORM
+) {
   output_filename(
-    prefix = "output/benchmarks.all.datasets.all",
+    prefix = prefix,
     paste0("cv", CV.REPEATS),
-    PREPROCESS.OPTION
+    transform
   )
-  
 }
 
 prep_label <- function() {
