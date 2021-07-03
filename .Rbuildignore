@@ -1,0 +1,11 @@
+figures/*
+models/*
+trials/*
+^data-raw$
+^.*\.Rproj$
+^\.Rproj\.user/$
+^LICENSE\.md$
+^_*$
+^R$
+^src$
+^trials$
