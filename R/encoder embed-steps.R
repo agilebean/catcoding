@@ -8,7 +8,11 @@
 apply_embed_encoder <- function(
   encoding, training_original, testing_original, target_label) {
   
-  require(embed)
+  require("embed")
+  
+  if (encoding == "embed-keras") {
+    reticulate::use_condaenv(condaenv = "reticulate", required = TRUE)
+  }
   
   encoding_function <- case_when(
       encoding == "embed-bayes"  ~  "step_lencode_bayes",

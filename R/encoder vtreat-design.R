@@ -40,8 +40,7 @@ apply_vtreat_design <- function(
   success <- FALSE
   counter <- 1
   
-  
-  while(!success & counter <= 3) {
+  while(!success & counter <= 5) {
     print(success)
     print("************ Calculate features with recommended == TRUE")
     
