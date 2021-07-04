@@ -14,7 +14,6 @@ CATS.ONLY <- TRUE
 # TRANSFORM <- "ica"
 # TRANSFORM <- "YeoJohnson"
 TRANSFORM <- NULL
-# TRANSFORM <- "none"
 
 preprocess_string <- c("center", "scale", "zv", TRANSFORM) %>% print
 
@@ -99,57 +98,77 @@ VARTYPES.SELECT <- if (CATS.ONLY) {
   c("lev", "clean", "isBad")
 }
 
+output_dir <- function(...) {
+  dots <- list(...)
+  paste0(c(dots, recursive = TRUE), collapse = "/")
+}
+
 models_list_label <- function(
-  dataset_label = DATASET.LABEL,
-  prefix = "models/models.list",
-  encoding = ENCODING,
+  dataset_label,
+  encoder,
+  prefix = "models.list",
   preprocess_option = TRANSFORM,
-  cv_repeats = paste0("cv", CV.REPEATS)
+  cv_repeats = 2
   ) {
-  output_filename(
-    prefix = prefix,
-    dataset_label,
-    TRAIN.SPLIT*100,
-    encoding,
-    preprocess_option,
-    cv_repeats
+  
+  output_dir(
+    "models",
+    paste0("cv", CV.REPEATS),
+    # dataset_label,
+    
+    output_filename(
+      prefix = prefix,
+      dataset_label,
+      TRAIN.SPLIT * 100,
+      encoder,
+      preprocess_option
+    )
   )
 }
 
 models_metrics_label <- function(
-  dataset_label = DATASET.LABEL,
-  prefix = "models/models.metrics",
-  encoding = ENCODING,
+  dataset_label,
+  encoder,
+  prefix = "models.metrics",
   preprocess_option = TRANSFORM,
   cv_repeats = paste0("cv", CV.REPEATS)
-  ) {
-  output_filename(
-    prefix = prefix,
-    dataset_label,
-    TRAIN.SPLIT*100,
-    encoding,
-    preprocess_option,
-    cv_repeats
+) {
+  
+  output_dir(
+    "models",
+    cv_repeats,
+    # dataset_label,
+    
+    output_filename(
+      prefix = prefix,
+      dataset_label,
+      TRAIN.SPLIT * 100,
+      encoder,
+      preprocess_option
+    )
   )
 }
 
 dataset_filename <- function(dataset_label) {
   
-  output_filename(
-    prefix = "data/data",
-    dataset_label,
-    "encoded"
+  output_dir(
+    "data",
+    output_filename(
+      dataset_label,
+      "encoded",
+      suffix = "rda"
+    )
   )
 }
 
 benchmark_filename <- function(
-  prefix = "output/benchmarks.all.datasets.all",
-  cv_repeats = paste0("cv", CV.REPEATS),
+  prefix = "output/benchmarks.datasets",
+  cv_repeats = CV.REPEATS,
   transform = TRANSFORM
 ) {
   output_filename(
     prefix = prefix,
-    paste0("cv", CV.REPEATS),
+    paste0("cv", cv_repeats),
     transform
   )
 }

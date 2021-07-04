@@ -5,7 +5,7 @@
 #
 ################################################################################
 packs <- c(
-  # "catcoding",
+  "catcoding",
   "tidyverse",
   "magrittr",
   "vtreat",
@@ -22,21 +22,31 @@ source("src/labels.R")
 NEW <- TRUE
 # NEW <- FALSE
 
+TRAIN.SPLIT <- 1.0
+
+# use only cats
+CATS.ONLY <- TRUE
+# CATS.ONLY <- FALSE
+
+# TRANSFORM <- "pca"
+# TRANSFORM <- "ica"
+# TRANSFORM <- "YeoJohnson"
+TRANSFORM <- NULL
+
 if (getwd() == "/home/rstudio") {
   setwd("sync")
 }
 # ENCODER.LIST.study2 <- c("scikit-loo")
 # ENCODER <- c("scikit-loo")
 
-preprocess_string
 
 ################################################################################
 CV.REPEATS <- 2
 # CV.REPEATS <- 5
 # CV.REPEATS <- 10
 # CV.REPEATS <- 20
-# TRY.FIRST <- 100
-TRY.FIRST <- NULL
+TRY.FIRST <- 100
+# TRY.FIRST <- NULL
 
 training.configuration <- trainControl(
   method = "repeatedcv",
@@ -54,6 +64,8 @@ algorithm.list <- c(
 )
 
 dataset_filename(dataset_label = "designdim")
+
+models_list_label("designdim", "vtreat")
 
 ################################################################################
 # benchmarking
@@ -86,7 +98,7 @@ if (NEW) {
                   try_first = TRY.FIRST,
                   models_list_name = models_list_label(DATASET_LABEL, ENCODER),
                   # models_list_name = NULL,
-                  preprocess_configuration = preprocess_string,
+                  preprocess_configuration = c("center", "scale", "zv", TRANSFORM),
                   # push = TRUE,
                   push = FALSE,
                   beep = TRUE
@@ -98,7 +110,7 @@ if (NEW) {
       ) %>% 
       set_names(DATASET.LABEL.LIST)
   )
-} 
+}
 ### NEW
 # 709s cv2
 

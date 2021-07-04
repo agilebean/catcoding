@@ -51,7 +51,7 @@ apply_vtreat_design <- function(
       outcomename = target_label
     )
     features.select <- treatment.plan$scoreFrame %>%
-      filter(code %in% VARTYPES.SELECT) %>%
+      filter(code %in% VARCODES.VTREAT) %>%
       # vtreat recommendations to filter out useless variables
       filter(recommended == TRUE) %>%
       pull(varName)

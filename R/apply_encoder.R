@@ -14,41 +14,34 @@ apply_encoder <- function(data_prepped, encoding) {
   
   if (is.null(encoding) | encoding == "factor-encoding") {
     
-    # source("encoders/factor-encoding.R")
     encoding_function <- apply_factor_encoder
     
   } else { # ENCODINGS
     
     if (encoding == "vtreat-cross") {
       
-      # source("encoders/vtreat-cross.R")
       encoding_function <- apply_vtreat_cross
       
     } else if (encoding == "vtreat-design") {
       
-      # source("encoders/vtreat-design.R")
       encoding_function <- apply_vtreat_design
       
     } else if (encoding == "vtreat-dummy") { # DUMMY ENCODING
       
-      # source("encoders/vtreat-dummy.R")
       encoding_function <- apply_vtreat_dummy
       
     } else if (startsWith(encoding, "embed")) {
       
       # PREP <- TRUE
       PREP <- FALSE
-      # source("encoders/embed-steps.R")
       encoding_function <- apply_embed_encoder
       
     } else if (startsWith(encoding, "scikit")) {
       
-      # source("encoders/scikit-encoders.R")
       encoding_function <-  apply_scikit_encoder
       
     } else if (encoding == "integer-encoding") {
       
-      # source("encoders/integer-encoding.R")
       encoding_function <- apply_integer_encoder
       
     }

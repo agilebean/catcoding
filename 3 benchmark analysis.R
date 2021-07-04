@@ -1,5 +1,5 @@
 packs <- c(
-  # "catcoding",
+  "catcoding",
   "tidyverse",
   "magrittr",
   "vtreat",

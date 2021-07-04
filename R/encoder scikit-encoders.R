@@ -12,7 +12,7 @@ apply_scikit_encoder <- function(
   # import("category_encoders")
   
   # load python script
-  source_python("R/scikit-encoders.py", convert = TRUE)
+  source_python("R/encoder scikit-encoders.py", convert = TRUE)
   
   CAT.labels <- training_original %>% 
     select(-target_label) %>% 

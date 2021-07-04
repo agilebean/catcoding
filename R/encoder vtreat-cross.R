@@ -40,7 +40,7 @@ apply_vtreat_cross <- function(
     # code "clean":  a numerical variable with no NAs or NaNs
     # code "lev": an indicator variable for a specific level of the original categorical variable.
     # filter(code %in% c("clean", "lev")) %>%
-    filter(code %in% VARTYPES.SELECT) %>%
+    filter(code %in% VARCODES.VTREAT) %>%
     # vtreat recommendations to filter out useless variables
     filter(recommended == TRUE) %>%
     pull(varName) %T>% print

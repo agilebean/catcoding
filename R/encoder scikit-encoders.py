@@ -5,6 +5,8 @@
 #
 ################################################################################
 import category_encoders as ce
+import os
+os.environ["OMP_NUM_THREADS"] = "1"
 
 def get_scikit_encoder(encoding, cat_labels):
   

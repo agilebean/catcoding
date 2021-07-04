@@ -10,7 +10,7 @@ apply_vtreat_dummy <- function(
   
   features.labels <- training_original %>% select(-target_label) %>% names
   
-  treatment.plan <- designTreatmentsZ(
+  treatment.plan <- vtreat::designTreatmentsZ(
     dframe = training_original,
     varlist = features.labels,
     minFraction = 0
@@ -18,7 +18,7 @@ apply_vtreat_dummy <- function(
   
   # select features
   features.select <- treatment.plan$scoreFrame %>% 
-    filter(code %in% VARTYPES.SELECT) %>% 
+    filter(code %in% VARCODES.VTREAT) %>% 
     pull(varName)
   
   training.set.encoded <- vtreat::prepare(

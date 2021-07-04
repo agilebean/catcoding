@@ -6,19 +6,25 @@
 #
 ################################################################################
 packs <- c(
-  # "catcoding",
+  "catcoding",
   "tidyverse",
   "magrittr",
-  # "caret",
+  "caret",
   "machinelearningtools",
   "reticulate",
   "doParallel",
-  "foreach"
+  "foreach",
+  "furrr"
 )
 sapply(packs, require, character.only = TRUE)
 # devtools::install_github("agilebean/machinelearningtools")
+# devtools::install_github("agilebean/catcoding")
 # unloadNamespace("machinelearningtools")
-source("src/labels.R")
+options(future.fork.multithreading.enable = FALSE)
+
+# source("src/labels.R")
+
+TRAIN.SPLIT <- 1.0
 
 ####################################################
 # run this for step_lencode_keras
@@ -32,24 +38,38 @@ apply_all_encoders <- function(data_prepped, encoder_list) {
     set_names(encoder_list)
 }
 
+SEED <- 171
 # apply ALL encoders on ALL split objects
 get_data_ALL_encoded_list <- function(data_label_list) {
   data_label_list %>%
-    map( ~ prep_dataset_original(.x, TRAIN.SPLIT, CATS.ONLY)) %>%
-    map( ~ apply_all_encoders(.x, ENCODER.LIST.study1)) %>%
-    set_names(data_label_list) %T>% 
-    imap(~ .x %>% saveRDS(.y %>% dataset_filename(suffix = "rda")))
-    # imap(~print(.y))
+    map( ~ prep_dataset_original(.x, TRAIN.SPLIT, CATS.ONLY) %>% 
+            apply_all_encoders(., ENCODER.LIST.study1) %>% 
+            save(file = dataset_filename(dataset_label = .x))
+         # , options = furrr_options(seed = SEED,
+                                        # packages = "catcoding")
+         ) %>%
+    set_names(data_label_list) %T>% print
 }
+
+# getOption("parallelly.fork.enable")
+# options(parallelly.fork.enable = TRUE)
+# future::supportsMulticore()
+# future::availableCores()
+# 
+# plan(multicore (workers = 2))
+# plan(multisession (workers = 15))
 
 ################################################################################
 # MAIN
 ################################################################################
 # FINAL1: create list of encoded datasets
+clus <- clusterOn()
 system.time(
   data.ALL.encoded.list <- get_data_ALL_encoded_list(DATASET.LABEL.LIST)  
 )
+clusterOff(clus)
 #### NEW
+# 263s in one chain 254 clusterOn()
 # 407s for 100 encoders (5 x 20 encoders)
 #### OLD
 # 116.3s for 55 encoders (5 datasets x 11 encoders)
@@ -70,15 +90,15 @@ data.ALL.encoded.list$ames$`scikit-loo`$target.label
 
 ####################################################
 # dataset
-# DATASET.LABEL <- "diamonds"
+DATASET.LABEL <- "diamonds"
 # DATASET.LABEL <- "ames"
-DATASET.LABEL <- "designdim"
+# DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
 # DATASET.LABEL <- "smartflow-scales"
 # 
 ####################################################
-# ENCODING <- "factor-encoding"
+ENCODING <- "factor-encoding"
 # ENCODING <- "vtreat-cross"
 # ENCODING <- "vtreat-design"
 # ENCODING <- "vtreat-dummy"
@@ -91,7 +111,7 @@ DATASET.LABEL <- "designdim"
 # ENCODING <- "scikit-james-stein"
 # ENCODING <- "scikit-polynomial"
 # ENCODING <- "scikit-binary"
-ENCODING <- "scikit-onehot"
+# ENCODING <- "scikit-onehot"
 # ENCODING <- "scikit-woe" # target must be binary
 # ENCODING <- "scikit-Mestimate"
 ####################################################
@@ -116,6 +136,11 @@ data.encoded <- apply_encoder(data.prepped, ENCODING)
 data.encoded$training.set %>% glimpse
 data.encoded$training.set %>% summary
 data.encoded$features.labels %>% length()
+
+data.encoded %>% 
+  save(file = dataset_filename(dataset_label = DATASET.LABEL))
+
+unlink("data/diamonds.encoded.rda", recursive = TRUE) %>% print
 
 ################################################################################
 ################################################################################
