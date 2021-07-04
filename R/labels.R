@@ -17,15 +17,15 @@ TRAIN.SPLIT <- 1.0
 # TRANSFORM <- "YeoJohnson"
 TRANSFORM <- NULL
 
-output_dir <- function(..., create = TRUE) {
+output_dir <- function(..., file = "") {
   # create dir path
   dirs = file.path(...)
   # create dir (and subdirs) if they don't exist
-  if(create & !dir.exists(dirs) & !file.exists(dirs)) { 
+  if(!dir.exists(dirs) & !file.exists(dirs)) { 
     dir.create(dirs, recursive = TRUE) 
   }
-  # return dir path
-  dirs
+  # return filepath under dirs
+  file.path(dirs, file)
 }
 
 models_list_label <- function(
@@ -34,7 +34,7 @@ models_list_label <- function(
   
   output_dir(
     "models", paste0("cv", cv_repeats),
-    output_filename(
+    file = output_filename(
       prefix, dataset_label, TRAIN.SPLIT * 100, encoder, transform
     )
   )
@@ -43,8 +43,8 @@ models_list_label <- function(
 dataset_filename <- function(dataset_label) {
   
   output_dir(
-    "data", create = FALSE, 
-    output_filename(dataset_label, "encoded", suffix = "rds")
+    "data", 
+    file = output_filename(dataset_label, "encoded", suffix = "rds")
   )
 }
 
