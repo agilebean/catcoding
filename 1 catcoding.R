@@ -40,7 +40,7 @@ apply_all_encoders <- function(data_prepped, encoder_list) {
 
 SEED <- 171
 # apply ALL encoders on ALL split objects
-get_data_ALL_encoded_list <- function(data_label_list) {
+get_data_encoded_list <- function(data_label_list) {
   data_label_list %>%
     map( ~ prep_dataset_original(.x, TRAIN.SPLIT, CATS.ONLY) %>% 
             apply_all_encoders(., ENCODER.LIST.study1) %>% 
@@ -65,7 +65,7 @@ get_data_ALL_encoded_list <- function(data_label_list) {
 # FINAL1: create list of encoded datasets
 clus <- clusterOn()
 system.time(
-  data.ALL.encoded.list <- get_data_ALL_encoded_list(DATASET.LABEL.LIST)  
+  data.ALL.encoded.list <- get_data_encoded_list(DATASET.LABEL.LIST)  
 )
 clusterOff(clus)
 #### NEW
@@ -98,7 +98,7 @@ DATASET.LABEL <- "diamonds"
 # DATASET.LABEL <- "smartflow-scales"
 # 
 ####################################################
-ENCODING <- "factor-encoding"
+# ENCODING <- "factor-encoding"
 # ENCODING <- "vtreat-cross"
 # ENCODING <- "vtreat-design"
 # ENCODING <- "vtreat-dummy"
@@ -117,7 +117,7 @@ ENCODING <- "factor-encoding"
 ####################################################
 # ENCODING <- "embed-bayes"
 # ENCODING <- "embed-glm"
-# ENCODING <- "embed-keras"
+ENCODING <- "embed-keras"
 # ENCODING <- "integer-encoding"
 ################################################################################
 
@@ -132,6 +132,9 @@ data.prepped$training.set %>% summary
 
 # apply 1 encoder on 1 split object ~ 1.1s
 data.encoded <- apply_encoder(data.prepped, ENCODING) 
+
+encoding <- ENCODING
+
 
 data.encoded$training.set %>% glimpse
 data.encoded$training.set %>% summary
