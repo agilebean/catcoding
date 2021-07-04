@@ -4,34 +4,17 @@
 # Output:  training.set, testing.set - bayesian target encoding
 #
 ################################################################################
-
 # For outcome, only numeric and two-level factors are currently supported
-
 apply_embed_encoder <- function(
   encoding, training_original, testing_original, target_label) {
   
   require(embed)
   
-  if (encoding == "embed-bayes") {
-    
-    print("TREATMENT: embed-bayes")
-    encoding_function <- step_lencode_bayes
-    
-  } else if (encoding == "embed-glm") {
-    
-    print("TREATMENT: embed-glm")
-    encoding_function <- step_lencode_glm
-    
-  } else if (encoding == "embed-keras") {
-    
-    print("TREATMENT: embed-keras")
-    library(reticulate)
-    # use_python("/Users/chaehan/opt/miniconda3/bin/python")
-    use_condaenv(condaenv = "reticulate", conda = "~/opt/miniconda3/bin/conda")
-    # conda_python(envname = "sodeep", conda = "auto")
-    
-    encoding_function <- step_embed
-  }
+  encoding_function <- case_when(
+      encoding == "embed-bayes"  ~  "step_lencode_bayes",
+      encoding == "embed-glm"    ~  "step_lencode_glm",
+      encoding == "embed-keras"  ~  "step_embed"
+    ) %>% get()
   
   features.labels <- training_original %>% 
     select(-target_label) %>% names %T>% print
@@ -41,7 +24,7 @@ apply_embed_encoder <- function(
     paste(target_label, "~", .) %>% 
     as.formula %>% 
     recipe(training_original) 
-    
+  
   # add encoder to recipe
   recipe.encoding <- recipe.base %>% 
     encoding_function(all_nominal(), outcome = vars(target_label)) 
@@ -69,7 +52,6 @@ apply_embed_encoder <- function(
   ))
   
 }
-
 
 # # set feature labels
 # features.labels <- training.set.juice %>% select(-target.label) %>% names

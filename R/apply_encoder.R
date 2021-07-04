@@ -12,40 +12,15 @@ apply_encoder <- function(data_prepped, encoding) {
   testing.original <- data_prepped$testing.set
   target.label <- data_prepped$target.label
   
-  if (is.null(encoding) | encoding == "factor-encoding") {
-    
-    encoding_function <- apply_factor_encoder
-    
-  } else { # ENCODINGS
-    
-    if (encoding == "vtreat-cross") {
-      
-      encoding_function <- apply_vtreat_cross
-      
-    } else if (encoding == "vtreat-design") {
-      
-      encoding_function <- apply_vtreat_design
-      
-    } else if (encoding == "vtreat-dummy") { # DUMMY ENCODING
-      
-      encoding_function <- apply_vtreat_dummy
-      
-    } else if (startsWith(encoding, "embed")) {
-      
-      # PREP <- TRUE
-      PREP <- FALSE
-      encoding_function <- apply_embed_encoder
-      
-    } else if (startsWith(encoding, "scikit")) {
-      
-      encoding_function <-  apply_scikit_encoder
-      
-    } else if (encoding == "integer-encoding") {
-      
-      encoding_function <- apply_integer_encoder
-      
-    }
-  }
+  encoding_function <- case_when(
+      encoding == "vtreat-cross" ~ "apply_vtreat_cross",
+      encoding == "vtreat-design" ~ "apply_vtreat_design",
+      encoding == "vtreat-dummy" ~ "apply_vtreat_dummy",
+      startsWith(encoding, "embed") ~ "apply_embed_encoder",
+      startsWith(encoding, "scikit") ~ "apply_scikit_encoder",
+      encoding == "integer-encoding" ~ "apply_integer_encoder",
+      encoding == "factor-encoding" ~ "apply_factor_encoder"
+    ) %>% get()
   
   # apply encoding function
   time.encoding <- system.time(

@@ -7,11 +7,8 @@
 apply_scikit_encoder <- function(
   encoding, training_original, testing_original, target_label) {
   
-  use_condaenv(condaenv = "reticulate", required = TRUE)
-  # py_config()
-  # import("category_encoders")
-  
   # load python script
+  reticulate::use_condaenv(condaenv = "reticulate", required = TRUE)
   source_python("R/encoder scikit-encoders.py", convert = TRUE)
   
   CAT.labels <- training_original %>% 
