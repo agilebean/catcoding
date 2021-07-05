@@ -7,29 +7,34 @@
 get_models_list_dataset <- function(
   dataset_label, 
   cv_repeats, 
-  preprocess_option = "none", 
-  models_dir = "models/"
-  ) {
-  
+  preprocess_option = NULL, 
+  models_dir = "models"
+) {
   # filter all models for a specific dataset
-  models.lists.dataset.labels <- dir(models_dir) %>% 
-    keep(., startsWith(., paste0("models.list.", dataset_label))) 
-  
-  # filter all models with specific preprocess and cv_repeats
-  models.lists.dataset.preprocess.labels <- models.lists.dataset.labels %>% 
-    keep(grepl(preprocess_option, .) & grepl(paste0("cv", cv_repeats), .))
+  models.lists.dataset.labels <- 
+    dir(file.path(models_dir, paste0("cv", cv_repeats))) %>% 
+    keep(., startsWith(., paste0("models.list.", dataset_label))) %>% 
+    {
+      # filter all models with specific preprocess
+      if (!is.null(preprocess_option)) {
+        keep(grepl(preprocess_option, .))
+      } else {
+        .
+      }
+    }
   
   print("****************************************************")
   print("Reading...")
-  print(models.lists.dataset.preprocess.labels)
+  print(models.lists.dataset.labels)
   
-  models.lists.dataset <- models.lists.dataset.preprocess.labels %>% 
-    map(~paste0(models_dir, .x) %>% readRDS) %>%
+  models.lists.dataset <- models.lists.dataset.labels %>% 
+    map(~ output_dir("models", paste0("cv", cv_repeats), file = .x) %>% 
+          readRDS) %>%
     set_names(
       gsub("models\\.list\\.(.+)\\.([0-9]+)\\.(.+)\\.(.*)\\.(.*)\\.rds", "\\3", 
-           models.lists.dataset.preprocess.labels)
+           models.lists.dataset.labels)
     )
-  models.lists.dataset %>% names
+  models.lists.dataset.labels %>% names
   
   print("****************************************************")
   print("Read successfully all above datasets...")

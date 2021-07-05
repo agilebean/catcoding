@@ -27,10 +27,7 @@ if (getwd() == "/home/rstudio") {
 }
 
 ################################################################################
-CV.REPEATS <- 2
-# CV.REPEATS <- 5
-# CV.REPEATS <- 10
-# CV.REPEATS <- 20
+
 # TRY.FIRST <- 100
 TRY.FIRST <- NULL
 

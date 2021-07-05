@@ -11,6 +11,11 @@ CATS.ONLY <- TRUE
 # train/test split
 TRAIN.SPLIT <- 1.0
 
+CV.REPEATS <- 2
+# CV.REPEATS <- 5
+# CV.REPEATS <- 10
+# CV.REPEATS <- 20
+
 # CATS.ONLY <- FALSE
 # TRANSFORM <- "pca"
 # TRANSFORM <- "ica"

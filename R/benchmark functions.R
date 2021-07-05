@@ -1,7 +1,7 @@
 ################################################################################
 # read all encoded datasets for ALL datasets
 ################################################################################
-create_benchmarks_all_datasets_all <- function(
+create_benchmarks_top_encoders <- function(
   DATASET_LABEL_LIST, ENCODER_LIST, median_sort = TRUE) {
   
   benchmarks.all.datasets.all <- DATASET_LABEL_LIST %>% 
@@ -14,7 +14,7 @@ create_benchmarks_all_datasets_all <- function(
         )
         
         models.lists.dataset <- ENCODER_LIST %>% 
-          map(~ models_list_label(DATASET_LABEL, .) %T>% print %>% 
+          map(~ models_list_label(DATASET_LABEL, ., CV.REPEATS) %T>% print %>% 
                 readRDS(.)) %>% set_names(ENCODER_LIST)
         
         metrics.lists.dataset <- models.lists.dataset %>% 
@@ -54,3 +54,4 @@ create_benchmarks_all_datasets_all <- function(
     ) %>% 
     set_names(DATASET_LABEL_LIST)
 }
+

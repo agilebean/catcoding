@@ -23,33 +23,41 @@ DATASET.LABEL <- "diamonds"
 # DATASET.LABEL <- "smartflow-scales"
 ####################################################
 
-# ENCODING <- "embed-keras"
-# ENCODING <- "factor-encoding"
-# ENCODING <- "scikit-binary"
-# ENCODING <- "scikit-glmm"
-# ENCODING <- "scikit-helmert" # reached elapsed time limit
-# ENCODING <- "scikit-loo"
-# ENCODING <- "scikit-Mestimate"
-# ENCODING <- "scikit-ordinal"
-# ENCODING <- "scikit-backward" # reached elapsed time limit
-# ENCODING <- "scikit-james-stein" # ++2*ames
-# ENCODING <- "scikit-polynomial" # ++3*ames
-# ENCODING <- "scikit-onehot"
-# ENCODING <- "scikit-target" # ++3*ames
-# ENCODING <- "scikit-woe" # target must be binary
-# ENCODING <- "vtreat-cross"
-# ENCODING <- "vtreat-design"
-ENCODING <- "vtreat-dummy"
+# ENCODER <- "embed-keras"
+# ENCODER <- "factor-ENCODER"
+# ENCODER <- "scikit-binary"
+# ENCODER <- "scikit-glmm"
+# ENCODER <- "scikit-helmert" # reached elapsed time limit
+# ENCODER <- "scikit-loo"
+# ENCODER <- "scikit-Mestimate"
+# ENCODER <- "scikit-ordinal"
+# ENCODER <- "scikit-backward" # reached elapsed time limit
+# ENCODER <- "scikit-james-stein" # ++2*ames
+# ENCODER <- "scikit-polynomial" # ++3*ames
+# ENCODER <- "scikit-onehot"
+# ENCODER <- "scikit-target" # ++3*ames
+# ENCODER <- "scikit-woe" # target must be binary
+# ENCODER <- "vtreat-cross"
+# ENCODER <- "vtreat-design"
+ENCODER <- "vtreat-dummy"
 
 ################################################################################
 
-models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, 2) %T>% print
+system.time(
+  models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, 2) %T>% print  
+) # 21.7s
+
 models.lists.dataset %>% names
+
 
 system.time(
   benchmarks.all.datasets.all <- 
     create_benchmarks_all_datasets_all(
-      DATASET.LABEL.LIST, ENCODER.LIST.study2, median_sort = FALSE)
+      # DATASET.LABEL.LIST, 
+      c("ames", "diamonds"),
+      # ENCODER.LIST.study2, 
+      c("factor-encoding", "integer-encoding", "embed-keras"),
+      median_sort = FALSE)
 ) # 38s
 benchmarks.all.datasets.all
 
@@ -140,11 +148,11 @@ benchmarks.all.datasets.all %>%
 # print benchmark for ONE dataset & ONE encoder
 ####################################################
 if (NEW) {
-  models_list_label(DATASET.LABEL, ENCODING)
-  models.list <- readRDS(models_list_label(DATASET.LABEL, ENCODING))
+  models_list_label(DATASET.LABEL, ENCODER)
+  models.list <- readRDS(models_list_label(DATASET.LABEL, ENCODER))
   models.metrics <- models.list %>% get_model_metrics() %T>% print
   ggsave(dpi = 300, width = 6, height = 4,
-         paste0("figures/study1-", DATASET.LABEL, "-", ENCODING, ".png") %T>% print)
+         paste0("figures/study1-", DATASET.LABEL, "-", ENCODER, ".png") %T>% print)
 }
 
 ################################################################################
@@ -188,7 +196,7 @@ CORRECT[[DATASET.LABEL]]
 object <- read_list_names()
 object %>% names
 object$ames$`vtreat-dummy`
-object$ames$`factor-encoding`
+object$ames$`factor-ENCODER`
 object$ames$`scikit-onehot`
 
 
