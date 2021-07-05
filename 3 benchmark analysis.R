@@ -52,7 +52,7 @@ models.lists.dataset %>% names
 
 system.time(
   benchmarks.all.datasets.all <- 
-    create_benchmarks_all_datasets_all(
+    create_benchmarks_top_encoders(
       # DATASET.LABEL.LIST, 
       c("ames", "diamonds"),
       # ENCODER.LIST.study2, 
