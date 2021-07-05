@@ -49,11 +49,15 @@ dataset_filename <- function(dataset_label) {
 }
 
 benchmark_filename <- function(
-  prefix = "output/benchmarks.datasets", cv_repeats, transform = TRANSFORM
+  cv_repeats, 
+  study,
+  prefix = "benchmarks.datasets", 
+  transform = TRANSFORM
 ) {
   output_dir(
-    "output",
-    output_filename(prefix = prefix, paste0("cv", cv_repeats), transform)  
+    "benchmarks", STUDY, paste0("cv", cv_repeats),
+    file  = output_filename(
+      prefix = prefix, transform)  
   )
 }
 
@@ -75,8 +79,8 @@ VARCODES.VTREAT <- if (CATS.ONLY) {
 
 
 DATASET.LABEL.LIST <- c(
-  "diamonds"
-  , "ames"
+  # "diamonds"
+  "ames"
   , "designdim"
   , "timex"
   , "smartflow"

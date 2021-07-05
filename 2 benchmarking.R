@@ -12,41 +12,27 @@ packs <- c(
   "caret",
   "machinelearningtools",
   "doParallel",
-  "foreach"
+  "foreach",
+  "pushoverr"
 )
 sapply(packs, require, character.only = TRUE)
 # devtools::install_github("agilebean/machinelearningtools")
 # unloadNamespace("machinelearningtools")
-source("src/labels.R")
 
 NEW <- TRUE
 # NEW <- FALSE
 
-TRAIN.SPLIT <- 1.0
-
-# use only cats
-CATS.ONLY <- TRUE
-# CATS.ONLY <- FALSE
-
-# TRANSFORM <- "pca"
-# TRANSFORM <- "ica"
-# TRANSFORM <- "YeoJohnson"
-TRANSFORM <- NULL
-
 if (getwd() == "/home/rstudio") {
   setwd("sync")
 }
-# ENCODER.LIST.study2 <- c("scikit-loo")
-# ENCODER <- c("scikit-loo")
-
 
 ################################################################################
 CV.REPEATS <- 2
 # CV.REPEATS <- 5
 # CV.REPEATS <- 10
 # CV.REPEATS <- 20
-TRY.FIRST <- 100
-# TRY.FIRST <- NULL
+# TRY.FIRST <- 100
+TRY.FIRST <- NULL
 
 training.configuration <- trainControl(
   method = "repeatedcv",
@@ -59,58 +45,63 @@ algorithm.list <- c(
   "lm"
   # , "knn"
   , "gbm"
-  # , "rf"
+  , "rf"
   # , "ranger"
 )
 
-dataset_filename(dataset_label = "designdim")
-
-models_list_label("designdim", "vtreat")
+# readRDS(dataset_filename(dataset_label = "designdim"))
+models_list_label("diamonds", "encoding", CV.REPEATS)
 
 ################################################################################
 # benchmarking
 ################################################################################
 
-if (NEW) {
-  system.time(
-    benchmark.ALL.data.ENCODER.LIST.study2 <- DATASET.LABEL.LIST %>% 
-      map(
-        function(DATASET_LABEL) {
+STUDY <- "study1"
+# STUDY <- "study2"
+# STUDY <- "study3"
+encoder.list <- paste0("ENCODER.LIST.", STUDY) %>% get
+
+
+system.time(
+  benchmarks.datasets.encoders <- DATASET.LABEL.LIST %>%
+    map(function(DATASET_LABEL) {
+      
+      print(paste("*** Dataset:", DATASET_LABEL))
+      data.list <- readRDS(dataset_filename(DATASET_LABEL))
+      # benchmark ml models for 1 dataset across all encoders
+      benchmark.models.list <- encoder.list %>% 
+        
+        map(function(ENCODER) {
+          print(paste("ENCODER:", ENCODER))
           
-          print(paste("*** Dataset:", DATASET_LABEL))
-          data.list <- readRDS(dataset_filename(DATASET_LABEL))
-          
-          benchmark.ENCODER.LIST.study2 <- ENCODER.LIST.study2 %>% 
-            map(
-              function(ENCODER) {
-                print(paste("ENCODER:", ENCODER))
-                # print(models_list_label(DATASET_LABEL, ENCODER))
-                # print(data.list[[ENCODER]])
-                
-                models.list <- benchmark_algorithms(
-                  target_label = data.list[[ENCODER]]$target.label,
-                  features_labels = data.list[[ENCODER]]$features.labels,
-                  training_set = data.list[[ENCODER]]$training.set,
-                  testing_set = data.list[[ENCODER]]$testing.set,
-                  training_configuration = training.configuration,
-                  algorithm_list = algorithm.list,
-                  cv_repeats = CV.REPEATS,
-                  try_first = TRY.FIRST,
-                  models_list_name = models_list_label(DATASET_LABEL, ENCODER),
-                  # models_list_name = NULL,
-                  preprocess_configuration = c("center", "scale", "zv", TRANSFORM),
-                  # push = TRUE,
-                  push = FALSE,
-                  beep = TRUE
-                )
-              }
-            ) %>% 
-            set_names(ENCODER.LIST.study2)
-        }
-      ) %>% 
-      set_names(DATASET.LABEL.LIST)
+          models.list <- benchmark_algorithms(
+            target_label = data.list[[ENCODER]]$target.label,
+            features_labels = data.list[[ENCODER]]$features.labels,
+            training_set = data.list[[ENCODER]]$training.set,
+            testing_set = data.list[[ENCODER]]$testing.set,
+            training_configuration = training.configuration,
+            algorithm_list = algorithm.list,
+            cv_repeats = CV.REPEATS,
+            try_first = TRY.FIRST,
+            models_list_name = models_list_label(DATASET_LABEL, ENCODER, CV.REPEATS),
+            # models_list_name = NULL,
+            preprocess_configuration = TRANSFORM,
+            push = TRUE,
+            # push = FALSE,
+            beep = TRUE
+            # beep = FALSE
+          )
+        }) %>%
+        set_names(encoder.list)
+    }) %>%
+    set_names(DATASET.LABEL.LIST) 
   )
-}
+
+system.time(
+  benchmark.datasets.encoders %>% 
+    saveRDS(benchmark_filename(2, STUDY) %T>% print)
+)
+
 ### NEW
 # 709s cv2
 
@@ -131,6 +122,7 @@ if (NEW) {
 
 # benchmark.ALL.data.ENCODER.LIST.study2$ames$`scikit-target` %>%
 # benchmark.ALL.data.ENCODER.LIST.study2$ames$`vtreat-dummy` %>% 
+
 benchmark.ALL.data.ENCODER.LIST.study2$ames$`scikit-loo` %>%
   get_model_metrics()
 

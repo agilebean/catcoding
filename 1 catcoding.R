@@ -18,7 +18,10 @@ packs <- c(
 )
 sapply(packs, require, character.only = TRUE)
 # devtools::install_github("agilebean/machinelearningtools")
-# devtools::install_github("agilebean/catcoding")
+credentials::set_github_pat()
+usethis::git_sitrep()
+# devtools::install_github("briandconnelly/pushoverr")
+devtools::install_github("agilebean/catcoding")
 # unloadNamespace("machinelearningtools")
 options(future.fork.multithreading.enable = FALSE)
 
@@ -124,11 +127,6 @@ data.encoded$training.set %>% summary
 data.encoded$features.labels %>% length()
 
 # unlink("data/diamonds.encoded.rda", recursive = TRUE) %>% print
-
-################################################################################
-################################################################################
-
-
 
 ################################################################################
 ################################################################################
