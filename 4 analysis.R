@@ -17,8 +17,6 @@ packs <- c(
 # devtools::install_github("agilebean/machinelearningtools")
 # unloadNamespace("machinelearningtools")
 sapply(packs, require, character.only = TRUE)
-source("src/labels.R")
-source("src/get_models.R")
 
 NEW <- TRUE
 # NEW <- FALSE
@@ -28,13 +26,11 @@ DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
 # DATASET.LABEL <- ""
-# CV.REPEATS <- ""
-CV.REPEATS <- 2
 
 ENCODING <- "scikit-loo"
 # ENCODING <- "factor-encoding"
 
-TRANSFORM <- "none"
+TRANSFORM <- NULL
 
 # visualize final benchmarking
 visualize_sampling_models_list <- function(
@@ -91,21 +87,23 @@ visualize_sampling_models_list <- function(
 ########################################################################
 # Study 1
 ########################################################################
-# DATASET.LABEL <- ""
-DATASET.LABEL <- "designdim"
+DATASET.LABEL <- "ames"
+# DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "timex"
+
+models.lists.dataset.labels <- c(
+  "models.list.ames.100.embed-glm.rds",
+  "models.list.ames.100.embed-keras.rds",
+  "models.list.ames.100.factor-encoding.rds" 
+)
 
 system.time(
   # models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, "pca")
-  models.lists.dataset <- get_models_list_dataset(
-    DATASET.LABEL, 
-    TRANSFORM, 
-    CV.REPEATS
-  )
-) # ~10.2s/11 encoders  
+  models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, CV.REPEATS)
+) # ~5.5s/11 encoders  
 
 models.lists.dataset %>% names
-models.lists.dataset %>% discard(grepl("scikit-loo", .), .)
+# models.lists.dataset %>% discard(grepl("scikit-loo", .), .)
 
 # return the sampling folds for the best algorithm
 system.time(
@@ -117,7 +115,7 @@ system.time(
     as_tibble() %T>% print  
 ) # 1.8s
 
-sampling.folds %>% select(`scikit-loo`, `scikit-onehot`, `scikit-helmert`)
+sampling.folds
 
 visualize_sampling_models_list(
   models.lists.dataset, "RMSE", 

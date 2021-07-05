@@ -9,6 +9,7 @@ packs <- c(
   "foreach"
 )
 sapply(packs, require, character.only = TRUE)
+# devtools::install_github("agilebean/catcoding")
 ################################################################################
 # read all encoded datasets for ONE dataset
 ################################################################################
@@ -44,11 +45,10 @@ ENCODER <- "vtreat-dummy"
 ################################################################################
 
 system.time(
-  models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, 2) %T>% print  
-) # 21.7s
+  models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, CV.REPEATS) %T>% print  
+) # 16s diamonds
 
 models.lists.dataset %>% names
-
 
 system.time(
   benchmarks.all.datasets.all <- 

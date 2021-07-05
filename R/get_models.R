@@ -7,7 +7,7 @@
 get_models_list_dataset <- function(
   dataset_label, 
   cv_repeats, 
-  preprocess_option = NULL, 
+  transform = NULL, 
   models_dir = "models"
 ) {
   # filter all models for a specific dataset
@@ -16,8 +16,8 @@ get_models_list_dataset <- function(
     keep(., startsWith(., paste0("models.list.", dataset_label))) %>% 
     {
       # filter all models with specific preprocess
-      if (!is.null(preprocess_option)) {
-        keep(grepl(preprocess_option, .))
+      if (!is.null(transform)) {
+        keep(grepl(transform, .))
       } else {
         .
       }
@@ -31,7 +31,7 @@ get_models_list_dataset <- function(
     map(~ output_dir("models", paste0("cv", cv_repeats), file = .x) %>% 
           readRDS) %>%
     set_names(
-      gsub("models\\.list\\.(.+)\\.([0-9]+)\\.(.+)\\.(.*)\\.(.*)\\.rds", "\\3", 
+      gsub("models\\.list\\.(.+)\\.([0-9]+)\\.(.+)\\.rds", "\\3",  
            models.lists.dataset.labels)
     )
   models.lists.dataset.labels %>% names
