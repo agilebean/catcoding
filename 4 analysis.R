@@ -7,11 +7,7 @@
 packs <- c(
   "tidyverse",
   "magrittr",
-  "vtreat",
-  "caret",
   "machinelearningtools",
-  "doParallel",
-  "foreach",
   "RColorBrewer"
 )
 # devtools::install_github("agilebean/machinelearningtools")
@@ -21,90 +17,27 @@ sapply(packs, require, character.only = TRUE)
 NEW <- TRUE
 # NEW <- FALSE
 
+########################################################################
+# Study 1
+########################################################################
 # DATASET.LABEL <- "ames"
-DATASET.LABEL <- "designdim"
+DATASET.LABEL <- "diamonds"
+# DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
 # DATASET.LABEL <- ""
 
-ENCODING <- "scikit-loo"
-# ENCODING <- "factor-encoding"
-
-TRANSFORM <- NULL
-
-# visualize final benchmarking
-visualize_sampling_models_list <- function(
-  models_lists_dataset, metric, 
-  palette = "Set1", boxfill = "#DCDCDC", dataset_label) {
-  
-  # models.lists.dataset <- get_models_list_dataset(
-  #   DATASET.LABEL, preprocess_option, cv_repeats)
-  
-  # return the sampling folds for the best algorithm
-  sampling.folds <- models_lists_dataset %>% 
-    # imap(~ mutate(.x, name = .y))
-    map(~ get_sampling_models_list(.x, metric)) %>% 
-    # tricky tricky: concatenate the sampling folds for all best algorithms
-    imap_dfc(~ set_names(.x, .y)) %T>% print
-  
-  
-  sampling.folds.ordered <- sampling.folds %>% 
-    pivot_longer(
-      cols = everything(),
-      names_to = "encoder",
-      values_to = metric
-    ) %>% 
-    arrange(RMSE) %T>% print
-  
-  color.codes <- RColorBrewer::brewer.pal(8, palette)[-c(1:2)]
-  color.values <- colorRampPalette(color.codes)(ncol(sampling.folds))
-  
-  plot.sampling.folds.ordered <- sampling.folds.ordered %>% 
-    ggplot(aes(x = reorder(encoder, desc(RMSE)), y = RMSE)) +
-    coord_flip() +
-    # geom_boxplot(fill = "#778899") + # lightslategrey
-    geom_boxplot(fill = boxfill) +
-    # geom_point(aes(color = encoder), alpha = 0.25, size = 1.5) +
-    # geom_point(aes(color = encoder), alpha = 1, size = 1.5, shape = 1) +
-    geom_jitter(aes(color = encoder), alpha = 1, size = 0.5, shape = 1) +
-    # scale_color_brewer(guide = "none", palette = palette) +
-    scale_color_manual(guide = "none", values = color.values) +
-    labs(
-      title = paste("Dataset:", dataset_label),
-      x = "model",
-      y = "RMSE"
-    ) +
-    theme_minimal() +
-    theme(
-      axis.text = element_text(size = 12),
-      axis.title = element_text(size = 12)
-    )
-  
-  plot.sampling.folds.ordered
-}
-
-
-########################################################################
-# Study 1
-########################################################################
-DATASET.LABEL <- "ames"
-# DATASET.LABEL <- "designdim"
-# DATASET.LABEL <- "timex"
-
-models.lists.dataset.labels <- c(
-  "models.list.ames.100.embed-glm.rds",
-  "models.list.ames.100.embed-keras.rds",
-  "models.list.ames.100.factor-encoding.rds" 
-)
-
 system.time(
-  # models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, "pca")
   models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, CV.REPEATS)
-) # ~5.5s/11 encoders  
+) # ~9.5s/11 encoders  
 
 models.lists.dataset %>% names
-# models.lists.dataset %>% discard(grepl("scikit-loo", .), .)
 
+visualize_multiple_models_lists(models.lists.dataset, "RMSE", 
+  palette = "Blues", boxfill = "#778899", DATASET.LABEL,
+  save_label = paste0("figures/study1-", DATASET.LABEL, ".png"))
+
+### DETAILS
 # return the sampling folds for the best algorithm
 system.time(
   sampling.folds <- models.lists.dataset %>% 
@@ -114,54 +47,39 @@ system.time(
     imap_dfc(~ set_names(.x, .y)) %>% 
     as_tibble() %T>% print  
 ) # 1.8s
-
-sampling.folds
-
-visualize_sampling_models_list(
-  models.lists.dataset, "RMSE", 
-  palette = "Blues", boxfill = "#778899", DATASET.LABEL)
-
-ggsave(
-  dpi = 300, width = 6, height = 9,
-  paste0("figures/study1-", DATASET.LABEL, ".png") %T>% print)
+# sampling.folds
 
 ########################################################################
 # Study 2
 ########################################################################
-DATASET.LABEL <- "pci"
+# DATASET.LABEL <- ""
 # DATASET.LABEL <- "ames"
 # DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
 
-# TRANSFORM.LIST <- c("none", "pca", "ica", "YeoJohnson")
-TRANSFORM.LIST <- "none"
-
-DATASET.LABEL.LIST
+# dataset.label.list <- DATASET.LABEL.LIST
+dataset.label.list <- c("ames", "diamonds")
 
 system.time(
   
-  sampling.boxplots.preprocess <- TRANSFORM.LIST %>% 
-    map(function(preprocess_option) {
-      
-      DATASET.LABEL.LIST %>% 
+  sampling.boxplots.preprocess <- 
+    dataset.label.list %>% 
         map(function(dataset_label) {
           
-            visualize_sampling_models_list(
+          models.lists.dataset <- get_models_list_dataset(dataset_label, CV.REPEATS)
+          visualize_multiple_models_lists(
               models.lists.dataset,
               metric = "RMSE", 
               palette = "Blues", 
               boxfill = "#778899",
-              DATASET.LABEL
+              dataset_label
             )
         }) %>% 
-        set_names(DATASET.LABEL.LIST)
-    }) %>% 
-    set_names(TRANSFORM.LIST)
+        set_names(dataset.label.list)
 
 ) #  11.0s/1 datasets x 4 preprocess options
 
-sampling.boxplots.preprocess$none
-# sampling.boxplots.preprocess$pca
-# sampling.boxplots.preprocess$ica
-# sampling.boxplots.preprocess$YeoJohnson
+sampling.boxplots.preprocess$ames
+sampling.boxplots.preprocess$diamonds
+
