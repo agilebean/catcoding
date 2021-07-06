@@ -18,10 +18,10 @@ packs <- c(
 )
 sapply(packs, require, character.only = TRUE)
 # devtools::install_github("agilebean/machinelearningtools")
-credentials::set_github_pat()
-usethis::git_sitrep()
+# credentials::set_github_pat()
+# usethis::git_sitrep()
 # devtools::install_github("briandconnelly/pushoverr")
-devtools::install_github("agilebean/catcoding")
+# devtools::install_github("agilebean/catcoding")
 # unloadNamespace("machinelearningtools")
 options(future.fork.multithreading.enable = FALSE)
 
@@ -29,30 +29,17 @@ options(future.fork.multithreading.enable = FALSE)
 # run this for step_lencode_keras
 # compareVersion("2.0", as.character(tensorflow::tf_version()))
 ################################################################################
-# apply ALL encoders on 1 split object
-apply_all_encoders <- function(data_prepped, encoder_list) {
-  
-  encoder_list %>% 
-    map(~apply_encoder(data_prepped, .x)) %>%
-    set_names(encoder_list)
-}
 
-# apply ALL encoders on ALL split objects
-get_data_encoded_list <- function(data_label_list) {
-  data_label_list %>%
-    map( ~ prep_dataset_original(.x, TRAIN.SPLIT, CATS.ONLY) %>% 
-            apply_all_encoders(., ENCODER.LIST.study1) %>% 
-            saveRDS(file = dataset_filename(dataset_label = .x))
-         ) %>%
-    set_names(data_label_list) %T>% print
-}
 
 ################################################################################
 # MAIN
 ################################################################################
 # FINAL1: create list of encoded datasets
 system.time(
-  data.encoded.list <- get_data_encoded_list(DATASET.LABEL.LIST)  
+  data.encoded.list <- apply_encoders_data_list(
+    DATASET.LABEL.LIST, ENCODER.LIST.study1
+    # , save = FALSE
+    )  
 )
 #### NEW
 # 240s after case_when - 263s in one chain 254 clusterOn()
