@@ -37,7 +37,8 @@ options(future.fork.multithreading.enable = FALSE)
 # FINAL1: create list of encoded datasets
 system.time(
   data.encoded.list <- apply_encoders_data_list(
-    DATASET.LABEL.LIST, ENCODER.LIST.study1
+    DATASET.LABEL.LIST, 
+    ENCODER.LIST.study1
     # , save = FALSE
     )  
 )
