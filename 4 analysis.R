@@ -5,6 +5,7 @@
 #
 ################################################################################
 packs <- c(
+  "catcoding",
   "tidyverse",
   "magrittr",
   "machinelearningtools",
@@ -18,68 +19,53 @@ NEW <- TRUE
 # NEW <- FALSE
 
 ########################################################################
-# Study 1
+# Main
 ########################################################################
-# DATASET.LABEL <- "ames"
-DATASET.LABEL <- "diamonds"
-# DATASET.LABEL <- "designdim"
-# DATASET.LABEL <- "timex"
-# DATASET.LABEL <- "smartflow"
-# DATASET.LABEL <- ""
+# dataset.label.list <- ""
+# dataset.label.list <- "ames"
+# dataset.label.list <- "designdim"
+# dataset.label.list <- "timex"
+# dataset.label.list <- "smartflow"
+
+# dataset.label.list.list <- dataset.label.list.LIST
+dataset.label.list.list <- c("ames", "diamonds")
 
 system.time(
-  models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, CV.REPEATS)
+  multiple.benchmarks.boxplots <- 
+    
+    dataset.label.list.list %>%
+    
+    map(function(dataset_label) {
+      
+      models.lists.dataset <-
+        get_models_list_dataset(dataset_label, CV.REPEATS)
+      
+      visualize_multiple_models_lists(
+        models.lists.dataset, metric = "RMSE", dataset_label,
+        palette = "Blues",
+        boxfill = "#778899"
+      )
+    }) %>%
+    set_names(dataset.label.list.list)
+  
+) #  11.0s/1 datasets x 4 preprocess options
+
+multiple.benchmarks.boxplots$ames
+multiple.benchmarks.boxplots$diamonds
+
+### DETAILS
+### 
+system.time(
+  models.lists.dataset <- get_models_list_dataset(dataset.label.list, CV.REPEATS)
 ) # ~9.5s/11 encoders  
 
 models.lists.dataset %>% names
 
-visualize_multiple_models_lists(models.lists.dataset, "RMSE", 
-  palette = "Blues", boxfill = "#778899", DATASET.LABEL,
-  save_label = paste0("figures/study1-", DATASET.LABEL, ".png"))
+aaa <- visualize_multiple_models_lists(models.lists.dataset, "RMSE", 
+  palette = "Blues", boxfill = "#778899", dataset.label.list,
+  save_label = paste0("figures/study1-", dataset.label.list, ".png"))
 
-### DETAILS
-# return the sampling folds for the best algorithm
-system.time(
-  sampling.folds <- models.lists.dataset %>% 
-    # imap(~ mutate(.x, name = .y))
-    map(~ get_sampling_models_list(.x, "RMSE")) %>% 
-    # tricky tricky: concatenate the sampling folds for all best algorithms
-    imap_dfc(~ set_names(.x, .y)) %>% 
-    as_tibble() %T>% print  
-) # 1.8s
-# sampling.folds
-
-########################################################################
-# Study 2
-########################################################################
-# DATASET.LABEL <- ""
-# DATASET.LABEL <- "ames"
-# DATASET.LABEL <- "designdim"
-# DATASET.LABEL <- "timex"
-# DATASET.LABEL <- "smartflow"
-
-# dataset.label.list <- DATASET.LABEL.LIST
-dataset.label.list <- c("ames", "diamonds")
-
-system.time(
-  
-  sampling.boxplots.preprocess <- 
-    dataset.label.list %>% 
-        map(function(dataset_label) {
-          
-          models.lists.dataset <- get_models_list_dataset(dataset_label, CV.REPEATS)
-          visualize_multiple_models_lists(
-              models.lists.dataset,
-              metric = "RMSE", 
-              palette = "Blues", 
-              boxfill = "#778899",
-              dataset_label
-            )
-        }) %>% 
-        set_names(dataset.label.list)
-
-) #  11.0s/1 datasets x 4 preprocess options
-
-sampling.boxplots.preprocess$ames
-sampling.boxplots.preprocess$diamonds
+aaa
+aaa %>% class
+aaa %>% print
 
