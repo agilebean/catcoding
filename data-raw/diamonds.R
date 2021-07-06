@@ -1,6 +1,6 @@
 ## code to prepare `diamonds` dataset goes here
 
-dataset <- ggplot2::diamonds
+dataset <- ggplot2::diamonds %>% sample_frac(0.05) %>% print
 
 # define target and features
 target.label <- "price"
