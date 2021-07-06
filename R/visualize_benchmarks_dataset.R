@@ -1,12 +1,17 @@
 # visualize final benchmarking
-visualize_multiple_models_lists <- function(
-  models_lists_dataset, metric, dataset_label,
+visualize_benchmarks_dataset <- function(
+  dataset_label, metric, models_lists_dataset = NULL, 
+  cv_repeats = CV.REPEATS, study = STUDY,
   palette = "Set1", boxfill = "#DCDCDC", 
-  save_label = "", width = 6, height = 6, dpi = 300) {
+  save = TRUE, width = 6, height = 6, dpi = 300) {
   
-  # models.lists.dataset <- get_models_list_dataset(
-  #   DATASET.LABEL, preprocess_option, cv_repeats)
+  models.lists.dataset <- if (!is.null(models_lists_dataset)) {
+    models_lists_dataset
+  } else {
+    get_models_list_dataset(dataset_label, cv_repeats)
+  }
   
+  models.lists.dataset %>% print
   # return the sampling folds for the best algorithm
   sampling.folds <- models.lists.dataset %>% 
     # imap(~ mutate(.x, name = .y))
@@ -45,8 +50,10 @@ visualize_multiple_models_lists <- function(
       axis.title = element_text(size = 12)
     )
   
-  if (save_label != "") {
-    ggsave(filename = save_label, plot = plot.sampling.folds.ordered,
+  if (save) {
+    ggsave(
+      filename = benchmark_plot_label(cv_repeats, study, dataset_label), 
+      plot = plot.sampling.folds.ordered,
       dpi = dpi, width = width, height = height)
   }
   

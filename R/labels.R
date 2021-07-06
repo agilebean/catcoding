@@ -11,6 +11,8 @@ CATS.ONLY <- TRUE
 # train/test split
 TRAIN.SPLIT <- 1.0
 
+STUDY <- "study1"
+
 CV.REPEATS <- 2
 # CV.REPEATS <- 5
 # CV.REPEATS <- 10
@@ -60,11 +62,27 @@ benchmark_filename <- function(
   transform = TRANSFORM
 ) {
   output_dir(
-    "benchmarks", STUDY, paste0("cv", cv_repeats),
+    "benchmarks", study, paste0("cv", cv_repeats),
     file  = output_filename(
       prefix = prefix, transform)  
   )
 }
+
+benchmark_plot_label <- function(
+  cv_repeats, 
+  study,
+  dataset_label,
+  prefix = "benchmark.plot",
+  transform = TRANSFORM
+) {
+
+  output_dir(
+    "benchmarks", study, paste0("cv", cv_repeats),
+    file  = output_filename(
+      prefix = prefix, dataset_label, transform, suffix = "png")
+  )
+}
+
 
 prep_label <- function(dataset_label, encoder) {
   
@@ -90,6 +108,20 @@ DATASET.LABEL.LIST <- c(
   , "timex"
   , "smartflow"
   # , "smartflow.scales"
+)
+
+ENCODER.LIST.test <- c(
+  "factor-encoding"
+  , "integer-encoding"
+  , "embed-glm"
+  , "embed-keras"
+  , "vtreat-cross"
+  , "vtreat-design"
+  , "vtreat-dummy"
+  , "scikit-backward"
+  , "scikit-baseN"
+  , "scikit-binary"
+  # , "scikit-catboost"
 )
 
 ENCODER.LIST.study1 <- c(

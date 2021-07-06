@@ -27,45 +27,41 @@ NEW <- TRUE
 # dataset.label.list <- "timex"
 # dataset.label.list <- "smartflow"
 
-# dataset.label.list.list <- dataset.label.list.LIST
-dataset.label.list.list <- c("ames", "diamonds")
+# dataset.label.list <- dataset.label.list
+dataset.label.list <- c("ames", "diamonds")
 
 system.time(
-  multiple.benchmarks.boxplots <- 
-    
-    dataset.label.list.list %>%
-    
-    map(function(dataset_label) {
-      
-      models.lists.dataset <-
-        get_models_list_dataset(dataset_label, CV.REPEATS)
-      
-      visualize_multiple_models_lists(
-        models.lists.dataset, metric = "RMSE", dataset_label,
+  multiple.benchmarks.boxplots <- dataset.label.list %>%
+    map(
+      ~ visualize_benchmarks_dataset(
+        metric = "RMSE",
+        dataset_label,
         palette = "Blues",
-        boxfill = "#778899"
+        boxfill = "#778899",
+        save = TRUE
       )
-    }) %>%
-    set_names(dataset.label.list.list)
+    ) %>%
+    set_names(dataset.label.list)
   
 ) #  11.0s/1 datasets x 4 preprocess options
 
 multiple.benchmarks.boxplots$ames
 multiple.benchmarks.boxplots$diamonds
 
+### 
 ### DETAILS
 ### 
+DATASET.LABEL <- "diamonds"
 system.time(
-  models.lists.dataset <- get_models_list_dataset(dataset.label.list, CV.REPEATS)
-) # ~9.5s/11 encoders  
+  models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, CV.REPEATS)
+) # 15s/11 encoders
 
 models.lists.dataset %>% names
 
-aaa <- visualize_multiple_models_lists(models.lists.dataset, "RMSE", 
-  palette = "Blues", boxfill = "#778899", dataset.label.list,
-  save_label = paste0("figures/study1-", dataset.label.list, ".png"))
+plot <- visualize_benchmarks_dataset(
+  DATASET.LABEL, "RMSE", models.lists.dataset, 
+  palette = "Blues", boxfill = "#778899",
+  save = TRUE)
 
-aaa
-aaa %>% class
-aaa %>% print
+plot
 
