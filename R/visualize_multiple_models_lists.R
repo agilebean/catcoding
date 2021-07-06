@@ -8,18 +8,16 @@ visualize_multiple_models_lists <- function(
   #   DATASET.LABEL, preprocess_option, cv_repeats)
   
   # return the sampling folds for the best algorithm
-  sampling.folds <- models_lists_dataset %>% 
+  sampling.folds <- models.lists.dataset %>% 
     # imap(~ mutate(.x, name = .y))
-    map(~ get_sampling_models_list(.x, metric)) %>% 
+    map(~ get_sampling_models_list(.x, "RMSE")) %>% 
     # tricky tricky: concatenate the sampling folds for all best algorithms
-    imap_dfc(~ set_names(.x, .y)) %T>% print
-  
+    imap_dfc(~ set_names(.x, .y)) %>% 
+    as_tibble() %T>% print
   
   sampling.folds.ordered <- sampling.folds %>% 
     pivot_longer(
-      cols = everything(),
-      names_to = "encoder",
-      values_to = metric
+      cols = everything(), names_to = "encoder", values_to = metric
     ) %>% 
     arrange(RMSE) %T>% print
   
@@ -37,7 +35,7 @@ visualize_multiple_models_lists <- function(
     # scale_color_brewer(guide = "none", palette = palette) +
     scale_color_manual(guide = "none", values = color.values) +
     labs(
-      title = paste("Dataset:", dataset_label),
+      title = paste("dataset:", dataset_label),
       x = "model",
       y = "RMSE"
     ) +
@@ -48,8 +46,9 @@ visualize_multiple_models_lists <- function(
     )
   
   if (save_label != "") {
-    ggsave(dpi = dpi, width = width, height = height, save_label %T>% print)
+    ggsave(filename = save_label, plot = plot.sampling.folds.ordered,
+      dpi = dpi, width = width, height = height)
   }
   
-  plot.sampling.folds.ordered
+  return(plot.sampling.folds.ordered)
 }
