@@ -42,7 +42,8 @@ algorithm.list <- c(
   "lm"
   # , "knn"
   , "gbm"
-  , "rf"
+  # , "rf"
+  , "svmRadial"
   # , "ranger"
 )
 
@@ -53,11 +54,7 @@ models_list_label("diamonds", "encoding", CV.REPEATS)
 # benchmarking
 ################################################################################
 
-STUDY <- "study1"
-# STUDY <- "study2"
-# STUDY <- "study3"
-encoder.list <- paste0("ENCODER.LIST.", STUDY) %>% get
-
+encoder.list <- paste0("ENCODER.LIST.", STUDY) %>% get %>% print
 
 system.time(
   benchmarks.datasets.encoders <- DATASET.LABEL.LIST %>%
@@ -65,38 +62,50 @@ system.time(
       
       print(paste("*** Dataset:", DATASET_LABEL))
       data.list <- readRDS(dataset_filename(DATASET_LABEL))
+      
+      
       # benchmark ml models for 1 dataset across all encoders
       benchmark.models.list <- encoder.list %>% 
         
         map(function(ENCODER) {
           print(paste("ENCODER:", ENCODER))
+      
+          models.list.label <- models_list_label(
+            STUDY, DATASET_LABEL, ENCODER, CV.REPEATS)
           
-          models.list <- benchmark_algorithms(
-            target_label = data.list[[ENCODER]]$target.label,
-            features_labels = data.list[[ENCODER]]$features.labels,
-            training_set = data.list[[ENCODER]]$training.set,
-            testing_set = data.list[[ENCODER]]$testing.set,
-            training_configuration = training.configuration,
-            algorithm_list = algorithm.list,
-            cv_repeats = CV.REPEATS,
-            try_first = TRY.FIRST,
-            models_list_name = models_list_label(DATASET_LABEL, ENCODER, CV.REPEATS),
-            # models_list_name = NULL,
-            preprocess_configuration = TRANSFORM,
-            push = TRUE,
-            # push = FALSE,
-            beep = TRUE
-            # beep = FALSE
-          )
+          if (!file.exists(models.list.label)) {
+            models.list <- benchmark_algorithms(
+              target_label = data.list[[ENCODER]]$target.label,
+              features_labels = data.list[[ENCODER]]$features.labels,
+              training_set = data.list[[ENCODER]]$training.set,
+              testing_set = data.list[[ENCODER]]$testing.set,
+              training_configuration = training.configuration,
+              algorithm_list = algorithm.list,
+              cv_repeats = CV.REPEATS,
+              try_first = TRY.FIRST,
+              models_list_name = models.list.label,
+              # models_list_name = NULL,
+              preprocess_configuration = TRANSFORM,
+              push = TRUE,
+              # push = FALSE,
+              beep = TRUE
+              # beep = FALSE
+            )  
+          }
+          
         }) %>%
         set_names(encoder.list)
     }) %>%
     set_names(DATASET.LABEL.LIST) 
-  )
+) %T>% {
+    beepr::beep()
+    push_message(time_in_seconds = .["elapsed"], 
+               algorithm_list = algorithm.list)
+  }
 
 system.time(
   benchmark.datasets.encoders %>% 
-    saveRDS(benchmark_filename(2, STUDY) %T>% print)
+    saveRDS(benchmark_filename(STUDY, CV.REPEATS) %T>% print)
 )
 
 ### NEW
