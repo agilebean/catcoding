@@ -15,7 +15,7 @@ packs <- c(
 sapply(packs, require, character.only = TRUE)
 # devtools::install_github("agilebean/machinelearningtools", force = TRUE)
 # unloadNamespace("machinelearningtools")
-options(future.fork.multithreading.enable = FALSE)
+# options(future.fork.multithreading.enable = FALSE)
 # "RhpcBLASctl"
 ################################################################################
 #
@@ -24,43 +24,64 @@ options(future.fork.multithreading.enable = FALSE)
 NEW <- TRUE
 # NEW <- FALSE
 
-DATASET.LABEL.LIST <- "designdim"
-# ENCODER.LIST <- ENCODER.LIST.study3
-ENCODER.LIST <- ENCODER.LIST.test
+# dataset.label.list <- DATASET.LABEL.LIST
+dataset.label.list <- "timex"
+# encoder.list <- ENCODER.LIST.study1
+encoder.list <- ENCODER.LIST.test
 
 xai.prefix <- paste0(
-  output_dir("xai", paste0("cv", CV.REPEATS)),
+  output_dir(STUDY, "xai", paste0("cv", CV.REPEATS)),
   "models.explanation"
 ) %>% print
 
 system.time(
   
-  xai.list <- DATASET.LABEL.LIST %>% 
+  xai.list <- dataset.label.list %>% 
     map(
       function(DATASET_LABEL) {
-        ENCODER.LIST %>% 
+        encoder.list %>% 
           map(
             function(ENCODER) {
               
-              models.list <- readRDS(
-                models_list_label(DATASET_LABEL, ENCODER, CV.REPEATS) %T>% print)
+              models.list.label <- models_list_label(
+                STUDY, DATASET_LABEL, ENCODER, CV.REPEATS) %T>% print
               
-              models.list.short <- models.list %>%
-                list_modify(target.label = NULL, testing.set = NULL)
+              models.list <- readRDS(models.list.label) %>% 
+                list_modify(target.label = NULL)
               
               get_xai_explanations(
-                models.list.short,
+                models.list,
                 # save_path = xai.prefix,
                 suffix = paste0(DATASET_LABEL, ".", ENCODER)
               )
             }
-          ) %>% set_names(ENCODER.LIST)
+          ) %>% set_names(encoder.list)
       }
-    ) %>% set_names(DATASET.LABEL.LIST)
+    ) %>% set_names(dataset.label.list)
 )
+# 1786s 
 
-# 2429s = 40.5m
-xai.list
+filename <- output_filename(xai.prefix, "timex") %>% print
+if (NEW) {
+  system.time(
+    xai.list %>% saveRDS(filename)  
+  ) # 33s
+} else {
+  system.time(
+    xai.list <- readRDS(filename)  
+  ) # 12s
+}
+
+
+xai.list %>% 
+  imap(function(xai_dataset, xai_dataset_label) {
+    xai_dataset %>% 
+    imap(function(encoder, encoder_label) {
+      models.list.label <- models_list_label(
+        STUDY, xai_dataset_label, encoder, CV.REPEATS) %T>% print
+    })
+  })
+
 
 # RhpcBLASctl::blas_set_num_threads(8)
 DATASET.LABEL <- "ames"

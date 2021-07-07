@@ -48,7 +48,7 @@ algorithm.list <- c(
 )
 
 # readRDS(dataset_filename(dataset_label = "designdim"))
-models_list_label("diamonds", "encoding", CV.REPEATS)
+models_list_label(STUDY, "diamonds", "encoding", CV.REPEATS)
 
 ################################################################################
 # benchmarking
@@ -62,7 +62,6 @@ system.time(
       
       print(paste("*** Dataset:", DATASET_LABEL))
       data.list <- readRDS(dataset_filename(DATASET_LABEL))
-      
       
       # benchmark ml models for 1 dataset across all encoders
       benchmark.models.list <- encoder.list %>% 
@@ -101,12 +100,12 @@ system.time(
     beepr::beep()
     push_message(time_in_seconds = .["elapsed"], 
                algorithm_list = algorithm.list)
-  }
+  } # 2296s/80encoders
 
 system.time(
-  benchmark.datasets.encoders %>% 
+  benchmarks.datasets.encoders %>% 
     saveRDS(benchmark_filename(STUDY, CV.REPEATS) %T>% print)
-)
+) # 129s/80
 
 ### NEW
 # 709s cv2

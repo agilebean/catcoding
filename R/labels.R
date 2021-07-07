@@ -18,9 +18,9 @@ STUDY <- "study1"
 # STUDY <- "study2"
 # STUDY <- "study3"
 
-CV.REPEATS <- 2
+# CV.REPEATS <- 2
 # CV.REPEATS <- 5
-# CV.REPEATS <- 10
+CV.REPEATS <- 10
 # CV.REPEATS <- 20
 
 # CATS.ONLY <- FALSE
@@ -113,25 +113,22 @@ DATASET.LABEL.LIST <- c(
 )
 
 ENCODER.LIST.test <- c(
-  # "scikit-glmm",
-  # "scikit-hashing"
   "factor-encoding"
-  , "integer-encoding"
+  # , "integer-encoding"
   , "embed-glm"
-  , "embed-keras"
-  , "vtreat-cross"
-  , "vtreat-design"
-  , "vtreat-dummy"
-  , "scikit-backward"
-  , "scikit-baseN"
-  , "scikit-binary"
+  # , "vtreat-cross"
+  , "scikit-glmm" 
+  , "scikit-Mestimate"
+  , "scikit-onehot"
+  # , "scikit-ordinal"
+  , "scikit-target"
 )
 
 ENCODER.LIST.study1 <- c(
   "factor-encoding"
   , "integer-encoding"
   , "embed-glm"
-  , "embed-keras"
+  # , "embed-keras"
   , "vtreat-cross"
   , "vtreat-design"
   , "vtreat-dummy"

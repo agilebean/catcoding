@@ -37,7 +37,7 @@ if (NEW) {
     benchmarks.top.encoders <- create_benchmarks_top_encoders(
       STUDY, dataset.label.list, encoder.list, median_sort = FALSE) %T>% 
       saveRDS(benchmark.filename %T>% print)
-  ) # 38s
+  ) # 40s
 } else {
   benchmarks.top.encoders <- readRDS(benchmark.filename %T>% print)
 }
@@ -82,7 +82,7 @@ system.time(
     ) %>%
     set_names(dataset.label.list)
   
-) # 30s/4 datasets x 20 preprocess options
+) # 44s/4 datasets x 20 preprocess options
 
 plot <- multiple.benchmarks.boxplots$diamonds
 plot

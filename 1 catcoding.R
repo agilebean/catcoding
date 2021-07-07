@@ -23,7 +23,6 @@ sapply(packs, require, character.only = TRUE)
 # devtools::install_github("briandconnelly/pushoverr")
 # devtools::install_github("agilebean/catcoding")
 # unloadNamespace("machinelearningtools")
-options(future.fork.multithreading.enable = FALSE)
 
 ####################################################
 # run this for step_lencode_keras
@@ -35,13 +34,21 @@ options(future.fork.multithreading.enable = FALSE)
 # MAIN
 ################################################################################
 # FINAL1: create list of encoded datasets
+DATASET.LABEL.TEST <- "smartflow"
+# DATASET.LABEL.TEST <- DATASET.LABEL.LIST %>% discard(., grepl("smartflow", .))
 system.time(
   data.encoded.list <- apply_encoders_data_list(
-    DATASET.LABEL.LIST, 
-    ENCODER.LIST.study1
+    # DATASET.LABEL.TEST, ENCODER.LIST.test
+    DATASET.LABEL.LIST, ENCODER.LIST.study1
     # , save = FALSE
     )  
-)
+) # 159s
+
+smartflow$data %>% glimpse()
+data.encoded.list %>% names
+data.encoded.list
+data.encoded.list$designdim$`scikit-glmm`
+data.encoded.list$designdim$`scikit-hashing`
 #### NEW
 # 240s after case_when - 263s in one chain 254 clusterOn()
 # 407s for 100 encoders (5 x 20 encoders)
@@ -51,10 +58,7 @@ system.time(
 # 29.5s for 22 encoders (pci)
 # 178s for 76 encoders (4 datasets x 19 encoders) = ~2.3s
 # 178s for 88 encoders (4 datasets x 22 encoders) = ~2.3s
-data.encoded.list %>% names
-data.encoded.list$ames$`scikit-target`
-data.encoded.list$ames$`scikit-loo`
-data.encoded.list$ames$`scikit-loo`$target.label
+
 
 ################################################################################
 # Tests on single dataset and single encoder
@@ -66,13 +70,13 @@ data.encoded.list$ames$`scikit-loo`$target.label
 # DATASET.LABEL <- "ames"
 # DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "timex"
-# DATASET.LABEL <- "smartflow"
-DATASET.LABEL <- "smartflow-scales"
+DATASET.LABEL <- "smartflow"
+# DATASET.LABEL <- "smartflow-scales"
 # 
 ####################################################
 # ENCODING <- "factor-encoding"
 # ENCODING <- "vtreat-cross"
-ENCODING <- "vtreat-design"
+# ENCODING <- "vtreat-design"
 # ENCODING <- "vtreat-dummy"
 # ENCODING <- "scikit-target"
 # ENCODING <- "scikit-loo"
@@ -96,17 +100,24 @@ ENCODING <- "vtreat-design"
 #####
 ## DEBUG ERROR no usable vars with smartflow-scales+vtreat-design
 ##### 
-DATASET.LABEL <- "smartflow.scales"
+DATASET.LABEL <- "diamonds"
+# DATASET.LABEL <- "ames"
+# DATASET.LABEL <- "designdim"
+# DATASET.LABEL <- "smartflow"
+DATASET.LABEL <- "timex"
 # create split objects for 1 dataset
 data.prepped <- prep_dataset_original(DATASET.LABEL, TRAIN.SPLIT, CATS.ONLY)  
 # 0.06s
 
 # # show factors
-data.prepped$training.set %>% select(where(is.factor)) %>% str
+data.prepped$training.set %>% select(where(is.ordered)) %>% glimpse
 data.prepped$training.set %>% glimpse
 # data.prepped$training.set %>% summary
 
-ENCODING <- "vtreat-design"
+# ENCODING <- "vtreat-design"
+ENCODING <- "scikit-glmm"
+# ENCODING <- "scikit-hashing"
+
 # apply 1 encoder on 1 split object ~ 1.1s
 data.encoded <- apply_encoder(data.prepped, ENCODING)
 
