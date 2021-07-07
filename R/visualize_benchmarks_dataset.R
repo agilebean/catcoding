@@ -2,29 +2,28 @@
 visualize_benchmarks_dataset <- function(
   dataset_label, metric, models_lists_dataset = NULL, 
   cv_repeats = CV.REPEATS, study = STUDY,
-  palette = "Set1", boxfill = "#DCDCDC", 
+  palette = "Set1", boxfill = "slategray3",
   save = TRUE, width = 6, height = 6, dpi = 300) {
   
   models.lists.dataset <- if (!is.null(models_lists_dataset)) {
     models_lists_dataset
   } else {
-    get_models_list_dataset(dataset_label, cv_repeats)
+    get_models_list_dataset(study, dataset_label, cv_repeats)
   }
   
-  models.lists.dataset %>% print
   # return the sampling folds for the best algorithm
   sampling.folds <- models.lists.dataset %>% 
     # imap(~ mutate(.x, name = .y))
     map(~ get_sampling_models_list(.x, "RMSE")) %>% 
     # tricky tricky: concatenate the sampling folds for all best algorithms
     imap_dfc(~ set_names(.x, .y)) %>% 
-    as_tibble() %T>% print
+    as_tibble() # %T>% print
   
   sampling.folds.ordered <- sampling.folds %>% 
     pivot_longer(
       cols = everything(), names_to = "encoder", values_to = metric
     ) %>% 
-    arrange(RMSE) %T>% print
+    arrange(RMSE) # %T>% print
   
   color.codes <- RColorBrewer::brewer.pal(8, palette)[-c(1:2)]
   color.values <- colorRampPalette(color.codes)(ncol(sampling.folds))
@@ -51,10 +50,15 @@ visualize_benchmarks_dataset <- function(
     )
   
   if (save) {
+    plot.label <- benchmark_plot_label(study, cv_repeats, dataset_label) 
     ggsave(
-      filename = benchmark_plot_label(cv_repeats, study, dataset_label), 
+      filename = plot.label, 
       plot = plot.sampling.folds.ordered,
       dpi = dpi, width = width, height = height)
+    print("****************************************************")
+    print("Saved benchmark plot under")
+    print(plot.label)
+    print("****************************************************")
   }
   
   return(plot.sampling.folds.ordered)

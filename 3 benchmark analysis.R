@@ -10,11 +10,10 @@ packs <- c(
 )
 sapply(packs, require, character.only = TRUE)
 # devtools::install_github("agilebean/catcoding")
-################################################################################
-# read all encoded datasets for ONE dataset
+NEW <- TRUE
+# NEW <- FALSE
 ################################################################################
 
-####################################################
 # DATASET.LABEL <- ""
 DATASET.LABEL <- "diamonds"
 # DATASET.LABEL <- "ames"
@@ -22,138 +21,85 @@ DATASET.LABEL <- "diamonds"
 # DATASET.LABEL <- "timex"
 # DATASET.LABEL <- "smartflow"
 # DATASET.LABEL <- "smartflow-scales"
-####################################################
-
-# ENCODER <- "embed-keras"
-# ENCODER <- "factor-ENCODER"
-# ENCODER <- "scikit-binary"
-# ENCODER <- "scikit-glmm"
-# ENCODER <- "scikit-helmert" # reached elapsed time limit
-# ENCODER <- "scikit-loo"
-# ENCODER <- "scikit-Mestimate"
-# ENCODER <- "scikit-ordinal"
-# ENCODER <- "scikit-backward" # reached elapsed time limit
-# ENCODER <- "scikit-james-stein" # ++2*ames
-# ENCODER <- "scikit-polynomial" # ++3*ames
-# ENCODER <- "scikit-onehot"
-# ENCODER <- "scikit-target" # ++3*ames
-# ENCODER <- "scikit-woe" # target must be binary
-# ENCODER <- "vtreat-cross"
-# ENCODER <- "vtreat-design"
-ENCODER <- "vtreat-dummy"
+# dataset.label.list <- DATASET.LABEL
 
 ################################################################################
+# extract top encoders from all encoded datasets
+################################################################################
+dataset.label.list <- DATASET.LABEL.LIST
+encoder.list <- ENCODER.LIST.study1 %>% print
+# encoder.list <- ENCODER.LIST.test %>% print
+# encoder.list <- c("factor-encoding", "integer-encoding", "embed-keras")
 
-system.time(
-  models.lists.dataset <- get_models_list_dataset(DATASET.LABEL, CV.REPEATS) %T>% print  
-) # 16s diamonds
-
-models.lists.dataset %>% names
-
-system.time(
-  benchmarks.all.datasets.all <- 
-    create_benchmarks_top_encoders(
-      # DATASET.LABEL.LIST, 
-      c("ames", "diamonds"),
-      # ENCODER.LIST.study2, 
-      c("factor-encoding", "integer-encoding", "embed-keras"),
-      median_sort = FALSE)
-) # 38s
-benchmarks.all.datasets.all
-
-# only model
-benchmarks.all.datasets.all %>% map(~select(.x, encoder:model)) %>% print
-# knitr::kable(format = "latex")
-# knitr::kable(format = "html")
-
-# TRICKY: collapse list into df with data column = dataset (list element name)
-benchmarks.all.datasets.all %>% map_df(~.x, .id = "data")
-# 
-# 57.6s >> EXP2 (60 encoders, full datasets)
-# 46.5s >> EXP4 (76 encoders, 4 datasets)
-# 39.4s >> EXP5 (76 encoders, 4 datasets)
-# 41.3s >> EXP6 (76 encoders, 4 datasets)
-# 15.0s >> EXP7 (54 encoders, 3 datasets)
-# 17.1s >> EXP1 ()
-# EXP2
-# benchmark.label <- paste0(
-#   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, "try1000.rds") %T>% print
-#
-# EXP3
-# benchmark.label <- paste0(
-#   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".rds") %T>% print
-# all <- benchmark.all.datasets.all
-# dia <- benchmark.all.datasets.all
-# 
-# benchmarks.all.datasets.all <- all %>% 
-#   list_modify(benchmark.diamonds = dia$benchmark.diamonds)
-# 
-# benchmark.label <- paste0(
-#   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".ml2.rds") %T>% print
-#
-# EXP4
-# benchmark.label <- paste0(
-#   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".folds10.rds") %T>% print
-# #
-# EXP5
-# benchmark.label <- paste0(
-#   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".rds") %T>% print
-
-# EXP6
-benchmark.label <- "output/benchmarks.all.datasets.all.cv2.factor.rds"
-
-# EXP7
-benchmark.label <- "output/benchmarks.all.datasets.all.cv2.ordinal.rds" %T>% print
-
-# EXP8
-# benchmark.label <- paste0(
-#   "output/benchmarks.all.datasets.all.cv", CV.REPEATS, ".ordinal4.rds") %T>% print
-
-# EXP9 pca
-benchmark.label <- "output/benchmarks.all.datasets.all.cv2.pca.rds"
-
-# EXP10 ica
-benchmark.label <- "output/benchmarks.all.datasets.all.cv2.ica.rds"
-
-# EXP11 yeo
-benchmark.label <- "output/benchmarks.all.datasets.all.cv2.yeo.rds"
-
-# EXP1 final
-benchmark.label <- "output/benchmarks.all.datasets.all.cv10.none.rds"
-
-# benchmarks.all.datasets.all %>% saveRDS(benchmark.label)
-benchmarks.all.datasets.all <- readRDS(benchmark.label) # %T>% print
+benchmark.filename <- benchmark_filename(STUDY, CV.REPEATS) %>% print
+if (NEW) {
+  system.time(
+    benchmarks.top.encoders <- create_benchmarks_top_encoders(
+      STUDY, dataset.label.list, encoder.list, median_sort = FALSE) %T>% 
+      saveRDS(benchmark.filename %T>% print)
+  ) # 38s
+} else {
+  benchmarks.top.encoders <- readRDS(benchmark.filename %T>% print)
+}
 
 # all alg
-benchmarks.all.datasets.all
-benchmarks.all.datasets.all$designdim %>% arrange(encoder) %>% print(n = 50)
-benchmarks.all.datasets.all$timex %>% arrange(encoder) %>% print(n = 50)
+benchmarks.top.encoders
 
+# all in one table
+# TRICKY: collapse list into df with data column = dataset (list element name)
+benchmarks.top.encoders %>% map_df(~.x, .id = "data")
 
-benchmarks.all.datasets.all$designdim %>% 
+# details
+benchmarks.top.encoders$designdim %>% 
   group_by(encoder, model) %>% 
   summarize(model, RMSE.median = min(RMSE.median))
 
 # top2 alg
-benchmarks.all.datasets.all %>% 
+benchmarks.top.encoders %>% 
   imap(~ mutate(.x, dataset = .y)) %>% 
   map_df(~ .x %>% slice_min(order_by = RMSE.median, n = 2))
 
 # top1 alg worse with ordinal
-benchmarks.all.datasets.all %>% 
+benchmarks.top.encoders %>% 
   imap(~ mutate(.x, dataset = .y)) %>% 
   map_df(~ .x %>% filter(RMSE.median == min(RMSE.median, na.rm = TRUE)))
 
-####################################################
-# print benchmark for ONE dataset & ONE encoder
-####################################################
-if (NEW) {
-  models_list_label(DATASET.LABEL, ENCODER)
-  models.list <- readRDS(models_list_label(DATASET.LABEL, ENCODER))
-  models.metrics <- models.list %>% get_model_metrics() %T>% print
-  ggsave(dpi = 300, width = 6, height = 4,
-         paste0("figures/study1-", DATASET.LABEL, "-", ENCODER, ".png") %T>% print)
-}
+
+################################################################################
+# visualize top encoders from all encoded datasets
+################################################################################
+
+system.time(
+  multiple.benchmarks.boxplots <- dataset.label.list %>%
+    map(
+      ~ visualize_benchmarks_dataset(
+        dataset_label = .,
+        metric = "RMSE",
+        # palette = "Blues",
+        # boxfill = "#DCDCDC",
+        save = TRUE
+      )
+    ) %>%
+    set_names(dataset.label.list)
+  
+) # 30s/4 datasets x 20 preprocess options
+
+plot <- multiple.benchmarks.boxplots$diamonds
+plot
+plot + geom_boxplot(fill = "lightsteelblue")
+plot + geom_boxplot(fill = "slategray2")
+plot + geom_boxplot(fill = "powderblue")
+# not so good
+plot + geom_boxplot(fill = "slategray4")
+plot + geom_boxplot(fill = "slategray3")
+plot + geom_boxplot(fill = "lightslategray")
+################################################################################
+# DETAILS
+# system.time(
+#   models.lists.dataset <- get_models_list_dataset(
+#     STUDY, DATASET.LABEL, CV.REPEATS) %T>% print  
+# ) # 16s diamonds
+# models.lists.dataset %>% names
 
 ################################################################################
 # DEBUG WRONG models.list
@@ -161,11 +107,12 @@ if (NEW) {
 # ENCODER <- "scikit-target"
 ENCODER <- "vtreat-dummy"
 system.time(
-  WRONG <- DATASET.LABEL.LIST %>% 
+  BLIST <- DATASET.LABEL.LIST %>% 
     map(
       function(DATASET_LABEL) {
         
-        models.lists.dataset.label <- models_list_label(DATASET_LABEL, ENCODER)
+        models.lists.dataset.label <- models_list_label(
+          STUDY, DATASET_LABEL, ENCODER, CV.REPEATS)
         
         models.lists.dataset.label %>% print
         system.time(
@@ -182,21 +129,13 @@ system.time(
     ) %>% 
     set_names(DATASET.LABEL.LIST)
 )
-WRONG %>% names
-WRONG %>% map(~.x)
-WRONG %>% map_df(~.x, .id = "dataset")
-
-CORRECT %>% names
-CORRECT[[DATASET.LABEL]]
+BLIST %>% names
+BLIST %>% map(~.x)
+BLIST %>% map_df(~.x, .id = "dataset")
+BLIST[[DATASET.LABEL]]
 ################################################################################
 # SCRIBBLE
 ################################################################################
 
-
-object <- read_list_names()
-object %>% names
-object$ames$`vtreat-dummy`
-object$ames$`factor-ENCODER`
-object$ames$`scikit-onehot`
 
 

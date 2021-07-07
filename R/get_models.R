@@ -5,6 +5,7 @@
 #
 ################################################################################
 get_models_list_dataset <- function(
+  study, 
   dataset_label, 
   cv_repeats, 
   transform = NULL, 
@@ -12,7 +13,7 @@ get_models_list_dataset <- function(
 ) {
   # filter all models for a specific dataset
   models.lists.dataset.labels <- 
-    dir(file.path(models_dir, paste0("cv", cv_repeats))) %>% 
+    dir(file.path(study, models_dir, paste0("cv", cv_repeats))) %>% 
     keep(., startsWith(., paste0("models.list.", dataset_label))) %>% 
     {
       # filter all models with specific preprocess
@@ -28,7 +29,7 @@ get_models_list_dataset <- function(
   print(models.lists.dataset.labels)
   
   models.lists.dataset <- models.lists.dataset.labels %>% 
-    map(~ output_dir("models", paste0("cv", cv_repeats), file = .x) %>% 
+    map(~ output_dir(study, "models", paste0("cv", cv_repeats), file = .x) %>% 
           readRDS) %>%
     set_names(
       gsub("models\\.list\\.(.+)\\.([0-9]+)\\.(.+)\\.rds", "\\3",  
