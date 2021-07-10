@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Script:  encoders/scikit-encoders.R
+# Script:  src/scikit-encoders.py
 # Output:  training.set, testing.set - library: category_encoders
 #
 ################################################################################

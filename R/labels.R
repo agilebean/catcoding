@@ -115,11 +115,11 @@ DATASET.LABEL.LIST <- c(
 ENCODER.LIST.test <- c(
   "factor-encoding"
   # , "integer-encoding"
-  , "embed-glm"
+  # , "embed-glm"
   # , "vtreat-cross"
   , "scikit-glmm" 
-  , "scikit-Mestimate"
-  , "scikit-onehot"
+  # , "scikit-Mestimate"
+  # , "scikit-onehot"
   # , "scikit-ordinal"
   , "scikit-target"
 )

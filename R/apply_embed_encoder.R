@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Script:  encoders/embed-steps.R
+# Script:  R/apply_embed_encoder.R
 # Output:  training.set, testing.set - bayesian target encoding
 #
 ################################################################################

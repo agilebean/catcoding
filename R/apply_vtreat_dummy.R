@@ -1,10 +1,9 @@
 ################################################################################
 #
-# Script:  encoders/vtreat-dummy.R
+# Script:  R/apply_vtreat_dummy.R
 # Output:  training.set, testing.set - dummy-encoded
 #
 ################################################################################
-
 apply_vtreat_dummy <- function(
   encoding, training_original, testing_original, target_label) {
   

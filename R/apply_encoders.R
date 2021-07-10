@@ -13,13 +13,10 @@ apply_encoder <- function(data_prepped, encoding) {
   target.label <- data_prepped$target.label
   
   encoding_function <- case_when(
-    encoding == "vtreat-cross" ~ "apply_vtreat_cross",
-    encoding == "vtreat-design" ~ "apply_vtreat_design",
-    encoding == "vtreat-dummy" ~ "apply_vtreat_dummy",
     startsWith(encoding, "embed") ~ "apply_embed_encoder",
     startsWith(encoding, "scikit") ~ "apply_scikit_encoder",
-    encoding == "integer-encoding" ~ "apply_integer_encoder",
-    encoding == "factor-encoding" ~ "apply_factor_encoder"
+    # creates function name starting with "apply_" and underscores 
+    TRUE ~ paste0("apply_", gsub("-", "_", encoding))
   ) %>% get()
   
   # apply encoding function

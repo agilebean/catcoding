@@ -34,46 +34,68 @@ xai.prefix <- paste0(
   "models.explanation"
 ) %>% print
 
+extract_xai_dataset <- function(
+  dataset_label, study, encoder_list, cv_repeats) {
+  
+  encoder_list %>% 
+    map(
+      function(encoder) {
+        
+        models.list.label <- models_list_label(
+          study, dataset_label, encoder, cv_repeats) %T>% print
+        
+        models.list <- readRDS(models.list.label) %>% 
+          list_modify(target.label = NULL)
+        
+        get_xai_explanations(
+          models.list,
+          # save_path = xai.prefix,
+          suffix = paste0(dataset_label, ".", encoder)
+        )
+      }
+    ) %>% set_names(encoder_list)
+}
+
+dataset.label <- "timex"
+system.time(
+  xai.list <- extract_xai_dataset(
+    dataset.label, STUDY, encoder.list, CV.REPEATS)
+) # 480s/3 encoders
+
+filename <- output_filename(xai.prefix, dataset.label) %>% print
+if (NEW) {
+  system.time(
+    xai.list %>% saveRDS(filename)  
+  ) # 13s
+} else {
+  system.time(
+    xai.list <- readRDS(filename)  
+  ) # 5s
+}
+
+
+xai.list$`scikit-target`$lm$DALEX.feature.importance.plot
+xai.list$`scikit-target`$gbm$DALEX.feature.importance.plot
+xai.list$`scikit-target`$svmRadial$DALEX.feature.importance.plot
+
+xai.list$`scikit-target`$gbm$DALEX.distribution.plot
+xai.list$`scikit-target`$gbm$DALEX.attribution.plot
+xai.list$`scikit-target`$gbm$DALEX.pdp.plot
+
+
 system.time(
   
-  xai.list <- dataset.label.list %>% 
+  xai.list.all <- dataset.label.list %>% 
     map(
-      function(DATASET_LABEL) {
-        encoder.list %>% 
-          map(
-            function(ENCODER) {
-              
-              models.list.label <- models_list_label(
-                STUDY, DATASET_LABEL, ENCODER, CV.REPEATS) %T>% print
-              
-              models.list <- readRDS(models.list.label) %>% 
-                list_modify(target.label = NULL)
-              
-              get_xai_explanations(
-                models.list,
-                # save_path = xai.prefix,
-                suffix = paste0(DATASET_LABEL, ".", ENCODER)
-              )
-            }
-          ) %>% set_names(encoder.list)
-      }
+      ~ extract_xai_dataset(
+        .x, STUDY, encoder.list, CV.REPEATS
+      )
     ) %>% set_names(dataset.label.list)
 )
 # 1786s 
 
-filename <- output_filename(xai.prefix, "timex") %>% print
-if (NEW) {
-  system.time(
-    xai.list %>% saveRDS(filename)  
-  ) # 33s
-} else {
-  system.time(
-    xai.list <- readRDS(filename)  
-  ) # 12s
-}
 
-
-xai.list %>% 
+xai.list.all %>% 
   imap(function(xai_dataset, xai_dataset_label) {
     xai_dataset %>% 
     imap(function(encoder, encoder_label) {

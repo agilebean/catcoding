@@ -1,10 +1,9 @@
 ################################################################################
 #
-# Script:  encoders/vtreat-design.R
+# Script:  R/apply_vtreat_design.R
 # Output:  training.set, testing.set - vtreat::designTreatmentsN
 #
 ################################################################################
-
 apply_vtreat_design <- function(
   encoding, training_original, testing_original, target_label) {
   

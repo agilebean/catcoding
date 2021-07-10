@@ -1,10 +1,9 @@
 ################################################################################
 #
-# Script:  encoders/vtreat-cross.R
+# Script:  R/apply_vtreat_cross.R
 # Output:  training.set, testing.set - vtreat::mkCrossFrame{N,C} Experiment
 #
 ################################################################################
-
 apply_vtreat_cross <- function(
   encoding, training_original, testing_original, target_label) {
   

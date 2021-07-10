@@ -14,15 +14,6 @@ NEW <- TRUE
 # NEW <- FALSE
 ################################################################################
 
-# DATASET.LABEL <- ""
-DATASET.LABEL <- "diamonds"
-# DATASET.LABEL <- "ames"
-# DATASET.LABEL <- "designdim"
-# DATASET.LABEL <- "timex"
-# DATASET.LABEL <- "smartflow"
-# DATASET.LABEL <- "smartflow-scales"
-# dataset.label.list <- DATASET.LABEL
-
 ################################################################################
 # extract top encoders from all encoded datasets
 ################################################################################

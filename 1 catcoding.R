@@ -40,7 +40,7 @@ system.time(
   data.encoded.list <- apply_encoders_data_list(
     # DATASET.LABEL.TEST, ENCODER.LIST.test
     DATASET.LABEL.LIST, ENCODER.LIST.study1
-    # , save = FALSE
+    , save = FALSE
     )  
 ) # 159s
 

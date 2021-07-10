@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Script:  encoders/scikit-encoders.R
+# Script:  R/scikit-encoders.R
 # Output:  training.set, testing.set - call scikit-learn category_encoders
 #
 ################################################################################
@@ -9,7 +9,7 @@ apply_scikit_encoder <- function(
   
   # load python script
   reticulate::use_condaenv(condaenv = "reticulate", required = TRUE)
-  source_python("R/encoder scikit-encoders.py", convert = TRUE)
+  source_python("src/scikit-encoders.py", convert = TRUE)
   
   CAT.labels <- training_original %>% 
     select(-target_label) %>% 
