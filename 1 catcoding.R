@@ -34,12 +34,12 @@ sapply(packs, require, character.only = TRUE)
 # MAIN
 ################################################################################
 # FINAL1: create list of encoded datasets
-DATASET.LABEL.TEST <- "smartflow"
+# DATASET.LABEL.TEST <- "smartflow"
 # DATASET.LABEL.TEST <- DATASET.LABEL.LIST %>% discard(., grepl("smartflow", .))
 system.time(
   data.encoded.list <- apply_encoders_data_list(
     # DATASET.LABEL.TEST, ENCODER.LIST.test
-    DATASET.LABEL.LIST, ENCODER.LIST.study1
+    DATASET.LABEL.LIST, ENCODER.LIST.LIST
     , save = FALSE
     )  
 ) # 159s

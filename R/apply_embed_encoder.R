@@ -21,13 +21,13 @@ apply_embed_encoder <- function(
     ) %>% get()
   
   features.labels <- training_original %>% 
-    select(-target_label) %>% names %T>% print
+    select(-target_label) %>% names
   
   recipe.base <- features.labels %>% 
     paste(collapse = " + ") %>% 
     paste(target_label, "~", .) %>% 
     as.formula %>% 
-    recipe(training_original) 
+    recipe(training_original) %>% print
   
   # add encoder to recipe
   recipe.encoding <- recipe.base %>% 

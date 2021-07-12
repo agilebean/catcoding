@@ -10,7 +10,8 @@ dataset <- readRDS(filepath) %>% as_tibble()
 
 # define target and features
 target.label <- "NPS"
-features.labels <- dataset %>% select(-target.label) %>% names
+features.labels <- dataset %>% 
+  select(-target.label) %>% names
 
 dataset %<>% 
   mutate(across(features.labels, as.factor)) %>% 

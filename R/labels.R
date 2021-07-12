@@ -14,13 +14,13 @@ CATS.ONLY <- TRUE
 # train/test split
 TRAIN.SPLIT <- 1.0
 
-STUDY <- "study1"
-# STUDY <- "study2"
+# STUDY <- "study1"
+STUDY <- "study2"
 # STUDY <- "study3"
 
-# CV.REPEATS <- 2
+CV.REPEATS <- 2
 # CV.REPEATS <- 5
-CV.REPEATS <- 10
+# CV.REPEATS <- 10
 # CV.REPEATS <- 20
 
 # CATS.ONLY <- FALSE
@@ -103,7 +103,7 @@ DATASET.LABEL.TEST <- c(
   "designdim"
 )
 
-DATASET.LABEL.LIST <- c(
+DATASET.LABEL.study1 <- c(
   "diamonds"
   , "ames"
   , "designdim"
@@ -112,16 +112,25 @@ DATASET.LABEL.LIST <- c(
   # , "smartflow.scales"
 )
 
+DATASET.LABEL.study2 <- c(
+  "swbsun",
+  "swbjoh"
+)
+
+# DATASET.LABEL.LIST <- DATASET.LABEL.study1
+DATASET.LABEL.LIST <- DATASET.LABEL.study2
+
 ENCODER.LIST.test <- c(
   "factor-encoding"
   # , "integer-encoding"
-  # , "embed-glm"
+  , "embed-glm"
   # , "vtreat-cross"
-  , "scikit-glmm" 
+  , "scikit-hashing"
+  , "scikit-glmm"
   # , "scikit-Mestimate"
   # , "scikit-onehot"
   # , "scikit-ordinal"
-  , "scikit-target"
+  # , "scikit-target"
 )
 
 ENCODER.LIST.study1 <- c(
@@ -136,7 +145,7 @@ ENCODER.LIST.study1 <- c(
   , "scikit-baseN"
   , "scikit-binary"
   , "scikit-catboost"
-  , "scikit-glmm" # error
+  # , "scikit-glmm" # error
   , "scikit-hashing" # error
   , "scikit-helmert"
   , "scikit-james-stein"
@@ -184,6 +193,8 @@ ENCODER.LIST.study3 <- c(
   "scikit-onehot"
 )
 
+# ENCODER.LIST.LIST <- ENCODER.LIST.test
+ENCODER.LIST.LIST <- ENCODER.LIST.study1
 # ENCODER <- "embed-keras"
 # ENCODER <- "factor-ENCODER"
 # ENCODER <- "scikit-binary"

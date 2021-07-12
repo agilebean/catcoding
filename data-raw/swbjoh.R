@@ -1,7 +1,7 @@
 ## code to prepare `swbjoh` dataset goes here
 filepath <- system.file(
   "extdata",
-  "processed_data.rds",
+  "swbjoh processed_data.rds",
   package = "catcoding"
 ) %>% print
 
@@ -14,7 +14,8 @@ dataset %<>%
   # tricky: replace "NA" by NA datatype
   mutate(across(everything(), ~na_if(.x, "NA"))) %>% 
   # remove rows with all NAs
-  filter(if_all(everything(), ~!is.na(.)))
+  filter(if_all(everything(), ~!is.na(.))) %>% 
+  mutate(across(-well_being_state, as_factor))
   
 # define target and features
 target.label <- "well_being_state"

@@ -16,6 +16,7 @@ Depends:
           R (>= 3.5),
           machinelearningtools,
           caret,
+          embed,
           vtreat,
           mirt,
           magrittr,
