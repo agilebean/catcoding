@@ -14,9 +14,9 @@ CATS.ONLY <- TRUE
 # train/test split
 TRAIN.SPLIT <- 1.0
 
-# STUDY <- "study1"
-STUDY <- "study2"
-# STUDY <- "study3"
+# STUDY <- "trial1"
+STUDY <- "trial2"
+# STUDY <- "trial3"
 
 CV.REPEATS <- 2
 # CV.REPEATS <- 5
@@ -113,6 +113,7 @@ DATASET.LABEL.study1 <- c(
 )
 
 DATASET.LABEL.study2 <- c(
+  "swbliss",
   "swbsun",
   "swbjoh"
 )
@@ -184,17 +185,18 @@ ENCODER.LIST.study2 <- c(
 )
 
 
-ENCODER.LIST.study3 <- c(
+ENCODER.LIST.XAI <- c(
   # "scikit-loo",
-  "scikit-Mestimate",
-  "embed-glm",
-  "embed-keras",
+  # "scikit-Mestimate",
+  # "embed-glm",
+  # "embed-keras",
   "scikit-ordinal",
   "scikit-onehot"
 )
 
-# ENCODER.LIST.LIST <- ENCODER.LIST.test
-ENCODER.LIST.LIST <- ENCODER.LIST.study1
+# ENCODER.LIST <- ENCODER.LIST.test
+# ENCODER.LIST <- ENCODER.LIST.study1
+ENCODER.LIST <- ENCODER.LIST.study2
 # ENCODER <- "embed-keras"
 # ENCODER <- "factor-ENCODER"
 # ENCODER <- "scikit-binary"

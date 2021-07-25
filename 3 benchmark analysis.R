@@ -18,17 +18,15 @@ NEW <- TRUE
 # extract top encoders from all encoded datasets
 ################################################################################
 dataset.label.list <- DATASET.LABEL.LIST
-encoder.list <- ENCODER.LIST.study1 %>% print
-# encoder.list <- ENCODER.LIST.test %>% print
-# encoder.list <- c("factor-encoding", "integer-encoding", "embed-keras")
+# ENCODER.LIST <- c("factor-encoding", "integer-encoding", "embed-keras")
 
 benchmark.filename <- benchmark_filename(STUDY, CV.REPEATS) %>% print
 if (NEW) {
   system.time(
     benchmarks.top.encoders <- create_benchmarks_top_encoders(
-      STUDY, dataset.label.list, encoder.list, median_sort = FALSE) %T>% 
+      STUDY, dataset.label.list, ENCODER.LIST, median_sort = FALSE) %T>% 
       saveRDS(benchmark.filename %T>% print)
-  ) # 40s
+  ) # 40s, 10s study1
 } else {
   benchmarks.top.encoders <- readRDS(benchmark.filename %T>% print)
 }
@@ -41,19 +39,21 @@ benchmarks.top.encoders
 benchmarks.top.encoders %>% map_df(~.x, .id = "data")
 
 # details
-benchmarks.top.encoders$designdim %>% 
+benchmarks.top.encoders$swbsun %>% 
   group_by(encoder, model) %>% 
   summarize(model, RMSE.median = min(RMSE.median))
 
 # top2 alg
 benchmarks.top.encoders %>% 
   imap(~ mutate(.x, dataset = .y)) %>% 
-  map_df(~ .x %>% slice_min(order_by = RMSE.median, n = 2))
+  map_df(~ .x %>% slice_min(order_by = RMSE.median, n = 2)) %>% 
+  select(dataset, everything())
 
 # top1 alg worse with ordinal
 benchmarks.top.encoders %>% 
   imap(~ mutate(.x, dataset = .y)) %>% 
-  map_df(~ .x %>% filter(RMSE.median == min(RMSE.median, na.rm = TRUE)))
+  map_df(~ .x %>% filter(RMSE.median == min(RMSE.median, na.rm = TRUE))) %>% 
+  select(dataset, everything())
 
 
 ################################################################################

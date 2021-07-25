@@ -43,7 +43,7 @@ algorithm.list <- c(
   # , "knn"
   , "gbm"
   # , "rf"
-  , "svmRadial"
+  # , "svmRadial"
   # , "ranger"
 )
 
@@ -54,7 +54,7 @@ models_list_label(STUDY, "diamonds", "encoding", CV.REPEATS)
 # benchmarking
 ################################################################################
 
-encoder.list <- paste0("ENCODER.LIST.", STUDY) %>% get %>% print
+ENCODER.LIST %>% print
 
 system.time(
   benchmarks.datasets.encoders <- DATASET.LABEL.LIST %>%
@@ -64,7 +64,7 @@ system.time(
       data.list <- readRDS(dataset_filename(DATASET_LABEL))
       
       # benchmark ml models for 1 dataset across all encoders
-      benchmark.models.list <- encoder.list %>% 
+      benchmark.models.list <- ENCODER.LIST %>% 
         
         map(function(ENCODER) {
           print(paste("ENCODER:", ENCODER))
@@ -85,22 +85,22 @@ system.time(
               models_list_name = models.list.label,
               # models_list_name = NULL,
               preprocess_configuration = TRANSFORM,
-              push = TRUE,
-              # push = FALSE,
+              # push = TRUE,
+              push = FALSE,
               beep = TRUE
               # beep = FALSE
             )  
           }
           
         }) %>%
-        set_names(encoder.list)
+        set_names(ENCODER.LIST)
     }) %>%
     set_names(DATASET.LABEL.LIST) 
 ) %T>% {
-    beepr::beep()
+    beepr::beep(10)
     push_message(time_in_seconds = .["elapsed"], 
                algorithm_list = algorithm.list)
-  } # 2296s/80encoders
+  } # 2296s/80encoders, 251s study2
 
 system.time(
   benchmarks.datasets.encoders %>% 
