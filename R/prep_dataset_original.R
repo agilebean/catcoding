@@ -5,14 +5,16 @@ prep_dataset_original <- function(
   dataset_label, train_test_split, cats_only = FALSE) {
   
   # get original dataset
-  data <- get(dataset_label) %>% print
+  data <- get(dataset_label)
   
   # retrieve dataset & labels
   target.label <- data$target.label
   features.labels <- data$features.labels
+  factors.labels <- data$factors.labels
   
   # subset features & remove other features or DVs
   dataset <- data$data %>% select(target.label, features.labels) 
+  dataset.irt <- data$irt.scores
   
   ####################################################
   # create training/testing.set
@@ -20,19 +22,28 @@ prep_dataset_original <- function(
     dataset[[target.label]], p = train_test_split, list = FALSE
   )
   
+  set.seed(SEED)
   training.set <- dataset %>% 
     # subset
     slice(train.index) %>% 
     # shuffle
     sample_n(nrow(.))
   
+  training.set.irt <- dataset.irt %>% 
+    slice(train.index) %>% 
+    sample_n(nrow(.))
+  
+  
   if (train_test_split < 1.0) {
     
     testing.set <- dataset[-train.index, ]  
+    testing.set.irt <- dataset.irt[-train.index, ]
+    
   } else { # default case: whole dataset
     
     print("no testing set")
     testing.set <- NULL
+    testing.set.irt <- NULL
   }
   ####################################################
   # special case: only cats without treatment
@@ -60,7 +71,8 @@ prep_dataset_original <- function(
     print("feature selection: ALL")
   }
   ####################################################
-  
+  # inform about dataset type, #features, target
+
   # create target
   target <- dataset[[target.label]]
   
@@ -70,7 +82,6 @@ prep_dataset_original <- function(
   # get #features-original
   no.features.original <- length(features.labels)
   
-  # inform about dataset type, #features, target
   if (is.numeric(target)) {
     
     print(
@@ -94,9 +105,12 @@ prep_dataset_original <- function(
   return(
     list(
       training.set = training.set,
+      training.set.irt = training.set.irt,
       testing.set = testing.set,
+      testing.set.irt = testing.set.irt,
       target.label = target.label,
-      features.labels = features.labels
+      features.labels = features.labels,
+      factors.labels = factors.labels
     )
   )
   ##############################################################################

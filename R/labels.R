@@ -103,7 +103,7 @@ DATASET.LABEL.TEST <- c(
   "designdim"
 )
 
-DATASET.LABEL.study1 <- c(
+DATASET.LABEL.trial1 <- c(
   "diamonds"
   , "ames"
   , "designdim"
@@ -112,17 +112,22 @@ DATASET.LABEL.study1 <- c(
   # , "smartflow.scales"
 )
 
-DATASET.LABEL.study2 <- c(
+DATASET.LABEL.trial2 <- c(
+  "diamonds"
+)
+
+DATASET.LABEL.trial3 <- c(
   "swbliss",
   "swbsun",
   "swbjoh"
 )
 
-# DATASET.LABEL.LIST <- DATASET.LABEL.study1
-DATASET.LABEL.LIST <- DATASET.LABEL.study2
+# DATASET.LABEL.LIST <- DATASET.LABEL.trial1
+DATASET.LABEL.LIST <- DATASET.LABEL.trial2
 
 ENCODER.LIST.test <- c(
   "factor-encoding"
+  , "irt-encoding"
   # , "integer-encoding"
   , "embed-glm"
   # , "vtreat-cross"

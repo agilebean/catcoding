@@ -8,8 +8,11 @@ filepath <- system.file(
 
 dataset <- readRDS(filepath) %>% as_tibble()
 
-# define target and features
+# define target
 target.label <- "NPS"
+target <- dataset %>% select(target.label)
+
+# define features
 features.labels <- dataset %>% 
   select(-target.label) %>% names
 features <- dataset %>% select(features.labels)
@@ -52,15 +55,15 @@ system.time(
   )
 ) # 160s QMCEM, 146s MHRM
 
-# model.mirt <- readRDS("data-raw/mirt.graded.rds")
+# model.mirt <- readRDS("data-raw/designdim.irt.graded.rds")
 
 # assess model fit
 model.fit <- M2(model.mirt, type = "M2*", calcNULL = TRUE, QMC=TRUE)
 model.fit # RMSEA .086, CFI .943
 
 # estimate factor scores
-factor.scores <- fscores(model.mirt, method = "EAP", QMC = TRUE) %>% as_tibble()
-factor.scores %>% head()
+factors.scores <- fscores(model.mirt, method = "EAP", QMC = TRUE) %>% as_tibble()
+factors.scores %>% head()
 
 # # MAP scores should be used instead of EAP scores for higher dimensional models.
 # fscores.MAP <- fscores(irt, method = "MAP", SE = TRUE, QMC = TRUE) %>% print()
@@ -72,7 +75,9 @@ factor.scores %>% head()
 designdim <- list()
 designdim$target.label <- target.label
 designdim$features.labels <- features.labels
+designdim$factors.labels <- factors.scores %>% names
+
 designdim$data <- dataset
-designdim$irt.scores <- factor.scores
+designdim$irt.scores <- bind_cols(target, factors.scores)
 
 usethis::use_data(designdim, overwrite = TRUE)
