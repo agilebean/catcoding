@@ -7,11 +7,6 @@ apply_encoder <- function(data_prepped, encoding) {
   print("#####################")
   print("Encoding...")
   
-  # data_prepped <- data.prepped
-  training.original <- data_prepped$training.set
-  testing.original <- data_prepped$testing.set
-  target.label <- data_prepped$target.label
-  
   encoding_function <- case_when(
     startsWith(encoding, "embed") ~ "apply_embed_encoder",
     startsWith(encoding, "scikit") ~ "apply_scikit_encoder",
@@ -19,18 +14,28 @@ apply_encoder <- function(data_prepped, encoding) {
     TRUE ~ paste0("apply_", gsub("-", "_", encoding))
   ) %>% get()
   
-  # apply encoding function
+  if (encoding == "irt-encoding") {
+    
+    training.set <- data_prepped$training.set.irt
+    testing.set <- data_prepped$testing.set.irt
+    
+  } else {
+    # apply encoding function
+    training.set <- data_prepped$training.set
+    testing.set <- data_prepped$testing.set
+  }
+  
   time.encoding <- system.time(
     data.encoded <- encoding_function(
-      encoding, training.original, testing.original, target.label
+      encoding, training.set, testing.set, data_prepped$target.label
     )
-  ) %>% .["elapsed"] %>% round(., digits = 3)
+  ) %>% .["elapsed"] %>% round(., digits = 3)  
   
   # get categorical features
-  no.cats <- training.original %>% select(where(is.factor)) %>% ncol
+  no.cats <- training.set %>% select(where(is.factor)) %>% ncol
   
   # get #features-original (-1 for target)
-  no.features.original <- training.original %>% ncol -1
+  no.features.original <- training.set %>% ncol -1
   
   # get #features-encoded (-1 for target)
   no.features.encoded <- data.encoded$training.set %>% ncol -1
