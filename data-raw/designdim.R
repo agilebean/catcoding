@@ -52,7 +52,7 @@ system.time(
   )
 ) # 160s QMCEM, 146s MHRM
 
-# model.mirt <- readRDS(model.label)
+# model.mirt <- readRDS("data-raw/mirt.graded.rds")
 
 # assess model fit
 model.fit <- M2(model.mirt, type = "M2*", calcNULL = TRUE, QMC=TRUE)
@@ -73,6 +73,6 @@ designdim <- list()
 designdim$target.label <- target.label
 designdim$features.labels <- features.labels
 designdim$data <- dataset
-designdim$theta.scores <- factor.scores
+designdim$irt.scores <- factor.scores
 
 usethis::use_data(designdim, overwrite = TRUE)
