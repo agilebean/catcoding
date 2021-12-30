@@ -19,10 +19,15 @@ apply_encoder <- function(data_prepped, encoding) {
     training.set <- data_prepped$training.set.irt
     testing.set <- data_prepped$testing.set.irt
     
+    if (is.null(training.set)) {
+      return("IRT data empty")
+    }
+    
   } else {
     # apply encoding function
     training.set <- data_prepped$training.set
     testing.set <- data_prepped$testing.set
+    
   }
   
   time.encoding <- system.time(
