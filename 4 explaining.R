@@ -12,9 +12,10 @@ packs <- c(
   "furrr",
   "machinelearningtools"
 )
+devtools::install_github("agilebean/machinelearningtools", force = TRUE)
+unloadNamespace("catcoding")
+unloadNamespace("machinelearningtools")
 sapply(packs, require, character.only = TRUE)
-# devtools::install_github("agilebean/machinelearningtools", force = TRUE)
-# unloadNamespace("machinelearningtools")
 # options(future.fork.multithreading.enable = FALSE)
 # "RhpcBLASctl"
 ################################################################################
@@ -25,9 +26,8 @@ NEW <- TRUE
 # NEW <- FALSE
 
 # dataset.label.list <- DATASET.LABEL.LIST
-dataset.label.list <- "timex"
-# encoder.list <- ENCODER.LIST.study1
-encoder.list <- ENCODER.LIST.test
+# dataset.label.list <- "timex"
+dataset.label.list <- "swbsun"
 
 xai.prefix <- paste0(
   output_dir(STUDY, "xai", paste0("cv", CV.REPEATS)),
@@ -56,17 +56,18 @@ extract_xai_dataset <- function(
     ) %>% set_names(encoder_list)
 }
 
-dataset.label <- "timex"
+# dataset.label <- "timex"
+dataset.label <- "swbsun"
 system.time(
   xai.list <- extract_xai_dataset(
-    dataset.label, STUDY, encoder.list, CV.REPEATS)
-) # 480s/3 encoders
+    dataset.label, STUDY, ENCODER.LIST.XAI, CV.REPEATS)
+) # 480s/3 encoders 1137s/study2
 
 filename <- output_filename(xai.prefix, dataset.label) %>% print
 if (NEW) {
   system.time(
     xai.list %>% saveRDS(filename)  
-  ) # 13s
+  ) # 13s, 22s/study2
 } else {
   system.time(
     xai.list <- readRDS(filename)  
@@ -74,13 +75,15 @@ if (NEW) {
 }
 
 
-xai.list$`scikit-target`$lm$DALEX.feature.importance.plot
-xai.list$`scikit-target`$gbm$DALEX.feature.importance.plot
-xai.list$`scikit-target`$svmRadial$DALEX.feature.importance.plot
+xai.list$`scikit-ordinal`$lm$DALEX.feature.importance.plot
+xai.list$`scikit-ordinal`$gbm$DALEX.feature.importance.plot
+xai.list$`scikit-ordinal`$svmRadial$DALEX.feature.importance.plot
 
-xai.list$`scikit-target`$gbm$DALEX.distribution.plot
-xai.list$`scikit-target`$gbm$DALEX.attribution.plot
-xai.list$`scikit-target`$gbm$DALEX.pdp.plot
+xai.list$`scikit-onehot`$gbm$DALEX.distribution.plot
+xai.list$`scikit-onehot`$gbm$DALEX.attribution.plot
+xai.list$`scikit-onehot`$gbm$DALEX.pdp.plot %>% 
+  ggsave(plot = ., filename = "study2/pdp.onehot.png", 
+         width = 20, height = 15)
 
 
 system.time(
@@ -88,7 +91,7 @@ system.time(
   xai.list.all <- dataset.label.list %>% 
     map(
       ~ extract_xai_dataset(
-        .x, STUDY, encoder.list, CV.REPEATS
+        .x, STUDY, ENCODER.LIST, CV.REPEATS
       )
     ) %>% set_names(dataset.label.list)
 )
@@ -124,380 +127,6 @@ system.time(
     save_path = xai.prefix,
     suffix = paste0(DATASET.LABEL, ".", ENCODING))
 )
-
-get_xai_explanations <- function(
-  models_list,
-  seed = 171,
-  cutoff_greater = 0,
-  n_features_lime = 5,
-  local_obs = NULL,
-  local_min_cutoff = 0.95,
-  local_no = 6,
-  random_case = NULL,
-  save_path = NULL,
-  suffix = NULL,
-  width = 6, height = 6,
-  # get_DALEX_explainer = TRUE,
-  get_DALEX_residual_plot = TRUE,
-  no_permutations = 50,
-  get_DALEX_feature_importance = TRUE,
-  get_DALEX_feature_importance_plot = TRUE,
-  get_DALEX_pdp_plot = TRUE,
-  get_DALEX_attribution_plot = TRUE,
-  get_DALEX_attribution_text = TRUE,
-  get_DALEX_attribution_uncertainty_plot = TRUE,
-  get_DALEX_shapley_plot = TRUE,
-  get_LIME_explainer = FALSE,
-  get_LIME_explanations = FALSE,
-  get_LIME_explanations_plot = FALSE,
-  get_LIME_features_plot = FALSE
-) {
-  
-  save_path = xai.prefix
-  
-  seed = 171
-  cutoff_greater = 0
-  n_features_lime = 5
-  local_obs = NULL
-  local_min_cutoff = 0.95
-  local_no = 6
-  random_case = NULL
-  save_path = NULL
-  suffix = NULL
-  width = 6 
-  height = 6
-  
-  get_DALEX_residual_plot = TRUE
-  no_permutations = 50
-  get_DALEX_feature_importance = TRUE
-  get_DALEX_feature_importance_plot = TRUE
-  get_DALEX_pdp_plot = TRUE
-  get_DALEX_attribution_plot = TRUE
-  get_DALEX_attribution_text = TRUE
-  get_DALEX_attribution_uncertainty_plot = TRUE
-  get_DALEX_shapley_plot = TRUE
-  
-  
-  require(ggplot2) # ggsave
-  require(dplyr)
-  require(furrr)
-  require(DALEX)
-  require(iBreakDown)
-  require(ingredients)
-  if (get_LIME_explainer) require(lime)
-  
-  models_list <- models.list.short
-  
-  model_object <- models_list$gbm
-  
-  options(parallelly.fork.enable = TRUE)
-  plan(multicore, workers = 8)
-  
-  xai.list <- models_list %>%
-    
-    future_map(function(model_object) {
-      
-      print(paste("*********", model_object$method))
-      training.set <- model_object$trainingData %>%
-        select(.outcome, everything())
-      
-      target <- training.set$.outcome
-      print(paste("***target"))
-      
-      features <- training.set %>% select(-.outcome)
-      
-      # local observations for prediction
-      local.obs <- if (!is.null(local_obs)) {
-        local_obs
-      } else {
-        training.set %>%
-          filter(
-            .outcome >=
-              get_percentile_from_model(model_object, local_min_cutoff)) %>%
-          sample_n(local_no)
-      }
-      
-      random.case <- if (!is.null(random_case)) {
-        random_case
-      } else {
-        local.obs %>% sample_n(1)
-      }
-      
-      print("*** DALEX.explainer")
-      DALEX.explainer <- DALEX::explain(
-        model = model_object,
-        data = features,
-        y = training.set$.outcome >= cutoff_greater,
-        label = paste(model_object$method, " model"),
-        colorize = TRUE
-      )
-      
-      # for residual plots by plot(geom = "histogram")
-      DALEX.performance <- DALEX.explainer %>%
-        DALEX::model_performance()
-      
-      DALEX.residual.plot <- if (get_DALEX_residual_plot) {
-        
-        DALEX.performance %>% plot(geom = "histogram")
-        
-      } else {
-        NULL
-      }
-      
-      DALEX.feature.importance <- if (
-        get_DALEX_feature_importance & !is.null(DALEX.explainer)) {
-        
-        print("*** DALEX.permutation.feature.importance")
-        
-        DALEX.explainer %>%
-          model_parts(
-            B = no_permutations,
-            type = "ratio"
-          )
-        
-      } else {
-        NULL
-      }
-      
-      DALEX.feature.importance.plot <- if (
-        get_DALEX_feature_importance_plot &
-        !is.null(DALEX.feature.importance)) {
-        
-        print("*** DALEX.feature.importance.plot")
-        
-        DALEX.feature.importance %>%
-          plot(
-            bar_width = 20 / log(ncol(features))
-            , show_boxplots = FALSE
-            , title = "Permutation Feature importance"
-            , subtitle = ""
-          ) +
-          # reduce space to axis
-          scale_y_continuous(expand = expansion()) %T>%
-          {
-            if (!is.null(save_path)) {
-              print("AAAA")
-              ggsave(
-                width = width, height = height,
-                filename = paste(
-                  c(save_path, "DALEX.feature.importance.plot", model_object$method,
-                    suffix, "png"),
-                  collapse = ".")
-              )
-            }
-          }
-        
-      } else {
-        NULL
-      }
-      
-      DALEX.pdp.plot <- if (get_DALEX_pdp_plot & !is.null(DALEX.explainer)) {
-        
-        print("*** DALEX.pdp.plot")
-        
-        DALEX.pdp <- DALEX.explainer %>% ingredients::partial_dependency()
-        
-        DALEX.pdp %>% plot %T>%
-          {
-            if (!is.null(save_path)) {
-              ggsave(
-                width = width, height = height,
-                filename = paste(
-                  c(save_path, "plot.pdp.DALEX", model_object$method,
-                    suffix, "png"),
-                  collapse = ".")
-              )
-            }
-          }
-      } else {
-        NULL
-      }
-      
-      DALEX.attribution <- DALEX.explainer %>%
-        iBreakDown::local_attributions(
-          local.obs,
-          keep_distributions = TRUE
-        )
-      print("*** DALEX.attribution")
-      
-      DALEX.attribution.text <- if(get_DALEX_attribution_text) {
-        
-        print("*** DALEX.attribution.text")
-        
-        DALEX.attribution %>%
-          iBreakDown::describe()
-      } else {
-        NULL
-      }
-      
-      DALEX.attribution.plot <- if (get_DALEX_attribution_plot &
-                                    !is.null(DALEX.explainer)) {
-        
-        print("*** DALEX.attribution.plot")
-        
-        DALEX.explainer %>%
-          iBreakDown::local_attributions(
-            local.obs,
-            keep_distributions = TRUE
-          ) %>%
-          plot(
-            shift_contributions = 0.03
-          ) %T>%
-          {
-            if (!is.null(save_path)) {
-              ggsave(
-                width = width, height = height,
-                filename = paste(
-                  c(save_path, "DALEX.attribution.plot", model_object$method,
-                    suffix, "png"),
-                  collapse = ".")
-              )
-            }
-          }
-      } else {
-        NULL
-      }
-      
-      DALEX.attribution.uncertainty.plot <-
-        if (get_DALEX_attribution_uncertainty_plot &
-            !is.null(DALEX.explainer)) {
-          
-          print("*** DALEX.attribution.uncertainty.plot")
-          DALEX.explainer %>%
-            iBreakDown::break_down_uncertainty(local.obs) %>%
-            plot %T>%
-            {
-              if (!is.null(save_path)) {
-                ggsave(
-                  width = width, height = height,
-                  filename = paste(
-                    c(save_path, "DALEX.attribution.uncertainty.plot",
-                      model_object$method, suffix, "png"),
-                    collapse = ".")
-                )
-              }
-            }
-        } else {
-          NULL
-        }
-      
-      
-      DALEX.distribution.plot <- DALEX.attribution %>%
-        plot(plot_distributions = TRUE)
-      
-      print("*** DALEX.distribution.plot")
-      
-      
-      DALEX.shapley.plot <- if (
-        get_DALEX_shapley_plot &
-        !is.null(DALEX.explainer) & !is.null(random_case)) {
-        
-        print("*** DALEX.shapley.plot")
-        
-        DALEX.explainer %>%
-          iBreakDown::shap(random_case,
-                           B = no_permutations) %>%
-          plot()
-      }
-      
-      
-      LIME.explainer <- if (get_LIME_explainer) {
-        
-        print("*** LIME.explainer")
-        lime::lime(
-          # tricky: features not training.set
-          x = features,
-          model = model_object
-        )
-      } else {
-        NULL
-      }
-      
-      LIME.explanations <- if (
-        get_LIME_explanations & !is.null(LIME.explainer)) {
-        
-        print("***LIME.explanations")
-        lime::explain(
-          # tricky: features not training.set
-          x = local.obs %>% select(-.outcome),
-          explainer = LIME.explainer,
-          n_features = n_features_lime
-        ) %T>% print
-      } else {
-        NULL
-      }
-      
-      LIME.explanations.plot <- if (
-        get_LIME_explanations_plot & !is.null(LIME.explanations)) {
-        
-        print("***LIME.explanations.plot")
-        lime::plot_explanations(
-          LIME.explanations
-        ) + ggtitle(model_object$method)  %T>%
-          {
-            if (!is.null(save_path)) {
-              ggsave(
-                width = width, height = height,
-                filename = paste(
-                  c(save_path, "LIME.explanations.plot",
-                    model_object$method, suffix, "png"),
-                  collapse = ".")
-              )
-            }
-          }
-        
-      } else {
-        NULL
-      }
-      
-      LIME.features.plot <- if (
-        get_LIME_features_plot & !is.null(LIME.explainer)) {
-        
-        print("***LIME.features.plot")
-        lime::plot_features(
-          LIME.explanations,
-          ncol = 2
-        ) + ggtitle(model_object$method)  %T>%
-          {
-            if (!is.null(save_path)) {
-              ggsave(
-                width = width, height = height,
-                filename = paste(
-                  c(save_path, "LIME.features.plot",
-                    model_object$method, suffix, "png"),
-                  collapse = ".")
-              )
-            }
-          }
-      } else {
-        NULL
-      }
-      
-      return(
-        list(
-          DALEX.explainer = DALEX.explainer
-          , DALEX.performance = DALEX.performance
-          , DALEX.feature.importance = DALEX.feature.importance
-          , DALEX.feature.importance.plot = DALEX.feature.importance.plot
-          , DALEX.residual.plot = DALEX.residual.plot
-          , DALEX.pdp.plot = DALEX.pdp.plot
-          , DALEX.attribution.text = DALEX.attribution.text
-          , DALEX.attribution.plot = DALEX.attribution.plot
-          , DALEX.attribution.uncertainty.plot = DALEX.attribution.uncertainty.plot
-          , DALEX.distribution.plot = DALEX.distribution.plot
-          , DALEX.shapley.plot = DALEX.shapley.plot
-          , LIME.explainer = LIME.explainer
-          , LIME.explanations = LIME.explanations
-          , LIME.explanations.plot = LIME.explanations.plot
-          , LIME.features.plot = LIME.features.plot
-        )
-      )
-    },
-    .options = furrr_options(
-      seed = seed
-      , packages = c("DALEX", "iBreakDown", "ingredients", "lime")
-    ))
-}
 
 models_explanation_label(STUDY, CV.REPEATS, DATASET.LABEL, ENCODING, ) 
 

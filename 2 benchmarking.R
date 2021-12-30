@@ -19,9 +19,6 @@ sapply(packs, require, character.only = TRUE)
 # devtools::install_github("agilebean/machinelearningtools")
 # unloadNamespace("machinelearningtools")
 
-NEW <- TRUE
-# NEW <- FALSE
-
 if (getwd() == "/home/rstudio") {
   setwd("sync")
 }
@@ -47,14 +44,21 @@ algorithm.list <- c(
   # , "ranger"
 )
 
-# readRDS(dataset_filename(dataset_label = "designdim"))
-models_list_label(STUDY, "diamonds", "encoding", CV.REPEATS)
+dataset.label <- "swbliss"
+readRDS(dataset_filename(dataset_label = dataset.label))
+# models_list_label(STUDY, "diamonds", "encoding", CV.REPEATS)
 
 ################################################################################
 # benchmarking
 ################################################################################
 
-ENCODER.LIST %>% print
+DATASET.LABEL.LIST
+ENCODER.LIST
+
+# NEW <- TRUE
+NEW <- FALSE
+# OVERWRITE <- TRUE
+OVERWRITE <- FALSE
 
 system.time(
   benchmarks.datasets.encoders <- DATASET.LABEL.LIST %>%
@@ -71,6 +75,8 @@ system.time(
       
           models.list.label <- models_list_label(
             STUDY, DATASET_LABEL, ENCODER, CV.REPEATS)
+          
+          if (OVERWRITE) file.remove(models.list.label)
           
           if (!file.exists(models.list.label)) {
             models.list <- benchmark_algorithms(
@@ -89,7 +95,9 @@ system.time(
               push = FALSE,
               beep = TRUE
               # beep = FALSE
-            )  
+            )
+          } else {
+            models.list <- readRDS(models.list.label)
           }
           
         }) %>%
@@ -102,10 +110,12 @@ system.time(
                algorithm_list = algorithm.list)
   } # 2296s/80encoders, 251s study2
 
-system.time(
-  benchmarks.datasets.encoders %>% 
-    saveRDS(benchmark_filename(STUDY, CV.REPEATS) %T>% print)
-) # 129s/80
+if (NEW) {
+  system.time(
+    benchmarks.datasets.encoders %>% 
+      saveRDS(benchmark_filename(STUDY, CV.REPEATS) %T>% print)
+  ) # 129s/80  
+}
 
 ### NEW
 # 709s cv2
@@ -128,10 +138,9 @@ system.time(
 # benchmark.ALL.data.ENCODER.LIST.study2$ames$`scikit-target` %>%
 # benchmark.ALL.data.ENCODER.LIST.study2$ames$`vtreat-dummy` %>% 
 
-benchmark.ALL.data.ENCODER.LIST.study2$ames$`scikit-loo` %>%
-  get_model_metrics()
-
-
+benchmarks.datasets.encoders[[dataset.label]]$`integer-encoding` %>% get_model_metrics()
+benchmarks.datasets.encoders[[dataset.label]]$`factor-encoding` %>% get_model_metrics()
+benchmarks.datasets.encoders[[dataset.label]]$`irt-encoding` %>% get_model_metrics()
 
 
 

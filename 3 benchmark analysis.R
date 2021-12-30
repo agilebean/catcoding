@@ -10,8 +10,8 @@ packs <- c(
 )
 sapply(packs, require, character.only = TRUE)
 # devtools::install_github("agilebean/catcoding")
-NEW <- TRUE
-# NEW <- FALSE
+# NEW <- TRUE
+NEW <- FALSE
 ################################################################################
 
 ################################################################################
@@ -39,9 +39,11 @@ benchmarks.top.encoders
 benchmarks.top.encoders %>% map_df(~.x, .id = "data")
 
 # details
-benchmarks.top.encoders$swbsun %>% 
+dataset.label <- "swbliss"
+benchmarks.top.encoders[[dataset.label]] %>% 
   group_by(encoder, model) %>% 
-  summarize(model, RMSE.median = min(RMSE.median))
+  summarize(model, RMSE.median = min(RMSE.median)) %>% 
+  arrange(RMSE.median)
 
 # top2 alg
 benchmarks.top.encoders %>% 
@@ -53,7 +55,8 @@ benchmarks.top.encoders %>%
 benchmarks.top.encoders %>% 
   imap(~ mutate(.x, dataset = .y)) %>% 
   map_df(~ .x %>% filter(RMSE.median == min(RMSE.median, na.rm = TRUE))) %>% 
-  select(dataset, everything())
+  select(dataset, everything()) %>% 
+  as.data.frame()
 
 
 ################################################################################
@@ -74,13 +77,15 @@ system.time(
     set_names(dataset.label.list)
   
 ) # 44s/4 datasets x 20 preprocess options
+multiple.benchmarks.boxplots
 
-plot <- multiple.benchmarks.boxplots$diamonds
+plot <- multiple.benchmarks.boxplots$swbliss
 plot
-plot + geom_boxplot(fill = "lightsteelblue")
+plot + geom_boxplot(fill = "slategray1")
 plot + geom_boxplot(fill = "slategray2")
 plot + geom_boxplot(fill = "powderblue")
 # not so good
+plot + geom_boxplot(fill = "lightsteelblue")
 plot + geom_boxplot(fill = "slategray4")
 plot + geom_boxplot(fill = "slategray3")
 plot + geom_boxplot(fill = "lightslategray")

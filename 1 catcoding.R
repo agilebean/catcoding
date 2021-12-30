@@ -21,7 +21,7 @@ sapply(packs, require, character.only = TRUE)
 # credentials::set_github_pat()
 # usethis::git_sitrep()
 # devtools::install_github("briandconnelly/pushoverr")
-# devtools::install_github("agilebean/catcoding")
+# devtools::install_github("agilebean/catcoding", force = TRUE)
 # unloadNamespace("machinelearningtools")
 
 ####################################################
@@ -29,6 +29,9 @@ sapply(packs, require, character.only = TRUE)
 # compareVersion("2.0", as.character(tensorflow::tf_version()))
 ################################################################################
 
+# CMD+SHIFT+L
+Sys.setenv(RETICULATE_PYTHON = "~/miniforge3/envs/reticulate/bin/python")
+options(reticulate.conda_binary = "~/miniforge3/condabin/conda")
 
 ################################################################################
 # MAIN
@@ -39,16 +42,15 @@ sapply(packs, require, character.only = TRUE)
 system.time(
   data.encoded.list <- apply_encoders_data_list(
     # DATASET.LABEL.TEST, ENCODER.LIST.test
-    DATASET.LABEL.LIST, ENCODER.LIST.LIST
-    , save = FALSE
+    DATASET.LABEL.LIST, ENCODER.LIST
+    # , save = TRUE
+    # , save = FALSE
     )  
-) # 159s
+) # 159s - 169/147m1
 
-smartflow$data %>% glimpse()
-data.encoded.list %>% names
-data.encoded.list
-data.encoded.list$designdim$`scikit-glmm`
-data.encoded.list$designdim$`scikit-hashing`
+dataset.label <- "swbliss"
+data.encoded.list[[dataset.label]]
+data.encoded.list$swbliss$`irt-encoding`
 #### NEW
 # 240s after case_when - 263s in one chain 254 clusterOn()
 # 407s for 100 encoders (5 x 20 encoders)
@@ -68,13 +70,14 @@ data.encoded.list$designdim$`scikit-hashing`
 # dataset
 # DATASET.LABEL <- "diamonds"
 # DATASET.LABEL <- "ames"
-# DATASET.LABEL <- "designdim"
+DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "timex"
-DATASET.LABEL <- "smartflow"
+# DATASET.LABEL <- "smartflow"
 # DATASET.LABEL <- "smartflow-scales"
 # 
 ####################################################
 # ENCODING <- "factor-encoding"
+ENCODING <- "irt-encoding"
 # ENCODING <- "vtreat-cross"
 # ENCODING <- "vtreat-design"
 # ENCODING <- "vtreat-dummy"
@@ -100,11 +103,13 @@ DATASET.LABEL <- "smartflow"
 #####
 ## DEBUG ERROR no usable vars with smartflow-scales+vtreat-design
 ##### 
-DATASET.LABEL <- "diamonds"
+# DATASET.LABEL <- "diamonds"
 # DATASET.LABEL <- "ames"
-# DATASET.LABEL <- "designdim"
+DATASET.LABEL <- "designdim"
 # DATASET.LABEL <- "smartflow"
-DATASET.LABEL <- "timex"
+# DATASET.LABEL <- "timex"
+# DATASET.LABEL <- "swbliss"
+# DATASET.LABEL <- "swbsun"
 # create split objects for 1 dataset
 data.prepped <- prep_dataset_original(DATASET.LABEL, TRAIN.SPLIT, CATS.ONLY)  
 # 0.06s
@@ -112,14 +117,17 @@ data.prepped <- prep_dataset_original(DATASET.LABEL, TRAIN.SPLIT, CATS.ONLY)
 # # show factors
 data.prepped$training.set %>% select(where(is.ordered)) %>% glimpse
 data.prepped$training.set %>% glimpse
-# data.prepped$training.set %>% summary
-
+data.prepped$training.set.irt %>% glimpse
+data.prepped$testing.set.irt
 # ENCODING <- "vtreat-design"
-ENCODING <- "scikit-glmm"
+# ENCODING <- "scikit-glmm"
 # ENCODING <- "scikit-hashing"
+ENCODING <- "irt-encoding"
 
 # apply 1 encoder on 1 split object ~ 1.1s
-data.encoded <- apply_encoder(data.prepped, ENCODING)
+system.time(
+  data.encoded <- apply_encoder(data.prepped, ENCODING)  
+)
 
 data.encoded$training.set %>% glimpse
 data.encoded$training.set %>% summary
