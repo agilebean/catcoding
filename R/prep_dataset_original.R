@@ -13,8 +13,8 @@ prep_dataset_original <- function(
   factors.labels <- data$factors.labels
   
   # subset features & remove other features or DVs
-  dataset <- data$data %>% select(target.label, features.labels) 
-  dataset.irt <- data$irt.scores
+  dataset <- data$data %>% select(target.label, features.labels) %>% print
+  dataset.irt <- data$irt.scores %>% print
   
   ####################################################
   # create training/testing.set
@@ -29,15 +29,19 @@ prep_dataset_original <- function(
     # shuffle
     sample_n(nrow(.))
   
-  training.set.irt <- dataset.irt %>% 
-    slice(train.index) %>% 
-    sample_n(nrow(.))
-  
+  if (!is.null(dataset.irt)) {
+    training.set.irt <- dataset.irt %>% 
+      slice(train.index) %>% 
+      sample_n(nrow(.))    
+  } else {
+    training.set.irt <- NULL
+  }
   
   if (train_test_split < 1.0) {
     
     testing.set <- dataset[-train.index, ]  
-    testing.set.irt <- dataset.irt[-train.index, ]
+    testing.set.irt <- ifelse(!is.null(dataset.irt),
+                              dataset.irt[-train.index, ], NULL)
     
   } else { # default case: whole dataset
     
