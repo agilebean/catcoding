@@ -22,32 +22,33 @@ apply_embed_encoder <- function(
   
   features.labels <- training_original %>% 
     select(-target_label) %>% names
+
   
-  recipe.base <- features.labels %>% 
-    paste(collapse = " + ") %>% 
-    paste(target_label, "~", .) %>% 
-    as.formula %>% 
+  recipe.base <- features.labels %>%
+    paste(collapse = " + ") %>%
+    paste(target_label, "~", .) %>%
+    as.formula %>%
     recipe(training_original) %>% print
-  
+
   # add encoder to recipe
-  recipe.encoding <- recipe.base %>% 
-    encoding_function(all_nominal(), outcome = vars(target_label)) 
-  
+  recipe.encoding <- recipe.base %>%
+    encoding_function(all_nominal(), outcome = vars(target_label))
+
   recipe.encoding %>% print
-  
+
   prep.encoding <- prep(recipe.encoding, training = training_original, retain = TRUE)
-  
+
   training.set.juiced <- juice(prep.encoding) %T>% print
-  
-  features.labels.juiced <- training.set.juiced %>% 
+
+  features.labels.juiced <- training.set.juiced %>%
     select(-target_label) %>% names
-  
+
   if (!is.null(testing_original)) {
     testing.set.baked <- prep.encoding %>% bake(testing_original)
   } else {
     testing.set.baked <- NULL
   }
-  
+
   return(list(
     features.labels = features.labels.juiced,
     target.label = target_label,
